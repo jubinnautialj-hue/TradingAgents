@@ -28,6 +28,15 @@ class Propagator:
         ``get_instrument_context_from_state``.
         """
         return {
+            "market_snapshot": {},
+            "data_quality": "NOT_CHECKED",
+            "allow_new_risk": False,
+            "execution_enabled": False,
+            "llm_status": "NOT_STARTED",
+            "workflow_status": "NOT_STARTED",
+            "llm_failure": {},
+            "investment_plan": "",
+            "trader_investment_plan": "",
             "messages": [("human", company_name)],
             "company_of_interest": company_name,
             "asset_type": asset_type,

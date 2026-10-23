@@ -26,6 +26,8 @@ import requests
 from tradingagents.dataflows.files import locked
 from tradingagents.default_config import _TRADINGAGENTS_HOME
 
+from .proxy import subscription_proxy_kwargs
+
 ISSUER = "https://auth.openai.com"
 AUTHORIZE_URL = f"{ISSUER}/api/accounts/authorize"
 TOKEN_URL = f"{ISSUER}/api/accounts/oauth/token"
@@ -106,7 +108,7 @@ def _signing_keys() -> list[dict]:
     """OpenAI's ID-token signing keys. Fetched before a token request, so nothing can fail
     on the network between OpenAI issuing tokens and this file keeping them."""
     try:
-        keys = requests.get(JWKS_URL, timeout=TIMEOUT).json()["keys"]
+        keys = requests.get(JWKS_URL, timeout=TIMEOUT, **subscription_proxy_kwargs()).json()["keys"]
     except (requests.RequestException, ValueError, KeyError, TypeError) as exc:
         raise ChatGPTUnreachable(f"Could not reach OpenAI to check the sign-in ({type(exc).__name__}); "
                                  "try again.") from None
@@ -168,7 +170,7 @@ def _token_request(form: dict, task: str, refused: str) -> dict:
     """OpenAI's answer to a token request, or the error to show: ``ChatGPTUnreachable``
     when OpenAI could not answer (try again), ``ChatGPTAuthError`` when it refused."""
     try:
-        response = requests.post(TOKEN_URL, timeout=TIMEOUT, data=form)
+        response = requests.post(TOKEN_URL, timeout=TIMEOUT, data=form, **subscription_proxy_kwargs())
     except requests.RequestException as exc:
         raise ChatGPTUnreachable(f"Could not reach OpenAI to {task} ({type(exc).__name__}); try again.") from None
     if response.status_code in (408, 429) or response.status_code >= 500:
@@ -254,7 +256,7 @@ def credential() -> Callable[[], str]:
 def list_models() -> list[tuple[str, str]]:
     """(name, model ID) for each model the signed-in plan offers, in OpenAI's order."""
     response = requests.get(f"{API_BASE}/models", timeout=10,
-                            headers={"Authorization": f"Bearer {access_token()}"})
+                            headers={"Authorization": f"Bearer {access_token()}"}, **subscription_proxy_kwargs())
     response.raise_for_status()
     models = [m for m in response.json().get("models", [])
               if isinstance(m, dict) and isinstance(m.get("slug"), str)
@@ -315,7 +317,7 @@ def _revoke(tokens: dict, client_id: str | None) -> bool:
         response = requests.post(REVOKE_URL, timeout=TIMEOUT, data={
             "token": tokens.get("refresh_token"), "token_type_hint": "refresh_token",
             "client_id": client_id,
-        })
+        }, **subscription_proxy_kwargs())
     except requests.RequestException:
         return False
     return response.status_code == 200

@@ -1,3 +1,4 @@
+import json
 import os
 
 _TRADINGAGENTS_HOME = os.path.join(os.path.expanduser("~"), ".tradingagents")
@@ -8,6 +9,9 @@ _TRADINGAGENTS_HOME = os.path.join(os.path.expanduser("~"), ".tradingagents")
 # of the existing default, so users can keep writing plain strings in
 # their .env file.
 _ENV_OVERRIDES = {
+    "TRADINGAGENTS_LLM_PROXY": "llm_proxy",
+    "TRADINGAGENTS_MARKET_MODE": "market_mode",
+    "TRADINGAGENTS_OKX_INTERVAL": "okx_interval",
     "TRADINGAGENTS_LLM_PROVIDER":         "llm_provider",
     "TRADINGAGENTS_DEEP_THINK_LLM":       "deep_think_llm",
     "TRADINGAGENTS_QUICK_THINK_LLM":      "quick_think_llm",
@@ -74,6 +78,24 @@ def _apply_env_overrides(config: dict) -> dict:
     return config
 
 
+def _saved_model_proxy():
+    """Optional model-only routing; a present env var (even blank) overrides it."""
+    if "TRADINGAGENTS_LLM_PROXY" in os.environ:
+        return None
+    path = os.getenv("TRADINGAGENTS_MODEL_NETWORK_FILE") or os.path.join(_TRADINGAGENTS_HOME, "model_network.json")
+    try:
+        with open(path, encoding="utf-8") as handle:
+            data = json.load(handle)
+    except FileNotFoundError:
+        return None
+    except (OSError, ValueError):
+        raise ValueError("Cannot read model_network.json; model routing is not silently bypassed") from None
+    if (not isinstance(data, dict) or set(data) != {"llm_proxy"}
+            or (data["llm_proxy"] is not None and not isinstance(data["llm_proxy"], str))):
+        raise ValueError("Invalid model_network.json format")
+    return data.get("llm_proxy") or None
+
+
 def build_default_config() -> dict:
     """The built-in defaults with the TRADINGAGENTS_* environment folded in.
 
@@ -81,6 +103,33 @@ def build_default_config() -> dict:
     the environment as it is now.
     """
     return _apply_env_overrides({
+        "llm_proxy": _saved_model_proxy(),
+        "market_mode": "stock",
+        "okx_interval": "1h",
+        "okx_history_bars": 400,
+        "okx_min_bars": 250,
+        "okx_max_lag_bars": 0,
+        "okx_bundle_ttl_seconds": 900,
+        "okx_derivatives_enabled": False,
+        "okx_multi_timeframe": False,
+        "okx_trade_plan_enabled": False,
+        "okx_plan_taker_fee_bps": None,
+        "okx_plan_maker_fee_bps": None,
+        "okx_plan_min_net_rr": 1.5,
+        "okx_plan_target_atr": 3.0,
+        "okx_plan_stop_atr_buffer": 0.25,
+        # Delivery evidence TTL, NOT the closed-bar signal confirmation window.
+        "okx_plan_ttl_seconds": 900,
+        "okx_plan_confirmation_bars": 6,
+        "okx_entry_revalidation_ttl_seconds": 60,
+        "okx_plan_horizon_hours": 4.0,
+        "okx_pivot_window": 2,
+        "okx_structure_window": 20,
+        "okx_retest_atr_fraction": 0.1,
+        "okx_derivatives_history_points": 100,
+        "okx_derivatives_ttl_seconds": 300,
+        "okx_liquidity_notional_usdt": 10000,
+        "okx_max_spread_bps": 50,
         "results_dir": os.getenv("TRADINGAGENTS_RESULTS_DIR") or os.path.join(_TRADINGAGENTS_HOME, "logs"),
         "data_cache_dir": os.getenv("TRADINGAGENTS_CACHE_DIR") or os.path.join(_TRADINGAGENTS_HOME, "cache"),
         "memory_log_path": os.getenv("TRADINGAGENTS_MEMORY_LOG_PATH") or os.path.join(_TRADINGAGENTS_HOME, "memory", "trading_memory.md"),

@@ -24,7 +24,7 @@ ANALYST_CHOICES = [
     ("Fundamentals Analyst", AnalystType.FUNDAMENTALS),
 ]
 
-CRYPTO_SUFFIXES = ("-USD", "-USDT", "-USDC", "-BTC", "-ETH")
+CRYPTO_SUFFIXES = ("-USD", "-USDT", "-USDC", "-BTC", "-ETH", "-USDT-SWAP")
 
 
 # The style of every selection menu.

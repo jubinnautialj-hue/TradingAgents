@@ -10,6 +10,16 @@ from datetime import datetime
 from pathlib import Path
 
 from tradingagents.agents.rating import run_rating
+from tradingagents.dataflows.okx_research import final_gate
+from tradingagents.dataflows.vendors.okx import MODE, describe
+
+
+def checked_report_state(final_state: dict, settings: dict | None) -> dict:
+    if final_state.get("market_snapshot") or (settings or {}).get("market_mode") == MODE:
+        config = {"market_mode": MODE, "okx_interval": final_state.get("market_snapshot", {}).get("interval", "1h"),
+                  **(settings or {})}
+        return {**final_state, **final_gate(final_state, config)}
+    return final_state
 
 
 def analyst_names(keys) -> list[str]:
@@ -20,9 +30,14 @@ def analyst_names(keys) -> list[str]:
 def _header(ticker: str, final_state: dict, settings: dict | None) -> str:
     """The report's title and what produced it: analysis date, version, models, analysts, vendors."""
     lines = [f"# Trading Analysis Report: {ticker}", ""]
+    if final_state.get("llm_status"):
+        lines.append(f"- Model status: {final_state['llm_status']}; workflow: {final_state.get('workflow_status', 'NOT_STARTED')}")
     if final_state.get("trade_date"):
         lines.append(f"- Analysis date: {final_state['trade_date']}")
-    if final_state.get("final_trade_decision"):
+    if final_state.get("research_result"):
+        result = final_state["research_result"]
+        lines.append(f"- Research action: {result['proposed_action']}; plan_status: {result['plan_status']}; plan_valid: {result['plan_valid']}")
+    elif final_state.get("final_trade_decision"):
         lines.append(f"- Rating: {run_rating(final_state)}")
     lines.append(f"- Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     if settings:
@@ -43,6 +58,8 @@ def _header(ticker: str, final_state: dict, settings: dict | None) -> str:
             lines.append("- Data vendors: " + ", ".join(f"{k} {v}" for k, v in vendors.items()))
     if final_state.get("memory_note"):
         lines.append(f"- Memory log: {final_state['memory_note']}")
+    if final_state.get("market_snapshot"):
+        lines.append("\n" + describe(final_state["market_snapshot"]))
     return "\n".join(lines) + "\n\n"
 
 
@@ -98,7 +115,34 @@ def write_report_tree(final_state: dict, ticker: str, save_path, settings: dict 
     self-contained page of the same report (#1419).
     """
     save_path = Path(save_path)
+    final_state = checked_report_state(final_state, settings)
     save_path.mkdir(parents=True, exist_ok=True)
+    if final_state.get("research_result"):
+        import json
+
+        from tradingagents.agents.perpetual_schemas import PerpetualResearchResult
+
+        result = PerpetualResearchResult.model_validate(final_state["research_result"])
+        (save_path / "research_result.json").write_text(result.model_dump_json(indent=2), encoding="utf-8")
+        (save_path / "research_result.schema.json").write_text(json.dumps(
+            PerpetualResearchResult.model_json_schema(), indent=2), encoding="utf-8")
+    if final_state.get("market_snapshot", {}).get("multi_timeframe"):
+        import json
+
+        # Research evidence archive, not a stage-C executable trade plan.
+        (save_path / "multitimeframe_snapshot.json").write_text(json.dumps(
+            final_state["market_snapshot"], ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
+    if final_state.get("market_snapshot", {}).get("derivatives"):
+        import json
+
+        from tradingagents.dataflows.vendors.okx_derivatives import evidence_view
+
+        snapshot = final_state["market_snapshot"]
+        evidence = evidence_view(snapshot["derivatives"])
+        (save_path / "derivatives_snapshot.json").write_text(json.dumps(
+            {"snapshot_id": snapshot["snapshot_id"], "core_data_quality": snapshot["status"],
+             "allow_new_risk": final_state["allow_new_risk"], "execution_enabled": False,
+             "derivatives": evidence}, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
     parts = _report_parts(final_state)
     sections = []
     for heading, folder, written in parts:

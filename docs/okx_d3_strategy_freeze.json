@@ -1,0 +1,29 @@
+{
+  "stage": "D.3 pre-development freeze",
+  "rules": {
+    "strategy": "okx-candle-ledger-v1",
+    "equity": 10000,
+    "notional": 1000,
+    "taker_bps": 5,
+    "slippage_bps": 2,
+    "confirmation_bars": 6,
+    "maximum_holding_bars": 12,
+    "target_4h_atr": 3,
+    "stop_1h_atr_buffer": 0.25,
+    "decision_hours": 4,
+    "mtf": {
+      "version": "closed-pivots-v1",
+      "pivot_window": 2,
+      "range_window": 20,
+      "retest_atr_fraction": 0.1
+    }
+  },
+  "prechange_sources": {
+    "tradingagents\\okx_backtest.py": "1772d95c6923b2b395d5f0bd5bea9419c05c83e1ae6d7a04217852e297f4b155",
+    "tradingagents\\okx_diagnostics.py": "f56f2b5cf0c95f5ac4ffb58865a54e889980970d17f3165b40d962b315fd03da",
+    "tradingagents\\dataflows\\perpetual_plan.py": "2b16b6a8aa3dc8b6293139a089be5fca76878ac53e33cf6a6979cc05c0811b09",
+    "tradingagents\\dataflows\\plan_lifecycle.py": "fb5db1bdd1690573786cc3e9c42bcbbbf1520ac97b60a72f1bd11c4f9739f3f5",
+    "tradingagents\\dataflows\\vendors\\okx_multitimeframe.py": "16159b366b91b8f2aa847c873cd3b45bd4701507fce505e6e51cae36f867557d"
+  },
+  "config_fingerprint": "aaeee69ab61e19dc9553d7d10c89304f64903e1e659cfae62f5ac499eba4e1e0"
+}

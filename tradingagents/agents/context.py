@@ -179,12 +179,24 @@ def get_instrument_context_from_state(state: Mapping[str, Any]) -> str:
     consumer is never forced to make a yfinance call mid-graph.
     """
     context = state.get("instrument_context")
-    if isinstance(context, str) and context.strip():
-        return context
-    return build_instrument_context(
-        str(state["company_of_interest"]),
-        state.get("asset_type", "stock"),
-    )
+    if not isinstance(context, str) or not context.strip():
+        context = build_instrument_context(str(state["company_of_interest"]), state.get("asset_type", "stock"))
+    if state.get("market_snapshot", {}).get("multi_timeframe"):
+        from tradingagents.dataflows.vendors.okx_multitimeframe import describe_multitimeframe
+
+        context += ("\nRequired multi-timeframe research: 1d regime, 4h structure, 1h confirmation. "
+                    "Keep opposing timeframe evidence explicit; no simple vote or single-period market-wide claim. "
+                    "A lack of resonance is not automatically bullish/bearish. All advice is research only; "
+                    "execution is disabled and legacy Sell does not authorize opening a short.\n"
+                    + describe_multitimeframe(state["market_snapshot"]))
+    if state.get("plan_mode"):
+        context += ("\nPerpetual research actions use explicit OPEN_LONG_CANDIDATE / OPEN_SHORT_CANDIDATE / WAIT / "
+                    "REDUCE_LONG / REDUCE_SHORT / EXIT_CANDIDATE; legacy Sell does not mean open short. "
+                    "Assess long, short and waiting independently, with the provided position context only. "
+                    f"Caller position context: {state.get('position_context', 'UNKNOWN')}. "
+                    "Do not invent position ownership, numeric prices, fees or portfolio percentages. "
+                    "Program validation owns plan_valid and risk permissions; all execution is disabled.")
+    return context
 
 
 def report_or_absent(text: str, source: str) -> str:

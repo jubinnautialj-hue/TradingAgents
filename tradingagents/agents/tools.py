@@ -9,10 +9,25 @@ from typing import Annotated
 from langchain_core.tools import tool
 from langgraph.prebuilt import InjectedState
 
+from tradingagents.dataflows.config import get_config
 from tradingagents.dataflows.date_window import as_of, as_of_window
 from tradingagents.dataflows.errors import NoMarketDataError, VendorUnavailableError
 from tradingagents.dataflows.router import no_data_available, route_to_vendor, vendor_unavailable
+from tradingagents.dataflows.vendors import okx
 from tradingagents.dataflows.vendors.yahoo.snapshot import build_verified_market_snapshot
+
+
+def _okx_snapshot(snapshot, symbol, trade_date, requested_date=None):
+    config = get_config()
+    if not okx.enabled(config):
+        if symbol.endswith("-SWAP"):
+            raise ValueError("SWAP tools require explicit OKX perpetual mode")
+        return None
+    bundle = okx.check_bundle(snapshot or {}, config, symbol, trade_date or None)
+    if requested_date and trade_date and requested_date != trade_date:
+        return {**bundle, "status": "RESEARCH_INVALID", "allow_new_risk": False,
+                "issues": ["Tool date differs from pinned research day; live values cannot stand in for historical values"]}
+    return bundle
 
 
 @tool
@@ -21,6 +36,7 @@ def get_stock_data(
     start_date: Annotated[str, "Start date in yyyy-mm-dd format"],
     end_date: Annotated[str, "End date in yyyy-mm-dd format"],
     trade_date: Annotated[str, InjectedState("trade_date")] = "",
+    market_snapshot: Annotated[dict, InjectedState("market_snapshot")] = None,
 ) -> str:
     """
     Retrieve stock price data (OHLCV) for the instrument under analysis.
@@ -35,6 +51,9 @@ def get_stock_data(
         start_date, end_date = as_of_window(start_date, end_date, trade_date)
     except ValueError as e:
         return str(e)
+    bundle = _okx_snapshot(market_snapshot, symbol, trade_date, end_date)
+    if bundle is not None:
+        return okx.render_prices(bundle, start_date, end_date)
     return route_to_vendor("get_stock_data", symbol, start_date, end_date)
 
 
@@ -45,6 +64,7 @@ def get_indicators(
     curr_date: Annotated[str, "The current trading date you are trading on, YYYY-mm-dd"],
     look_back_days: Annotated[int, "how many days to look back"] = 30,
     trade_date: Annotated[str, InjectedState("trade_date")] = "",
+    market_snapshot: Annotated[dict, InjectedState("market_snapshot")] = None,
 ) -> str:
     """
     Retrieve a single technical indicator for the instrument under analysis.
@@ -60,6 +80,9 @@ def get_indicators(
     # split and process each individually.
     curr_date = as_of(curr_date, trade_date)
     indicators = [i.strip().lower() for i in indicator.split(",") if i.strip()]
+    bundle = _okx_snapshot(market_snapshot, symbol, trade_date, curr_date)
+    if bundle is not None:
+        return "\n\n".join(okx.render_indicator(bundle, ind, look_back_days) for ind in indicators)
     results = []
     for ind in indicators:
         try:
@@ -77,6 +100,7 @@ def get_verified_market_snapshot(
         int, "number of recent trading rows to include for sanity-checking"
     ] = 30,
     trade_date: Annotated[str, InjectedState("trade_date")] = "",
+    market_snapshot: Annotated[dict, InjectedState("market_snapshot")] = None,
 ) -> str:
     """Deterministic verification snapshot for exact market-data claims.
 
@@ -85,6 +109,9 @@ def get_verified_market_snapshot(
     price levels, Bollinger bands, RSI, MACD, moving averages, support /
     resistance, or historical comparisons, and treat it as the source of truth.
     """
+    bundle = _okx_snapshot(market_snapshot, symbol, trade_date, as_of(curr_date, trade_date))
+    if bundle is not None:
+        return okx.render_snapshot(bundle)
     # An exception out of a tool would end the run.
     try:
         return build_verified_market_snapshot(symbol, as_of(curr_date, trade_date), look_back_days)

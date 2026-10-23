@@ -24,6 +24,11 @@ def create_portfolio_manager(llm):
     structured_llm = bind_structured(llm, PortfolioDecision, "Portfolio Manager")
 
     def portfolio_manager_node(state) -> dict:
+        if state.get("plan_mode"):
+            from tradingagents.agents.perpetual_research import choose_research
+
+            choice, text, parsed = choose_research(llm, state, "Portfolio Manager")
+            return {"portfolio_choice": choice, "portfolio_schema_valid": parsed, "final_trade_decision": text, "final_rating": "REVIEW"}
         instrument_context = get_instrument_context_from_state(state)
         portfolio_context = get_portfolio_context_from_state(state)
 

@@ -95,6 +95,9 @@ def build_llm_kwargs(config: dict) -> dict[str, Any]:
     """Keyword arguments for ``create_llm_client`` from a TradingAgents config."""
     kwargs = {}
     provider = config.get("llm_provider", "").lower()
+    if config.get("llm_proxy") and provider in {"openai", "chatgpt"}:
+        from .proxy import validate_model_proxy
+        kwargs["model_proxy"] = validate_model_proxy(config["llm_proxy"])
 
     if provider == "google":
         thinking_level = config.get("google_thinking_level")

@@ -161,6 +161,111 @@ def backtest(
 
 
 # The plans `login` and `logout` take: the providers signed in to, not keyed.
+@app.command("okx-research")
+def okx_research(
+    instrument: str = typer.Option("BTC-USDT-SWAP", "--instrument"),
+    interval: str = typer.Option("1h", "--interval", help="1h, 4h or 1d (UTC)"),
+    date: str = typer.Option(None, "--date", help="UTC research day; default UTC today"),
+    data_only: bool = typer.Option(False, "--data-only", help="Public data/quality report without LLM calls"),
+    derivatives: bool = typer.Option(False, "--derivatives", help="Include optional public OI/funding/mark/index/depth evidence"),
+    multi_timeframe: bool = typer.Option(False, "--multi-timeframe", help="Joint 1d regime / 4h structure / 1h confirmation; interval remains the labelled anchor"),
+    trade_plan: bool = typer.Option(False, "--trade-plan", help="Schema-validated perpetual research; enables three timeframes and derivatives; never executes"),
+    taker_fee_bps: float = typer.Option(None, "--taker-fee-bps", min=0, help="Explicit fee assumption in basis points, not fetched account fee"),
+    maker_fee_bps: float = typer.Option(None, "--maker-fee-bps", help="Optional maker assumption; costs conservatively use taker"),
+    portfolio_file: str = typer.Option(None, "--portfolio", help="Optional caller portfolio JSON; no account API query"),
+    liquidity_notional: float = typer.Option(10000, "--liquidity-notional", min=1, help="USDT reference size for displayed-depth estimates"),
+):
+    """Research OKX linear USDT swaps. Public data only; execution always disabled."""
+    from copy import deepcopy
+    from datetime import UTC, datetime
+    from pathlib import Path
+    from uuid import uuid4
+
+    from tradingagents.dataflows.config import run_config
+    from tradingagents.dataflows.okx_research import final_gate, preflight
+    from tradingagents.dataflows.vendors.okx import BARS, MODE, render_snapshot, validate_symbol
+    from tradingagents.graph.trading_graph import TradingAgentsGraph, _validate_trade_date
+    from tradingagents.reporting import write_report_tree
+
+    try:
+        validate_symbol(instrument)
+        if interval not in BARS:
+            raise ValueError("interval must be 1h, 4h or 1d")
+        day = _validate_trade_date(date or datetime.now(UTC).strftime("%Y-%m-%d"))
+        config = deepcopy(DEFAULT_CONFIG)
+        if not data_only:
+            import os
+
+            from cli.prefs import load_last_run, sanitize
+            prefs = sanitize(load_last_run(), AssetType.CRYPTO)
+            # Reuse existing model choices without rewriting preferences; explicit
+            # environment settings retain precedence over remembered choices.
+            variables = {"llm_provider": "TRADINGAGENTS_LLM_PROVIDER",
+                         "quick_think_llm": "TRADINGAGENTS_QUICK_THINK_LLM",
+                         "deep_think_llm": "TRADINGAGENTS_DEEP_THINK_LLM",
+                         "backend_url": "TRADINGAGENTS_LLM_BACKEND_URL",
+                         "output_language": "TRADINGAGENTS_OUTPUT_LANGUAGE"}
+            for key, variable in variables.items():
+                if key in prefs and not os.environ.get(variable):
+                    config[key] = prefs[key]
+        config.update(market_mode=MODE, okx_interval=interval, checkpoint_enabled=False)
+        config.update(okx_derivatives_enabled=derivatives, okx_liquidity_notional_usdt=liquidity_notional)
+        multi_timeframe = multi_timeframe or trade_plan
+        config["okx_multi_timeframe"] = multi_timeframe
+        config["okx_trade_plan_enabled"] = trade_plan
+        if trade_plan:
+            config.update(okx_derivatives_enabled=True, okx_plan_taker_fee_bps=taker_fee_bps,
+                          okx_plan_maker_fee_bps=maker_fee_bps)
+        portfolio = load_portfolio(portfolio_file) if portfolio_file else None
+        # Accurate configured source labels; all market tools use the bundle.
+        config["data_vendors"].update(core_stock_apis="okx", technical_indicators="okx")
+        if data_only:
+            state = {"company_of_interest": instrument, "trade_date": day}
+            if trade_plan:
+                from tradingagents.dataflows.perpetual_plan import position_context
+
+                state["position_context"] = position_context(portfolio, instrument)
+            with run_config(config):
+                state.update(preflight(state))
+                state.update(final_gate(state))
+            if state["allow_new_risk"]:
+                state.update(market_report=render_snapshot(state["market_snapshot"]),
+                             final_rating="REVIEW", final_trade_decision="Data validation only; no model trading recommendation. Execution disabled.")
+            settings = {k: config[k] for k in ("market_mode", "okx_interval", "okx_bundle_ttl_seconds",
+                                               "okx_min_bars", "okx_history_bars", "okx_max_lag_bars",
+                                               "okx_derivatives_enabled", "okx_derivatives_history_points",
+                                               "okx_derivatives_ttl_seconds", "okx_liquidity_notional_usdt", "okx_max_spread_bps",
+                                               "okx_multi_timeframe", "okx_pivot_window", "okx_structure_window", "okx_retest_atr_fraction") if k in config}
+            settings.update({k: v for k, v in config.items() if k.startswith("okx_plan_") or k == "okx_trade_plan_enabled"})
+        else:
+            graph = TradingAgentsGraph(selected_analysts=["market"], config=config)
+            state, _ = graph.propagate(instrument, day, asset_type="crypto", portfolio=portfolio)
+            settings = graph.run_settings()
+        mode_label = "multi" if multi_timeframe else interval
+        folder = Path(config["results_dir"]) / "reports" / f"okx_{instrument}_{mode_label}_{uuid4().hex[:12]}"
+        report = write_report_tree(state, instrument, folder, settings=settings)
+        if state.get("market_snapshot", {}).get("derivatives"):
+            from tradingagents.dataflows.vendors.okx_derivatives import evidence_view
+
+            typer.echo(f"Derivative evidence: {evidence_view(state['market_snapshot']['derivatives'])['status']} (optional; see report coverage)")
+        typer.echo(f"Data quality: {state['data_quality']}; allow_new_risk={state['allow_new_risk']}; execution_enabled=False")
+        if not data_only:
+            typer.echo(f"Model: {state.get('llm_status', 'NOT_STARTED')}; workflow: {state.get('workflow_status', 'NOT_STARTED')}")
+        typer.echo(f"Report: {report}")
+        if state.get("research_result"):
+            result = state["research_result"]
+            typer.echo(f"Research action: {result['proposed_action']}; plan_status={result['plan_status']}; plan_valid={result['plan_valid']}; requires_revalidation={result['requires_revalidation']}")
+            typer.echo(f"Research JSON: {folder / 'research_result.json'}")
+        if state.get("llm_status") == "LLM_UNAVAILABLE":
+            typer.echo(f"LLM_UNAVAILABLE: {state['llm_failure']['kind']} at {state['llm_failure']['stage']}")
+            raise typer.Exit(code=3)
+        if (trade_plan and state["data_quality"] != "VALID") or (not trade_plan and not state["allow_new_risk"]):
+            raise typer.Exit(code=2)
+    except ValueError as exc:
+        typer.echo(f"OKX research configuration error: {exc}", err=True)
+        raise typer.Exit(code=1) from None
+
+
 Plan = StrEnum("Plan", {name: name for name in SIGNED_IN_PROVIDERS})
 
 

@@ -224,6 +224,14 @@ def _group(name: str, values_html: str) -> str:
 def _run_details(final_state: dict, settings: dict | None) -> list[tuple[str, str]]:
     """The run details as (label, value HTML); every value from the run is escaped."""
     details = [("Generated", escape(datetime.now().strftime("%Y-%m-%d %H:%M")))]
+    if final_state.get("research_result"):
+        r = final_state["research_result"]
+        details.append(("Research plan", escape(f"{r['proposed_action']} / {r['plan_status']} / plan_valid={r['plan_valid']} / execution_enabled=False")))
+    if final_state.get("llm_status"):
+        details.append(("Model / workflow", escape(f"{final_state['llm_status']} / {final_state.get('workflow_status', 'NOT_STARTED')}")))
+    if final_state.get("market_snapshot"):
+        from tradingagents.dataflows.vendors.okx import describe
+        details.append(("Data quality / risk gate", "<pre>" + escape(describe(final_state["market_snapshot"])) + "</pre>"))
     if settings:
         s = settings.get
         for tier in ("deep", "quick"):
@@ -247,8 +255,13 @@ def _run_details(final_state: dict, settings: dict | None) -> list[tuple[str, st
 
 def render_report(ticker: str, final_state: dict, settings: dict | None, parts) -> str:
     """The report page: title and rating, what produced the run, contents, sections."""
+    from tradingagents.reporting import _report_parts, checked_report_state
+    final_state = checked_report_state(final_state, settings)
+    if final_state.get("market_snapshot"):
+        parts = _report_parts(final_state)
     md = _markdown()
-    rating = run_rating(final_state) if final_state.get("final_trade_decision") else ""
+    rating = (final_state["research_result"]["proposed_action"] if final_state.get("research_result")
+              else run_rating(final_state) if final_state.get("final_trade_decision") else "")
     tone = _TONE.get(rating, "review")
     date = final_state.get("trade_date", "")
 

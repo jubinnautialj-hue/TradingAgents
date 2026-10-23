@@ -28,6 +28,23 @@ from .conditional_logic import ConditionalLogic
 
 logger = logging.getLogger(__name__)
 
+
+def _model_failure_boundary(node, stage):
+    """Keep the last completed public research state when a model call fails."""
+    def guarded(state, config):
+        from tradingagents.llm_clients.reliability import classify_failure
+        try:
+            result = node.invoke(state, config=config) if hasattr(node, "invoke") else node(state)
+            return {**result, "llm_status": "AVAILABLE", "workflow_status": "RUNNING"}
+        except Exception as exc:
+            failure = classify_failure(exc)
+            if failure is None:
+                raise
+            failure.stage = stage
+            failure.research_state = dict(state)
+            raise failure from None
+    return guarded
+
 # Every target a shared conditional router can return. Each edge driven by the
 # router maps all of them, so a fall-through return (e.g. under prompt/i18n/
 # refactor drift in the speaker labels) can never hit a missing path_map entry
@@ -99,15 +116,18 @@ class GraphSetup:
         deep_thinking_llm: Any,
         conditional_logic: ConditionalLogic,
         max_tool_rounds: int,
+        okx_mode: bool = False,
     ):
         """Initialize with required components."""
         self.quick_thinking_llm = quick_thinking_llm
         self.deep_thinking_llm = deep_thinking_llm
         self.conditional_logic = conditional_logic
         self.max_tool_rounds = max_tool_rounds
+        self.okx_mode = okx_mode
 
     def setup_graph(
-        self, selected_analysts=("market", "social", "news", "fundamentals"), memory_node=None
+        self, selected_analysts=("market", "social", "news", "fundamentals"), memory_node=None,
+        *, historical_filter=False,
     ):
         """Set up and compile the agent workflow graph.
 
@@ -120,6 +140,8 @@ class GraphSetup:
             memory_node: Node that settles past decisions and returns the run's
                 ``past_context``. It runs alongside the analysts.
         """
+        if historical_filter and (self.okx_mode or memory_node is not None or tuple(selected_analysts) != ("market",)):
+            raise ValueError("Offline filter requires market-only, no live preflight or memory; caller must validate historical data")
         plan = build_analyst_execution_plan(selected_analysts)
 
         analyst_factories = {
@@ -140,19 +162,22 @@ class GraphSetup:
         portfolio_manager_node = create_portfolio_manager(self.deep_thinking_llm)
 
         workflow = StateGraph(AgentState)
+        def model_node(node, stage):
+            return _model_failure_boundary(node, stage) if self.okx_mode else node
 
         for spec in plan.specs:
             workflow.add_node(spec.agent_node,
-                              _analyst_graph(spec, analyst_factories[spec.key](), self.max_tool_rounds))
+                              model_node(analyst_factories[spec.key]() if historical_filter else
+                                         _analyst_graph(spec, analyst_factories[spec.key](), self.max_tool_rounds), spec.agent_node))
 
-        workflow.add_node("Bull Researcher", bull_researcher_node)
-        workflow.add_node("Bear Researcher", bear_researcher_node)
-        workflow.add_node("Research Manager", research_manager_node)
-        workflow.add_node("Trader", trader_node)
-        workflow.add_node("Aggressive Analyst", aggressive_analyst)
-        workflow.add_node("Neutral Analyst", neutral_analyst)
-        workflow.add_node("Conservative Analyst", conservative_analyst)
-        workflow.add_node("Portfolio Manager", portfolio_manager_node)
+        workflow.add_node("Bull Researcher", model_node(bull_researcher_node, "Bull Researcher"))
+        workflow.add_node("Bear Researcher", model_node(bear_researcher_node, "Bear Researcher"))
+        workflow.add_node("Research Manager", model_node(research_manager_node, "Research Manager"))
+        workflow.add_node("Trader", model_node(trader_node, "Trader"))
+        workflow.add_node("Aggressive Analyst", model_node(aggressive_analyst, "Aggressive Analyst"))
+        workflow.add_node("Neutral Analyst", model_node(neutral_analyst, "Neutral Analyst"))
+        workflow.add_node("Conservative Analyst", model_node(conservative_analyst, "Conservative Analyst"))
+        workflow.add_node("Portfolio Manager", model_node(portfolio_manager_node, "Portfolio Manager"))
 
         # The analysts work at the same time; the research debate starts once
         # every one of them has filed its report. The memory log settles past
@@ -161,8 +186,20 @@ class GraphSetup:
         if memory_node is not None:
             workflow.add_node("Memory Log", memory_node)
             first_steps.append("Memory Log")
-        for node in first_steps:
-            workflow.add_edge(START, node)
+        if self.okx_mode:
+            from tradingagents.dataflows.okx_research import final_gate, preflight
+
+            workflow.add_node("Data Preflight", preflight)
+            workflow.add_edge(START, "Data Preflight")
+            workflow.add_conditional_edges(
+                "Data Preflight",
+                lambda state: first_steps if state["allow_new_risk"] else END,
+                [*first_steps, END],
+            )
+            workflow.add_node("Data Final Gate", lambda state: final_gate(state, revalidate=True))
+        else:
+            for node in first_steps:
+                workflow.add_edge(START, node)
         workflow.add_edge(first_steps, "Bull Researcher")
 
         # Both research-debate edges share the complete DEBATE_PATH_MAP (#1088).
@@ -182,6 +219,10 @@ class GraphSetup:
                 RISK_ANALYSIS_PATH_MAP,
             )
 
-        workflow.add_edge("Portfolio Manager", END)
+        if self.okx_mode:
+            workflow.add_edge("Portfolio Manager", "Data Final Gate")
+            workflow.add_edge("Data Final Gate", END)
+        else:
+            workflow.add_edge("Portfolio Manager", END)
 
         return workflow

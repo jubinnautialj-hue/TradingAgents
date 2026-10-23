@@ -21,6 +21,12 @@ def create_trader(llm):
     structured_llm = bind_structured(llm, TraderProposal, "Trader")
 
     def trader_node(state):
+        if state.get("plan_mode"):
+            from tradingagents.agents.perpetual_research import choose_research
+
+            choice, text, _ = choose_research(llm, state, "Trader")
+            return {"trader_choice": choice, "trader_investment_plan": text,
+                    "messages": [AIMessage(content=text)]}
         company_name = state["company_of_interest"]
         instrument_context = get_instrument_context_from_state(state)
         investment_plan = state["investment_plan"]

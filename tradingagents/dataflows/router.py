@@ -199,6 +199,9 @@ def no_data_available(error: NoMarketDataError) -> str:
 
 def route_to_vendor(method: str, *args, **kwargs):
     """Route method calls to appropriate vendor implementation with fallback support."""
+    symbol = args[0] if args else kwargs.get("symbol", kwargs.get("ticker", ""))
+    if method in {"get_stock_data", "get_indicators"} and str(symbol).endswith("-SWAP"):
+        raise ValueError("OKX swaps require the validated research snapshot tools; Yahoo fallback is blocked")
     category = get_category_for_method(method)
     vendor_config = get_vendor(category, method)
     primary_vendors = [v.strip() for v in vendor_config.split(',')]

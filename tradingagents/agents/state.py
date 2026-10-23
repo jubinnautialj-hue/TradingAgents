@@ -43,6 +43,25 @@ class RiskDebateState(TypedDict):
 
 
 class AgentState(MessagesState):
+    candidate_filter_mode: bool
+    candidate_filter_input: dict
+    plan_mode: bool
+    research_id: str
+    position_context: str
+    candidate_plans: dict
+    research_choice: dict
+    trader_choice: dict
+    portfolio_choice: dict
+    portfolio_schema_valid: bool
+    research_result: dict
+    entry_revalidation: dict
+    market_snapshot: dict
+    data_quality: str
+    allow_new_risk: bool
+    execution_enabled: bool
+    llm_status: str
+    workflow_status: str
+    llm_failure: dict
     company_of_interest: Annotated[str, "Company that we are interested in trading"]
     asset_type: Annotated[str, "Asset type under analysis such as stock or crypto"]
     instrument_context: Annotated[str, "Deterministic ticker identity resolved at run start"]

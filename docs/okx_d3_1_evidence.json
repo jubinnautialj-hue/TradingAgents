@@ -1,0 +1,36 @@
+{
+  "review_date_utc": "2026-10-23",
+  "historical_instrument_continuity": "UNVERIFIED_NO_COMPLETE_VERSION_SERIES",
+  "sources": [
+    {
+      "url": "https://www.okx.com/en-au/help/okx-to-adjust-the-minimum-order-quantities-for-several-futures-24-04-19",
+      "publication_date": "2024-04-19",
+      "announced_effective_window_utc": "2024-04-25T06:00:00Z/2024-04-25T08:00:00Z",
+      "finding": "BTC/USDT perpetual minimum and step changed from 1 to 0.1 contracts (0.01 to 0.001 BTC). Announcement evidence, not an observed exact transition timestamp."
+    },
+    {
+      "url": "https://www.okx.com/en-sg/help/okx-to-adjust-the-minimum-order-quantities-of-spots-and-futures",
+      "publication_date": "2025-01-17",
+      "announced_effective_window_utc": "2025-01-22T06:00:00Z/2025-01-22T08:00:00Z",
+      "finding": "BTC/USDT perpetual minimum and step changed from 0.1 to 0.01 contracts (0.001 to 0.0001 BTC). Both announcements imply 0.01 BTC per contract at those events; neither proves all intervening or subsequent parameter versions."
+    },
+    {
+      "url": "https://www.okx.com/en-us/help/perps-funding-fee-mechanism",
+      "current_page_updated_date": "2026-08-27",
+      "finding": "USDT funding notional = contracts * face value * multiplier * mark. Position membership depends on actual assessment; assessment may take up to one minute. Frequency can change. Current description is not a certified complete historical rule history."
+    },
+    {
+      "url": "https://www.okx.com/en-us/help/trading-fee-rules-faq",
+      "finding": "Fees apply to fill notional on each leg; leverage does not directly multiply fees. Example tiers do not identify this user's account rate."
+    },
+    {
+      "url": "https://www.okx.com/docs-v5/en/#public-data-rest-api-get-historical-market-data",
+      "finding": "Modules 1/2/3/11 typically T+2, subject to backfill. Monthly funding archives are ex-post evidence. Neither typical schedule nor funding_time certifies the original publication instant. Current public instruments endpoint has no requested historical effective-date version series."
+    }
+  ],
+  "negative_search_limit": "Targeted official announcement/API searches found no complete parameter-change ledger for the tested interval. Absence from this search is NOT proof of no changes.",
+  "cached_spec": {
+    "ctVal": "0.01", "ctValCcy": "BTC", "ctMult": "1", "tickSz": "0.1", "lotSz": "0.01", "minSz": "0.01",
+    "scope": "D.3 observed current metadata only; not automatically a historical fact for 2025-10-01 through 2026-10-22"
+  }
+}

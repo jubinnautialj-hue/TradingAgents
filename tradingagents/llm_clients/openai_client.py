@@ -1,17 +1,22 @@
 import logging
 import os
+import random
 import re
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlparse
 
+import openai
 from langchain_core.messages import AIMessage
 from langchain_openai import ChatOpenAI
+from pydantic import PrivateAttr
 
 from .api_key_env import get_api_key_env
 from .base_client import BaseLLMClient, normalize_content
 from .capabilities import get_capabilities
+from .reliability import LLMUnavailable, classify_failure
 from .validators import validate_model
 
 logger = logging.getLogger(__name__)
@@ -180,19 +185,60 @@ class ChatGPTPlanChatOpenAI(NormalizedChatOpenAI):
     project is sent.
     """
 
+    _connection_retries: int = PrivateAttr(default=2)
+
     def __init__(self, **kwargs):
+        explicit_retry_budget = "max_retries" in kwargs
         for name in _PLAN_REFUSED:
             if kwargs.pop(name, None) is not None:
                 logger.warning("A ChatGPT plan does not accept %s; it is not sent.", name)
         kwargs.setdefault("streaming", True)
         kwargs.setdefault("store", False)
+        # Installed LangChain passes timeout=None into its cached HTTP client;
+        # the SDK then inherits an unlimited timeout, including synchronous SSE.
+        kwargs.setdefault("timeout", 120.0)
+        # SDK retries may replay requests after a write/read timeout. Default to
+        # our narrower pre-connect-only budget below; explicit SDK config wins.
+        kwargs.setdefault("max_retries", 0)
         super().__init__(**kwargs)
+        self._connection_retries = 0 if explicit_retry_budget else 2
         # The sign-in names the account; an organization or project set for API
         # keys (OPENAI_ORG_ID, OPENAI_PROJECT_ID) must not travel with it.
         self.openai_organization = None
         for client in (self.root_client, self.root_async_client):
             client.organization = None
             client.project = None
+
+    def _stream(self, *args, **kwargs):
+        # Both invoke() and stream() pass here, including bind_tools and typed
+        # output. Never retry an accepted response or execute a partial tool call.
+        budget = self._connection_retries
+        for attempt in range(budget + 1):
+            received, completed = False, False
+            try:
+                for chunk in super()._stream(*args, **kwargs):
+                    received = True
+                    status = chunk.message.response_metadata.get("status")
+                    if status == "incomplete":
+                        raise LLMUnavailable("STREAM_INCOMPLETE", partial=True)
+                    completed = completed or status == "completed"
+                    yield chunk
+                # LangChain otherwise synthesizes a final chunk on a clean EOF,
+                # which can turn truncated text/tool arguments into a result.
+                if self.use_responses_api and not completed:
+                    raise LLMUnavailable("STREAM_INCOMPLETE", partial=received)
+                return
+            except Exception as exc:
+                failure = classify_failure(exc, partial=received)
+                if failure is None:
+                    raise
+                if not received and failure.kind == "CONNECT_FAILURE" and attempt < budget:
+                    delay = 2 ** attempt + random.uniform(0, 0.25)
+                    logger.warning("LLM connect attempt %d failed; retrying in %.2fs (%s)",
+                                   attempt + 1, delay, failure.kind)
+                    time.sleep(delay)
+                    continue
+                raise failure from None
 
     def _get_request_payload(self, input_, *, stop=None, **kwargs):
         payload = super()._get_request_payload(input_, stop=stop, **kwargs)
@@ -396,6 +442,16 @@ class OpenAIClient(BaseLLMClient):
             llm_kwargs["base_url"] = self.base_url
 
         # Forward user-provided kwargs
+        if self.kwargs.get("model_proxy"):
+            from .proxy import validate_model_proxy
+            proxy = validate_model_proxy(self.kwargs["model_proxy"])
+            if self.kwargs.get("http_client") or self.kwargs.get("http_async_client"):
+                raise ValueError("Choose either model_proxy or explicit HTTP clients")
+            # Use the SDK's matching httpx generation, for both sync and async.
+            # No environment/system proxy mounts may override this explicit route.
+            llm_kwargs["http_client"] = openai.DefaultHttpxClient(proxy=proxy, trust_env=False, verify=True, timeout=120)
+            llm_kwargs["http_async_client"] = openai.DefaultAsyncHttpxClient(proxy=proxy, trust_env=False, verify=True, timeout=120)
+            llm_kwargs["http_socket_options"] = ()  # Explicit transports own their socket/proxy policy.
         for key in _PASSTHROUGH_KWARGS:
             if key not in self.kwargs:
                 continue

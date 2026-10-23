@@ -15,8 +15,35 @@ TOOLS = (
 def create_market_analyst(llm):
 
     def market_analyst_node(state):
+        if state.get("candidate_filter_mode"):
+            from tradingagents.agents.candidate_filter import market_filter_report
+            return market_filter_report(llm, state)
         current_date = state["trade_date"]
         instrument_context = get_instrument_context_from_state(state)
+        if state.get("market_snapshot", {}).get("multi_timeframe"):
+            instrument_context += (
+                " This is REQUIRED three-timeframe research, not an anchor-only report. "
+                "Read get_verified_market_snapshot for deterministic structures and independent indicators. "
+                "Organize the report as 1d primary regime, 4h structure, 1h short-term confirmation, "
+                "then explicit agreement/conflict/insufficient-evidence synthesis and derivative limitations. "
+                "Quote each timeframe's latest closed UTC time and common cutoff. Never majority-vote "
+                "BUY/SELL or reinterpret a short timeframe as the whole market. Pivots only become "
+                "known at confirmed_at_ms; rejected breaks/retests are rule candidates, not proof or orders."
+            )
+        if state.get("market_snapshot"):
+            instrument_context += (
+                " All tools share a pinned OKX candle bundle. Indicator periods count candles, "
+                "not days (a 200 SMA on 1h is 200 hours). Use the research date for each tool's "
+                "end/as-of date; historical lookbacks cannot manufacture unavailable coverage. "
+                "Volume is base currency; VolumeContracts is contract count and VolumeQuote is USDT. "
+                "State partial history coverage and data-quality exclusions explicitly."
+                " If optional derivative evidence is present, use its per-component status, UTC timestamp "
+                "and history coverage. Distinguish forecast funding from realized settlements and USD OI "
+                "from USDT notional. OI cannot identify aggressive long/short opening. Displayed book "
+                "imbalance is not executed buy/sell flow; depth slippage is an estimate, not a fill guarantee. "
+                "Do not infer account liquidation prices from mark prices without account evidence. "
+                "Missing or expired optional evidence is unknown, not a directional signal."
+            )
 
         system_message = (
             """You are a trading assistant tasked with analyzing financial markets. Your role is to select the **most relevant indicators** for a given market condition or trading strategy from the following list. The goal is to choose up to **8 indicators** that provide complementary insights without redundancy. Categories and each category's indicators are:

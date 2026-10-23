@@ -15,6 +15,12 @@ def create_research_manager(llm):
     structured_llm = bind_structured(llm, ResearchPlan, "Research Manager")
 
     def research_manager_node(state) -> dict:
+        if state.get("plan_mode"):
+            from tradingagents.agents.perpetual_research import choose_research
+
+            choice, text, _ = choose_research(llm, state, "Research Manager")
+            debate = {**state["investment_debate_state"], "current_response": text}
+            return {"research_choice": choice, "investment_plan": text, "investment_debate_state": debate}
         instrument_context = get_instrument_context_from_state(state)
         history = state["investment_debate_state"].get("history", "")
 

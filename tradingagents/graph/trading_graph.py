@@ -12,9 +12,12 @@ from tradingagents.agents.context import build_instrument_context, resolve_instr
 from tradingagents.agents.rating import run_rating
 from tradingagents.dataflows.config import run_config, run_config_context, set_config
 from tradingagents.dataflows.date_window import get_current_date, is_historical
+from tradingagents.dataflows.okx_research import final_gate
 from tradingagents.dataflows.symbols import safe_ticker_component
+from tradingagents.dataflows.vendors.okx import enabled as okx_enabled, validate_symbol
 from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.llm_clients import create_tier_client, tier_provider
+from tradingagents.llm_clients.reliability import LLMUnavailable
 from tradingagents.memory import TradingMemoryLog, settlement
 from tradingagents.memory.reflection import Reflector
 from tradingagents.reporting import write_report_tree
@@ -68,6 +71,13 @@ class TradingAgentsGraph:
         """
         self.debug = debug
         self.config = config or DEFAULT_CONFIG
+        if self.config.get("market_mode", "stock") not in {"stock", "okx_usdt_perpetual"}:
+            raise ValueError("Unknown market_mode")
+        if okx_enabled(self.config) and tuple(selected_analysts) != ("market",):
+            raise ValueError("Phase-one OKX mode requires selected_analysts=['market']; news/social are not yet mapped to swaps")
+        if self.config.get("okx_trade_plan_enabled") and (
+                not okx_enabled(self.config) or not self.config.get("okx_multi_timeframe") or not self.config.get("okx_derivatives_enabled")):
+            raise ValueError("Perpetual research plans require explicit OKX multi-timeframe and derivatives modes")
         self.callbacks = callbacks or []
 
         set_config(self.config)
@@ -98,6 +108,7 @@ class TradingAgentsGraph:
             self.deep_thinking_llm,
             self.conditional_logic,
             max_tool_rounds,
+            okx_mode=okx_enabled(self.config),
         )
 
         self.propagator = Propagator(
@@ -124,6 +135,16 @@ class TradingAgentsGraph:
         path and the CLI call this so the resolved identity reaches the whole
         graph regardless of entry point.
         """
+        if okx_enabled(self.config):
+            validate_symbol(ticker)
+            interval_context = (f"Required timeframes: 1d regime, 4h structure, 1h confirmation; "
+                                f"compatibility anchor: {self.config.get('okx_interval', '1h')}" if self.config.get("okx_multi_timeframe")
+                                else f"Research interval: {self.config.get('okx_interval', '1h')}")
+            return (f"Exchange: OKX; instrument: {ticker}; type: linear USDT-settled SWAP. "
+                    f"{interval_context}; UTC closed candles only. "
+                    "This is a perpetual contract, not Yahoo/spot. Research only; execution disabled.")
+        if ticker.endswith("-SWAP"):
+            raise ValueError("SWAP instruments require market_mode=okx_usdt_perpetual")
         identity = resolve_instrument_identity(ticker)
         return build_instrument_context(ticker, asset_type, identity, trade_date)
 
@@ -261,6 +282,22 @@ class TradingAgentsGraph:
         cfg = self.config
         return {
             "version": tradingagents.__version__,
+            "market_mode": cfg.get("market_mode", "stock"),
+            "okx_interval": cfg.get("okx_interval", "1h"),
+            "okx_bundle_ttl_seconds": cfg.get("okx_bundle_ttl_seconds", 900),
+            "okx_min_bars": cfg.get("okx_min_bars", 250),
+            "okx_history_bars": cfg.get("okx_history_bars", 400),
+            "okx_max_lag_bars": cfg.get("okx_max_lag_bars", 0),
+            "okx_derivatives_enabled": cfg.get("okx_derivatives_enabled", False),
+            "okx_multi_timeframe": cfg.get("okx_multi_timeframe", False),
+            **{k: v for k, v in cfg.items() if k.startswith("okx_plan_") or k == "okx_trade_plan_enabled"},
+            "okx_pivot_window": cfg.get("okx_pivot_window", 2),
+            "okx_structure_window": cfg.get("okx_structure_window", 20),
+            "okx_retest_atr_fraction": cfg.get("okx_retest_atr_fraction", 0.1),
+            "okx_derivatives_history_points": cfg.get("okx_derivatives_history_points", 100),
+            "okx_derivatives_ttl_seconds": cfg.get("okx_derivatives_ttl_seconds", 300),
+            "okx_liquidity_notional_usdt": cfg.get("okx_liquidity_notional_usdt", 10000),
+            "okx_max_spread_bps": cfg.get("okx_max_spread_bps", 50),
             "llm_provider": cfg.get("llm_provider"),
             "deep_think_provider": tier_provider(cfg, "deep") if cfg.get("llm_provider") else None,
             "deep_think_llm": cfg.get("deep_think_llm"),
@@ -270,7 +307,9 @@ class TradingAgentsGraph:
             "max_debate_rounds": cfg.get("max_debate_rounds"),
             "max_risk_discuss_rounds": cfg.get("max_risk_discuss_rounds"),
             "output_language": cfg.get("output_language"),
-            "data_vendors": dict(cfg.get("data_vendors") or {}),
+            "data_vendors": {**(cfg.get("data_vendors") or {}),
+                             **({"core_stock_apis": "okx", "technical_indicators": "okx"}
+                                if okx_enabled(cfg) else {})},
             "tool_vendors": dict(cfg.get("tool_vendors") or {}),
         }
 
@@ -281,6 +320,7 @@ class TradingAgentsGraph:
         an explicit ``save_path`` or let it default under ``results_dir``; the
         report is also written as one HTML page unless ``html`` is False.
         """
+        final_state.update(final_gate(final_state, getattr(self, "config", {})))
         if save_path is None:
             save_path = self.default_report_path(ticker)
         return write_report_tree(final_state, ticker, save_path, settings=self.run_settings(), html=html)
@@ -288,6 +328,9 @@ class TradingAgentsGraph:
     def default_report_path(self, ticker) -> Path:
         """Where a run's reports go unless told otherwise: under results_dir, stamped now."""
         stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        if okx_enabled(self.config):
+            from uuid import uuid4
+            stamp += "_" + uuid4().hex[:12]
         return Path(self.config["results_dir"]) / "reports" / f"{safe_ticker_component(ticker)}_{stamp}"
 
     def create_run_state(self, company_name, trade_date, asset_type: str = "stock", portfolio=None):
@@ -297,13 +340,18 @@ class TradingAgentsGraph:
         memory log's lessons are not here: the graph's Memory Log step settles
         and loads them alongside the analysts (see ``_memory_step``).
         """
-        return self.propagator.create_initial_state(
+        state = self.propagator.create_initial_state(
             company_name,
             trade_date,
             asset_type=asset_type,
             instrument_context=self.resolve_instrument_context(company_name, asset_type, trade_date),
             portfolio_context=portfolio.render(company_name) if portfolio is not None else "",
         )
+        if self.config.get("okx_trade_plan_enabled"):
+            from tradingagents.dataflows.perpetual_plan import position_context
+
+            state["position_context"] = position_context(portfolio, company_name)
+        return state
 
     def _memory_step(self, state):
         """The graph's Memory Log step, alongside the analysts (#1428): settle every
@@ -315,6 +363,8 @@ class TradingAgentsGraph:
         does not end the run: the analysts' work is kept, the lessons already in
         the log are used, and the report says what could not be settled.
         """
+        if okx_enabled(self.config):
+            return {"past_context": "", "memory_note": "OKX swap outcome settlement is not implemented; Yahoo settlement is disabled for this mode."}
         note = ""
         try:
             # Another run settling the same log does the work; this one goes on.
@@ -342,6 +392,8 @@ class TradingAgentsGraph:
         analyzing a ticker (a backtest sweep, a scheduled job) calls this to
         settle it now. Returns what was settled and what failed.
         """
+        if okx_enabled(self.config):
+            raise ValueError("OKX swap outcome settlement is not implemented; Yahoo fallback is blocked")
         with run_config(self.config):
             return settlement.settle_pending(company_name, self.memory_log, self.reflector, self.config)
 
@@ -352,13 +404,18 @@ class TradingAgentsGraph:
         otherwise keep its decisions pending, and their lessons out of later runs.
         With ``wait=False`` a pass already running on the same log is not waited for.
         """
+        if okx_enabled(self.config):
+            raise ValueError("OKX swap outcome settlement is not implemented; Yahoo fallback is blocked")
         with run_config(self.config):
             return settlement.settle_all_pending(self.memory_log, self.reflector, self.config, wait=wait)
 
     def record_decision(self, company_name, trade_date, final_state):
         """Record a finished run: its state log, and its decision in the memory log
         for reflection on the next same-ticker run. propagate() and the CLI both end here."""
+        final_state.update(final_gate(final_state, self.config))
         self._log_state(trade_date, final_state)
+        if okx_enabled(self.config):
+            return  # Do not mix swap research into Yahoo-based outcome settlement.
         decision = final_state.get("final_trade_decision")
         if not decision:
             logger.warning("No final decision for %s on %s; nothing added to the memory log",
@@ -382,19 +439,26 @@ class TradingAgentsGraph:
 
         # None resumes an existing checkpoint; init_agent_state starts fresh (#1249).
         graph_input = self.checkpoint_input(init_agent_state)
-        if self.debug:
-            # A state repeats the messages before it, so each prints once (#1027).
-            final_state, printed = {}, set()
-            for messages, state in self.stream_run(graph_input, **args):
-                for msg in messages:
-                    key = getattr(msg, "id", None) or (type(msg).__name__, getattr(msg, "content", None))
-                    if key not in printed:
-                        printed.add(key)
-                        msg.pretty_print()
-                if state is not None:
-                    final_state.update(state)
-        else:
-            final_state = self.graph.invoke(graph_input, **args)
+        try:
+            if self.debug:
+                # A state repeats the messages before it, so each prints once (#1027).
+                final_state, printed = {}, set()
+                for messages, state in self.stream_run(graph_input, **args):
+                    for msg in messages:
+                        key = getattr(msg, "id", None) or (type(msg).__name__, getattr(msg, "content", None))
+                        if key not in printed:
+                            printed.add(key)
+                            msg.pretty_print()
+                    if state is not None:
+                        final_state.update(state)
+            else:
+                final_state = self.graph.invoke(graph_input, **args)
+        except LLMUnavailable as exc:
+            if not okx_enabled(self.config):
+                raise
+            from tradingagents.dataflows.okx_research import model_failure_update
+            final_state = exc.research_state or init_agent_state
+            final_state.update(model_failure_update(exc.summary(), final_state.get("market_snapshot", {})))
 
         self.record_decision(company_name, trade_date, final_state)
 
@@ -462,6 +526,15 @@ class TradingAgentsGraph:
             "final_trade_decision": final_state["final_trade_decision"],
             "final_rating": run_rating(final_state),
             "run_settings": self.run_settings(),
+            "market_snapshot": final_state.get("market_snapshot", {}),
+            "data_quality": final_state.get("data_quality", "NOT_CHECKED"),
+            "allow_new_risk": final_state.get("allow_new_risk", False),
+            "execution_enabled": False,
+            "llm_status": final_state.get("llm_status", "NOT_STARTED"),
+            "workflow_status": final_state.get("workflow_status", "NOT_STARTED"),
+            "llm_failure": final_state.get("llm_failure", {}),
+            **({k: final_state.get(k) for k in ("research_id", "position_context", "research_choice", "trader_choice",
+                "portfolio_choice", "portfolio_schema_valid", "research_result", "entry_revalidation")} if self.config.get("okx_trade_plan_enabled") else {}),
         }
 
         # A ticker that would escape the results directory is rejected.
@@ -470,6 +543,9 @@ class TradingAgentsGraph:
         directory.mkdir(parents=True, exist_ok=True)
 
         log_path = directory / f"full_states_log_{trade_date}.json"
+        if okx_enabled(self.config):
+            from uuid import uuid4
+            log_path = directory / f"okx_{self.config.get('okx_interval', '1h')}_{trade_date}_{uuid4().hex[:12]}.json"
         with open(log_path, "w", encoding="utf-8") as f:
             # Reports can be in any language and this file is read by a person.
             json.dump(entry, f, indent=4, ensure_ascii=False)

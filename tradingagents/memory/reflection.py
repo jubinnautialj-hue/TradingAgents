@@ -10,6 +10,36 @@ class Reflector:
         """Initialize the reflector with an LLM."""
         self.quick_thinking_llm = quick_thinking_llm
 
+    def reflect_on_simulation_feedback(self, feedback: dict, *, as_of_ms: int) -> dict:
+        """Review one available OKX simulation; never interpret it as stock alpha."""
+        import json
+        from tradingagents.memory.okx_simulation import SimulationFeedback, as_ms, utc_ms
+        record = SimulationFeedback.model_validate(feedback)
+        if record.research_status != "COMPLETED":
+            raise ValueError("Failed research is not a completed decision")
+        cutoff = as_ms(as_of_ms)
+        if record.available_at_ms > cutoff or cutoff > utc_ms():
+            raise ValueError("Feedback was not available at reflection cutoff")
+        messages = [
+            ("system", "Review this OFFLINE SIMULATION feedback only. Use only supplied evidence. "
+             "Do not use external knowledge, tools, Memory or future results. In 2-4 plain sentences, "
+             "examine the judgment and its supporting/opposing evidence, distinguish analysis uncertainty "
+             "from execution assumptions and data faults, and give one tentative lesson. "
+             "A rejected baseline win/loss is counterfactual, not an executed Agent portfolio result. "
+             "ABSTAIN and failures are not successful avoidance. Do not infer strategy superiority, "
+             "change frozen rules, prescribe parameters, or authorize trading. "
+             "Do not claim a root cause that the evidence cannot establish."),
+            ("human", json.dumps(record.model_dump(mode="json"), ensure_ascii=True, allow_nan=False)),
+        ]
+        raw = self.quick_thinking_llm.invoke(messages)
+        metadata = getattr(raw, "response_metadata", {})
+        if (not isinstance(raw.content, str) or not raw.content.strip() or getattr(raw, "tool_calls", None)
+                or getattr(raw, "invalid_tool_calls", None)
+                or metadata.get("status") not in {None, "completed"}
+                or metadata.get("finish_reason") in {"length", "content_filter"}):
+            raise ValueError("Incomplete/tool response cannot become a reflection")
+        return {"text": raw.content.strip(), "usage": getattr(raw, "usage_metadata", None)}
+
     def _system_prompt(self, holding_days: int) -> str:
         """Concise prompt for reflect_on_final_decision (settled memory log entries).
 
