@@ -189,6 +189,14 @@ def get_instrument_context_from_state(state: Mapping[str, Any]) -> str:
                     "A lack of resonance is not automatically bullish/bearish. All advice is research only; "
                     "execution is disabled and legacy Sell does not authorize opening a short.\n"
                     + describe_multitimeframe(state["market_snapshot"]))
+    if state.get("orderflow_evidence"):
+        from tradingagents.dataflows.vendors.okx_orderflow import render_orderflow
+
+        context += ("\nFlow evidence is optional. Separate observed taker sides, computed Delta/CVD and model "
+                    "interpretation. Compare only matching windows/units. Missing/partial/stale flow cannot "
+                    "establish spot leadership, causality or a trading direction. Retain supporting and opposing "
+                    "evidence. Do not change frozen candidate prices, signal rules or permissions.\n"
+                    + render_orderflow(state["orderflow_evidence"]))
     if state.get("plan_mode"):
         context += ("\nPerpetual research actions use explicit OPEN_LONG_CANDIDATE / OPEN_SHORT_CANDIDATE / WAIT / "
                     "REDUCE_LONG / REDUCE_SHORT / EXIT_CANDIDATE; legacy Sell does not mean open short. "

@@ -1,0 +1,237 @@
+{
+  "version": "V2.1 acceptance candidate; not committed",
+  "branch": "codex/okx-orderflow-spot-perpetual",
+  "base_commit": "a6d94f470c46eb2d017daf44fa0f01f43b3c0a6a",
+  "strategy_fingerprint": "b61aa92741f23a9db0120211654ab56317490b22878622adeb77fe538eca79cf",
+  "frozen_rules": {
+    "tradingagents\\dataflows\\perpetual_plan.py": true,
+    "tradingagents\\dataflows\\plan_lifecycle.py": true,
+    "tradingagents\\dataflows\\vendors\\okx_multitimeframe.py": true
+  },
+  "original_files": 146,
+  "original_unchanged": true,
+  "pending_files": [
+    ".gitattributes",
+    "AGENTS.md",
+    "cli/main.py",
+    "docs/okx_orderflow_batch1.md",
+    "tests/test_okx_orderflow.py",
+    "tradingagents/agents/context.py",
+    "tradingagents/agents/state.py",
+    "tradingagents/dataflows/okx_research.py",
+    "tradingagents/dataflows/vendors/okx.py",
+    "tradingagents/dataflows/vendors/okx_orderflow.py",
+    "tradingagents/default_config.py",
+    "tradingagents/graph/trading_graph.py",
+    "tradingagents/reporting.py"
+  ],
+  "credential_findings": [],
+  "source_sha256": {
+    ".gitattributes": "73644feadae8b3d778be0bc29c0ff4972d665e124f5f51e53eda0cf5d97e37c1",
+    "cli/main.py": "eab17e6545c995b0a4e02d79d73948efcbfb99860ec59ab6f095a16b06b9b3c1",
+    "docs/okx_orderflow_batch1.md": "a1490a311f03fab5deae026f23706fb17216692746aa4150667e9b03f52514e2",
+    "docs/okx_orderflow_v2_1_acceptance.md": "1aca1d25362dcd6c4c20b633c5a3fcc1a30eb07e89558aa5b086fe9360432d33",
+    "tests/test_okx_orderflow.py": "135aa4f2497a5a444bd185ffa6c6b3d737121bfe3a939cb9e56dd44bd7dd40e2",
+    "tradingagents/agents/context.py": "363d95242126840fb830cd6f9250940ec65460a192b1f6e871647fd570763706",
+    "tradingagents/agents/state.py": "8c5ce9657596356519424e32c2ee06b649cb048ff6c085013d6debb7d424b0fb",
+    "tradingagents/dataflows/okx_research.py": "9cd623769ac8fcc47a2d8f8fe3374e1b840165a36e5222f1a15ee9dce7fff8d0",
+    "tradingagents/dataflows/vendors/okx.py": "e16eb20cf0afe25ee7ee0bdddfc2f9ae1d3b2ca4b086f63ab10d4eadcb45ed8a",
+    "tradingagents/dataflows/vendors/okx_orderflow.py": "1cfd89033f67d51fe4a0dac90802f216ae4b2b59f31a6b84f4dc500bde583536",
+    "tradingagents/default_config.py": "2dabad8cc18410b96c571ffc441b507d79780ee10c010545caf21aa0ed49ad19",
+    "tradingagents/graph/trading_graph.py": "9266272cc7a3261791cc05fcfcdba496eb474d7e5d7ed05ba83f0c14abf63d6b",
+    "tradingagents/reporting.py": "77c06c9db9229be024b95ea249f7ddee110a4abcf6b408f93ace564c34cade8b"
+  },
+  "real_research": {
+    "directory": "C:\\Users\\jerry_su\\.tradingagents\\logs\\reports\\okx_BTC-USDT-SWAP_multi_8da1872bee47",
+    "hashes": {
+      "complete_report.html": "b996fe787d6e7bb60397b7d6e38d49117a80067dbf897cfa131bc571af9a95f1",
+      "research_result.json": "78a63dce2aaac4ee4853c17fa8e2cd7f26dd544ce395980c29fc66a5295f2eb7",
+      "orderflow_snapshot.json": "4025326eb04b501157c0c9efdfb94862e01cab94ae018238eb6958107d81069b"
+    },
+    "cutoff": "2026-10-23T08:24:48.418000+00:00",
+    "action": "WAIT",
+    "plan_valid": false,
+    "original_flow": "VALID",
+    "final_flow": "STALE_DATA",
+    "json_flow": "STALE_DATA",
+    "html_cvd_mentions": 5,
+    "execution_enabled": false
+  },
+  "execution_enabled": false,
+  "source_manifest_scope": "Raw working-tree bytes before Git normalization; excludes user AGENTS.md and this self-referential manifest. New commit SHA remains pending.",
+  "acceptance": "CONDITIONAL_PASS",
+  "tests": {
+    "passed": 1777,
+    "failed_existing_windows": 5,
+    "skipped": 4,
+    "deselected": 13,
+    "subtests_passed": 100,
+    "seconds": 106.76
+  },
+  "public_window_results": [
+    {
+      "minutes": 1,
+      "status": "VALID",
+      "seconds": 9.3654054000217,
+      "network_requests_cumulative": 12,
+      "cache_hits_cumulative": 0,
+      "start_ms": 1792745280000,
+      "end_ms": 1792745340000,
+      "markets": {
+        "swap": {
+          "status": "VALID",
+          "trades": 440,
+          "pages": 5,
+          "coverage": {
+            "definition": "Observed base volume / closed-minute candle base volume; not proof of every exchange match",
+            "volume_ratio": 1.0,
+            "time_boundary_reached": true
+          },
+          "matched_minutes": 1,
+          "issues": [],
+          "cvd_present": true
+        },
+        "spot": {
+          "status": "VALID",
+          "trades": 107,
+          "pages": 2,
+          "coverage": {
+            "definition": "Observed base volume / closed-minute candle base volume; not proof of every exchange match",
+            "volume_ratio": 1.0,
+            "time_boundary_reached": true
+          },
+          "matched_minutes": 1,
+          "issues": [],
+          "cvd_present": true
+        }
+      }
+    },
+    {
+      "minutes": 5,
+      "status": "VALID",
+      "seconds": 14.034686500002863,
+      "network_requests_cumulative": 41,
+      "cache_hits_cumulative": 10,
+      "start_ms": 1792745040000,
+      "end_ms": 1792745340000,
+      "markets": {
+        "swap": {
+          "status": "VALID",
+          "trades": 2775,
+          "pages": 28,
+          "coverage": {
+            "definition": "Observed base volume / closed-minute candle base volume; not proof of every exchange match",
+            "volume_ratio": 1.0,
+            "time_boundary_reached": true
+          },
+          "matched_minutes": 5,
+          "issues": [],
+          "cvd_present": true
+        },
+        "spot": {
+          "status": "VALID",
+          "trades": 707,
+          "pages": 8,
+          "coverage": {
+            "definition": "Observed base volume / closed-minute candle base volume; not proof of every exchange match",
+            "volume_ratio": 1.0,
+            "time_boundary_reached": true
+          },
+          "matched_minutes": 5,
+          "issues": [],
+          "cvd_present": true
+        }
+      }
+    },
+    {
+      "minutes": 15,
+      "status": "PARTIAL",
+      "seconds": 19.584504300000845,
+      "network_requests_cumulative": 87,
+      "cache_hits_cumulative": 49,
+      "start_ms": 1792744440000,
+      "end_ms": 1792745340000,
+      "markets": {
+        "swap": {
+          "status": "PARTIAL",
+          "trades": 6000,
+          "pages": 60,
+          "coverage": {
+            "definition": "Observed base volume / closed-minute candle base volume; not proof of every exchange match",
+            "volume_ratio": 0.44284231560763204,
+            "time_boundary_reached": false
+          },
+          "matched_minutes": 9,
+          "issues": [
+            "Page budget/boundary or volume mismatch: complete CVD suppressed"
+          ],
+          "cvd_present": false
+        },
+        "spot": {
+          "status": "VALID",
+          "trades": 2173,
+          "pages": 22,
+          "coverage": {
+            "definition": "Observed base volume / closed-minute candle base volume; not proof of every exchange match",
+            "volume_ratio": 1.0,
+            "time_boundary_reached": true
+          },
+          "matched_minutes": 15,
+          "issues": [],
+          "cvd_present": true
+        }
+      }
+    },
+    {
+      "minutes": 60,
+      "status": "PARTIAL",
+      "seconds": 22.532099799980642,
+      "network_requests_cumulative": 125,
+      "cache_hits_cumulative": 134,
+      "start_ms": 1792741740000,
+      "end_ms": 1792745340000,
+      "markets": {
+        "swap": {
+          "status": "PARTIAL",
+          "trades": 6000,
+          "pages": 60,
+          "coverage": {
+            "definition": "Observed base volume / closed-minute candle base volume; not proof of every exchange match",
+            "volume_ratio": 0.0603155813082022,
+            "time_boundary_reached": false
+          },
+          "matched_minutes": 9,
+          "issues": [
+            "Page budget/boundary or volume mismatch: complete CVD suppressed"
+          ],
+          "cvd_present": false
+        },
+        "spot": {
+          "status": "PARTIAL",
+          "trades": 6000,
+          "pages": 60,
+          "coverage": {
+            "definition": "Observed base volume / closed-minute candle base volume; not proof of every exchange match",
+            "volume_ratio": 0.1643698805400247,
+            "time_boundary_reached": false
+          },
+          "matched_minutes": 32,
+          "issues": [
+            "Page budget/boundary or volume mismatch: complete CVD suppressed"
+          ],
+          "cvd_present": false
+        }
+      }
+    }
+  ],
+  "test_evidence": {
+    "pytest.xml": "81e8f7ad3b2be724e4f1470b24d9cea7ff611c51ee2542220943f79933694794",
+    "pytest.txt": "147257347e5813e2e1ae8fb6818e9258d10f11fe26d6f785809e7371d4a7ce1e",
+    "coverage.json": "3f4d7b32654b2080a2707eead9b74941b2f7cf195a1c9c9de834e1e7588692a7",
+    "window_1m.json": "09dbeee8ef1b50ba503a0be9652945bec36987ed1a13b4cf5dd6a34f5c164d8b",
+    "window_5m.json": "f2af232cb1296ffbff7fc8fb8e7c4a7a8596c49feb364e8a18d77902c7dee540",
+    "window_15m.json": "2fb72e1fc9dade38f27fe29f3911c59be93b1fcff24724099e3590a943c901e8",
+    "window_60m.json": "3eb9d6b981ac0d26ab22184ac3026e54bd660f759d394772c645c6ac1d110ab1"
+  },
+  "official_documentation": "https://www.okx.com/docs-v5/en/#order-book-trading-market-data-get-trades-history"
+}

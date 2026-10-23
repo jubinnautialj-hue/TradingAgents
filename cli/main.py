@@ -168,6 +168,9 @@ def okx_research(
     date: str = typer.Option(None, "--date", help="UTC research day; default UTC today"),
     data_only: bool = typer.Option(False, "--data-only", help="Public data/quality report without LLM calls"),
     derivatives: bool = typer.Option(False, "--derivatives", help="Include optional public OI/funding/mark/index/depth evidence"),
+    orderflow: bool = typer.Option(False, "--orderflow", help="Optional bounded closed-minute taker Delta/CVD and matching spot evidence"),
+    flow_minutes: int = typer.Option(1, "--flow-minutes", min=1, max=60),
+    flow_max_pages: int = typer.Option(60, "--flow-max-pages", min=1, max=100),
     multi_timeframe: bool = typer.Option(False, "--multi-timeframe", help="Joint 1d regime / 4h structure / 1h confirmation; interval remains the labelled anchor"),
     trade_plan: bool = typer.Option(False, "--trade-plan", help="Schema-validated perpetual research; enables three timeframes and derivatives; never executes"),
     taker_fee_bps: float = typer.Option(None, "--taker-fee-bps", min=0, help="Explicit fee assumption in basis points, not fetched account fee"),
@@ -210,6 +213,8 @@ def okx_research(
                     config[key] = prefs[key]
         config.update(market_mode=MODE, okx_interval=interval, checkpoint_enabled=False)
         config.update(okx_derivatives_enabled=derivatives, okx_liquidity_notional_usdt=liquidity_notional)
+        config.update(okx_orderflow_enabled=orderflow, okx_orderflow_minutes=flow_minutes,
+                      okx_orderflow_max_pages=flow_max_pages)
         multi_timeframe = multi_timeframe or trade_plan
         config["okx_multi_timeframe"] = multi_timeframe
         config["okx_trade_plan_enabled"] = trade_plan
@@ -237,6 +242,7 @@ def okx_research(
                                                "okx_derivatives_ttl_seconds", "okx_liquidity_notional_usdt", "okx_max_spread_bps",
                                                "okx_multi_timeframe", "okx_pivot_window", "okx_structure_window", "okx_retest_atr_fraction") if k in config}
             settings.update({k: v for k, v in config.items() if k.startswith("okx_plan_") or k == "okx_trade_plan_enabled"})
+            settings.update({k: v for k, v in config.items() if k.startswith("okx_orderflow_")})
         else:
             graph = TradingAgentsGraph(selected_analysts=["market"], config=config)
             state, _ = graph.propagate(instrument, day, asset_type="crypto", portfolio=portfolio)

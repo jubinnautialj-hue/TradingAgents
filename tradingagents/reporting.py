@@ -60,6 +60,10 @@ def _header(ticker: str, final_state: dict, settings: dict | None) -> str:
         lines.append(f"- Memory log: {final_state['memory_note']}")
     if final_state.get("market_snapshot"):
         lines.append("\n" + describe(final_state["market_snapshot"]))
+    if final_state.get("orderflow_evidence"):
+        from tradingagents.dataflows.vendors.okx_orderflow import render_orderflow
+
+        lines.append(render_orderflow(final_state["orderflow_evidence"]))
     return "\n".join(lines) + "\n\n"
 
 
@@ -143,6 +147,14 @@ def write_report_tree(final_state: dict, ticker: str, save_path, settings: dict 
             {"snapshot_id": snapshot["snapshot_id"], "core_data_quality": snapshot["status"],
              "allow_new_risk": final_state["allow_new_risk"], "execution_enabled": False,
              "derivatives": evidence}, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
+    if final_state.get("orderflow_evidence"):
+        import json
+        from tradingagents.dataflows.vendors.okx_orderflow import evidence_view
+
+        raw = final_state["orderflow_evidence"]
+        (save_path / "orderflow_snapshot.json").write_text(json.dumps(
+            {"original": raw, "effective_view": evidence_view(raw), "execution_enabled": False},
+            indent=2, allow_nan=False), encoding="utf-8")
     parts = _report_parts(final_state)
     sections = []
     for heading, folder, written in parts:

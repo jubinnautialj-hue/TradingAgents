@@ -1,0 +1,4 @@
+# Preserve the exact pre-existing D.3 frozen working-file hashes on Windows.
+tradingagents/dataflows/perpetual_plan.py text eol=crlf
+tradingagents/dataflows/plan_lifecycle.py text eol=crlf
+tradingagents/dataflows/vendors/okx_multitimeframe.py text eol=lf

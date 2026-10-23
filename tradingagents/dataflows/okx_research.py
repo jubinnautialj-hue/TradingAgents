@@ -10,6 +10,10 @@ def preflight(state):
     bundle = check_bundle(bundle, config, state["company_of_interest"], state["trade_date"])
     update = {"market_snapshot": bundle, "data_quality": bundle["status"],
               "allow_new_risk": bundle["allow_new_risk"], "execution_enabled": False}
+    if config.get("okx_orderflow_enabled", False) and bundle.get("status") == "VALID":
+        from tradingagents.dataflows.vendors.okx_orderflow import collect_orderflow
+
+        update["orderflow_evidence"] = collect_orderflow(bundle, config)
     if config.get("okx_trade_plan_enabled", False):
         from uuid import uuid4
 
@@ -60,4 +64,8 @@ def final_gate(state, config=None, *, revalidate=False):
         update.update(research_result=result.model_dump(mode="json"), entry_revalidation=validation,
                       final_trade_decision=render_result(result), final_rating="REVIEW", allow_new_risk=False,
                       execution_enabled=False)
+        if state.get("orderflow_evidence"):
+            from tradingagents.dataflows.vendors.okx_orderflow import evidence_view
+
+            update["research_result"]["evidence"]["orderflow"] = evidence_view(state["orderflow_evidence"])
     return update

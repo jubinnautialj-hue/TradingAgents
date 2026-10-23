@@ -290,6 +290,7 @@ class TradingAgentsGraph:
             "okx_max_lag_bars": cfg.get("okx_max_lag_bars", 0),
             "okx_derivatives_enabled": cfg.get("okx_derivatives_enabled", False),
             "okx_multi_timeframe": cfg.get("okx_multi_timeframe", False),
+            **{k: v for k, v in cfg.items() if k.startswith("okx_orderflow_")},
             **{k: v for k, v in cfg.items() if k.startswith("okx_plan_") or k == "okx_trade_plan_enabled"},
             "okx_pivot_window": cfg.get("okx_pivot_window", 2),
             "okx_structure_window": cfg.get("okx_structure_window", 20),
@@ -533,6 +534,7 @@ class TradingAgentsGraph:
             "llm_status": final_state.get("llm_status", "NOT_STARTED"),
             "workflow_status": final_state.get("workflow_status", "NOT_STARTED"),
             "llm_failure": final_state.get("llm_failure", {}),
+            **({"orderflow_evidence": final_state["orderflow_evidence"]} if final_state.get("orderflow_evidence") else {}),
             **({k: final_state.get(k) for k in ("research_id", "position_context", "research_choice", "trader_choice",
                 "portfolio_choice", "portfolio_schema_valid", "research_result", "entry_revalidation")} if self.config.get("okx_trade_plan_enabled") else {}),
         }
