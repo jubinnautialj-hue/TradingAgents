@@ -112,6 +112,8 @@ def build_default_config() -> dict:
         "okx_bundle_ttl_seconds": 900,
         "okx_derivatives_enabled": False,
         "okx_orderflow_enabled": False,
+        "okx_market_checks_enabled": False,
+        "okx_market_checks_liquidation_seconds": 10,
         "okx_orderflow_minutes": 1,
         "okx_orderflow_max_pages": 60,
         "okx_orderflow_ttl_seconds": 300,

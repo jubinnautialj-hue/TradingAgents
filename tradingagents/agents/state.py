@@ -57,6 +57,7 @@ class AgentState(MessagesState):
     entry_revalidation: dict
     market_snapshot: dict
     orderflow_evidence: dict
+    market_checks_evidence: dict
     data_quality: str
     allow_new_risk: bool
     execution_enabled: bool

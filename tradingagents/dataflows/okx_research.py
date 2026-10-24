@@ -6,10 +6,21 @@ from tradingagents.dataflows.vendors.okx import build_bundle, check_bundle, desc
 
 def preflight(state):
     config = get_config()
+    samples = None
+    if config.get("okx_market_checks_enabled", False):
+        from tradingagents.dataflows.vendors.okx_market_checks import prepare_liquidations
+
+        # Capture before the core freezes its cutoff. Never shift an existing
+        # snapshot forward to admit newly received liquidation events.
+        samples = prepare_liquidations(state["company_of_interest"], state["trade_date"], config)
     bundle = build_bundle(state["company_of_interest"], state["trade_date"], config)
     bundle = check_bundle(bundle, config, state["company_of_interest"], state["trade_date"])
     update = {"market_snapshot": bundle, "data_quality": bundle["status"],
               "allow_new_risk": bundle["allow_new_risk"], "execution_enabled": False}
+    if config.get("okx_market_checks_enabled", False) and bundle.get("status") == "VALID":
+        from tradingagents.dataflows.vendors.okx_market_checks import collect_checks
+
+        update["market_checks_evidence"] = collect_checks(bundle, config, samples)
     if config.get("okx_orderflow_enabled", False) and bundle.get("status") == "VALID":
         from tradingagents.dataflows.vendors.okx_orderflow import collect_orderflow
 
@@ -68,4 +79,8 @@ def final_gate(state, config=None, *, revalidate=False):
             from tradingagents.dataflows.vendors.okx_orderflow import evidence_view
 
             update["research_result"]["evidence"]["orderflow"] = evidence_view(state["orderflow_evidence"])
+        if state.get("market_checks_evidence"):
+            from tradingagents.dataflows.vendors.okx_market_checks import evidence_view
+
+            update["research_result"]["evidence"]["market_checks"] = evidence_view(state["market_checks_evidence"])
     return update

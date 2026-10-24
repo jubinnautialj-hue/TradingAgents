@@ -197,6 +197,14 @@ def get_instrument_context_from_state(state: Mapping[str, Any]) -> str:
                     "establish spot leadership, causality or a trading direction. Retain supporting and opposing "
                     "evidence. Do not change frozen candidate prices, signal rules or permissions.\n"
                     + render_orderflow(state["orderflow_evidence"]))
+    if state.get("market_checks_evidence"):
+        from tradingagents.dataflows.vendors.okx_market_checks import render_checks
+
+        context += ("\nSeparate account ratios, top-trader position ratios, OI and taker activity. "
+                    "Liquidations are observed incomplete public samples, not potential heatmaps or total losses. "
+                    "Compare only aligned windows and units; missing/stale evidence cannot establish direction "
+                    "or causality. Explain supporting and opposing evidence without changing frozen plans.\n"
+                    + render_checks(state["market_checks_evidence"]))
     if state.get("plan_mode"):
         context += ("\nPerpetual research actions use explicit OPEN_LONG_CANDIDATE / OPEN_SHORT_CANDIDATE / WAIT / "
                     "REDUCE_LONG / REDUCE_SHORT / EXIT_CANDIDATE; legacy Sell does not mean open short. "

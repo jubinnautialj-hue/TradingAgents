@@ -1,0 +1,84 @@
+{
+  "base_commit": "dd37d8f7e8c5be957f4f488ce5a3b873860d7a24",
+  "branch": "codex/okx-liquidation-crowding-cross-exchange",
+  "frozen_rules": {
+    "tradingagents\\dataflows\\perpetual_plan.py": true,
+    "tradingagents\\dataflows\\plan_lifecycle.py": true,
+    "tradingagents\\dataflows\\vendors\\okx_multitimeframe.py": true
+  },
+  "sensitive_pattern_findings": [],
+  "source_sha256": {
+    "cli/main.py": "7fb1684ff36491e28ea6b1935a84e0fe2c74fe4ed18ce60f0a2424328b656009",
+    "tradingagents/agents/context.py": "b319958954e8f6ef13f08b3d0df05cee673aa02fcb0e047c1eaee574d13fcba8",
+    "tradingagents/agents/state.py": "af8c8d7bd7b68bfe597f3c71182b4150ff4b2efe82ae34b17d6deae1b2c74770",
+    "tradingagents/dataflows/okx_research.py": "3c18e445ab90ae638c822e2262e23d7c0d16cc86cfc4f6cf95ae0fc7417ce59f",
+    "tradingagents/dataflows/vendors/okx.py": "6427a054f28cfb77ed7aab95afad18c5477844f7b2bb8cd2586f078f2ca7340a",
+    "tradingagents/default_config.py": "0273856837171468e75c10a00b9c0831c0760b5cb184f6862ec78e2347b5e5b5",
+    "tradingagents/graph/trading_graph.py": "97da2084e410136a9b2221eb06fbbf9a1755f4aad7a42f5022cfa998619633d2",
+    "tradingagents/reporting.py": "09a82be609c16fb25848735869308f5fb11b9a9f788ecb8264b6466b0e352f28",
+    "docs/okx_v2_2.md": "10d45be37a46a474ee832ed60c08b1972e8bd1ef09ce6368265b75a30b368381",
+    "tests/test_okx_market_checks.py": "4529a2a4ebf34cc1c89ba338f65bacb7c7e33f11de76c9c0deae7ad3a7c5e3f2",
+    "tradingagents/dataflows/vendors/okx_market_checks.py": "2dc80316453e09c4aeabf542bf158777a09f8b06d4885eeed33497e6f4011c7c"
+  },
+  "execution_enabled": false,
+  "acceptance": "CONDITIONAL_PASS",
+  "tests": {
+    "passed": 1808,
+    "failed_existing_windows": 5,
+    "skipped": 4,
+    "deselected": 13,
+    "subtests_passed": 100,
+    "seconds": 90.11,
+    "v2_2_special": 31,
+    "v2_1_and_v2_2_special": 60
+  },
+  "strategy_fingerprint": "b61aa92741f23a9db0120211654ab56317490b22878622adeb77fe538eca79cf",
+  "original_experiment_files_unchanged": 146,
+  "hash_scope": "Raw working-tree bytes, excludes this manifest and user AGENTS.md; no commit created",
+  "real_research": {
+    "directory": "C:\\Users\\jerry_su\\.tradingagents\\logs\\reports\\okx_BTC-USDT-SWAP_multi_f6f23ec85374",
+    "workflow": "COMPLETED",
+    "model": "AVAILABLE",
+    "cutoff": "2026-10-24T00:48:08.026000+00:00",
+    "action": "WAIT",
+    "plan_valid": false,
+    "allow_new_risk": false,
+    "execution_enabled": false,
+    "initial_evidence": "PARTIAL",
+    "final_evidence": "STALE_DATA",
+    "final_json_evidence": "STALE_DATA",
+    "component_states": {
+      "okx_accounts": "VALID",
+      "okx_top_accounts": "VALID",
+      "okx_top_positions": "VALID",
+      "okx_oi": "VALID",
+      "okx_funding": "VALID",
+      "binance_oi": "VALID",
+      "binance_accounts": "VALID",
+      "binance_funding": "VALID",
+      "prices_volume": "VALID"
+    },
+    "html_has_binance": true,
+    "html_liquidation_mentions": 7,
+    "sample_event_counts": {
+      "OKX": 0,
+      "BINANCE": 0
+    },
+    "hashes": {
+      "complete_report.html": "3144257bb2de914bf3c0f97b52bdd72b911404c43e5cee1fe029cc85f512cc45",
+      "complete_report.md": "9213f25cf085812b050aaa8b3559a13cf173a3c981cccd52551ba56fb44c4464",
+      "research_result.json": "73704f9490cfdcb16f7b30f7b32a0dd9d809cfbbea29fb0b7c239abc50ca88bb",
+      "market_checks_snapshot.json": "ec26843ca50cbbde0092e91c1ea5782ca6edce33f46175a93c980e78b3c22040"
+    }
+  },
+  "public_probe_report": "okx_BTC-USDT-SWAP_multi_5a5e34ec4bf9",
+  "limitations": [
+    "First public probe OKX OI unit mismatch not reproduced; preserved as DATA_UNAVAILABLE",
+    "Nonzero liquidation events validated with mocks only",
+    "Public samples are not complete exchange liquidations; no heatmaps",
+    "Historical publication-time archive not available; current substitution blocked",
+    "Evidence expires after 300 seconds; no TTL extension",
+    "No proof of improved accuracy or profit; one real model run",
+    "Binance key-requiring top-trader endpoints not queried; no credentials needed"
+  ]
+}
