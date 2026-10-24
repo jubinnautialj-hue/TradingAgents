@@ -1,0 +1,10 @@
+{
+  "resolver": "uv 0.11.14",
+  "target": "Linux x86_64 Python 3.13",
+  "status": "LINUX_TARGET_RESOLVED",
+  "index": "https://pypi.org/simple",
+  "locked_packages": 86,
+  "lock_sha256": "b2424a52b008c60053c32986c4598d30150e2981aa9ffccb61e9a1ead9aad9bf",
+  "actual_linux_install_verified": false,
+  "source_versions": "Constrained to current installed Linux-target dependency closure"
+}

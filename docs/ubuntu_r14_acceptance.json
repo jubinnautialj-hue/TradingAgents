@@ -1,0 +1,181 @@
+{
+  "stage": "R1.4",
+  "recommendation": "CONDITIONAL_DEPLOYMENT_PREPARATION_PASS_NOT_PRODUCTION_ACCEPTANCE",
+  "branch": "codex/auto-research-r14",
+  "baseline_commit": "10472fb2a59199261722f2727db9e1b126f46de4",
+  "generated_utc": "2026-10-24T16:10:12.078987+00:00",
+  "source_sha256": {
+    "tradingagents/ubuntu_deployment.py": "45c6d821b2cddb07836c38f443e12a0cae054008be751b6174aa43ceff8c2ef4",
+    "tradingagents/ubuntu_operations.py": "47492fb57a6d6397bc7c10bd542309715f384c8fd33a22aa52b5714b18ea5b59",
+    "scripts/verify_ubuntu_r14.py": "ff54f3be0da5a4eb0f8ec497b27ab455c8755d998557d0d31ed42b7db420c79a",
+    "tests/test_ubuntu_r14.py": "5c5f74a809cb4ab3ad79121a5fbc8f8f8ebef616900289c3b73807ff70920c2c",
+    "docs/ubuntu_r14.json": "0874197ba809a5356473c711cbd3e0f94be393e0803633190b93e082b3de8074",
+    "docs/ubuntu_r14.schema.json": "ab78dc806a118b3166c1cd0e26681d54e82ecdfef5e1aa1b12fcd05956d8658a",
+    "docs/ubuntu_r14.requirements.lock": "b2424a52b008c60053c32986c4598d30150e2981aa9ffccb61e9a1ead9aad9bf",
+    "docs/ubuntu_r14_dependency_lock.json": "5331996f54553fae0b45cb410c9cb45695d00f8b931b2dfd4bedaa855a271d98",
+    "docs/ubuntu_r14.md": "191656a9e6bd9da60a7ae30fd2477685a5dfa6438579aa2c30f4d7e7bd089e35"
+  },
+  "scope": {
+    "original_tracked_files_modified": 0,
+    "frozen_experiment_files_unchanged": 146,
+    "original_archives_unchanged": 11,
+    "server_ssh_connections": 0,
+    "units_installed": 0,
+    "timers_enabled": 0,
+    "committed": false,
+    "pushed": false
+  },
+  "tests": {
+    "r14_specialized": {
+      "passed": 32,
+      "failed": 0
+    },
+    "earlier_r14_r13_r12_combined": {
+      "passed": 124,
+      "failed": 0,
+      "note": "Before final four R14 tests were added"
+    },
+    "full": {
+      "passed": 2176,
+      "failed": 5,
+      "skipped": 4,
+      "deselected": 13,
+      "subtests_passed": 100,
+      "seconds": 153.06,
+      "failure_ids": [
+        "tests.test_chatgpt_auth::test_a_token_near_expiry_is_renewed_with_the_stored_refresh_token",
+        "tests.test_chatgpt_auth::test_signing_in_by_pasting_the_redirect_saves_a_private_sign_in",
+        "tests.test_cli_updates::test_the_upgrade_command_follows_the_install",
+        "tests.test_cli_updates::test_a_uv_git_install_is_upgraded_with_uv",
+        "tests.test_suite_isolation::test_yfinance_keeps_its_cache_out_of_the_users_home"
+      ]
+    },
+    "same_failure_ids_as_r13": true,
+    "initial_cross_midnight_run": {
+      "passed": 2164,
+      "failed": 17,
+      "extra_failures": 12,
+      "reason": "Stock test fixtures capture today during collection; execution crossed local midnight. Source unchanged.",
+      "targeted_recheck": {
+        "passed": 61,
+        "failed": 0
+      }
+    }
+  },
+  "local_linux_compatibility": {
+    "platform": "linux",
+    "python": "3.12.3",
+    "uid": 1000,
+    "native_posix_lock_dedup": true,
+    "lock_released_after_process_termination": true,
+    "systemd_version": "systemd 255 (255.4-1ubuntu8.14)",
+    "unit_syntax_fixture": {
+      "returncode": 0,
+      "scope": "DISPOSABLE_NON_PRODUCTION_PATHS_PYTHON_SYMLINK_ONLY_NOT_A_VENV"
+    },
+    "all_calendars_valid": true,
+    "calendar_cases": 5,
+    "logrotate_debug_returncode": 0,
+    "units_installed": 0,
+    "services_started": 0,
+    "runtime_python313_or_app_import_verified": false,
+    "server_deployment_verified": false,
+    "execution_enabled": false
+  },
+  "dependency_lock": {
+    "resolver": "uv 0.11.14",
+    "target": "Linux x86_64 Python 3.13",
+    "status": "LINUX_TARGET_RESOLVED",
+    "index": "https://pypi.org/simple",
+    "locked_packages": 86,
+    "lock_sha256": "b2424a52b008c60053c32986c4598d30150e2981aa9ffccb61e9a1ead9aad9bf",
+    "actual_linux_install_verified": false,
+    "source_versions": "Constrained to current installed Linux-target dependency closure"
+  },
+  "public_probe": {
+    "logical_get_calls": 10,
+    "instruments": [
+      "BTC-USDT-SWAP",
+      "ETH-USDT-SWAP",
+      "SOL-USDT-SWAP"
+    ],
+    "closed_bars_per_instrument": [
+      2,
+      2,
+      2
+    ],
+    "realized_funding_samples_per_instrument": [
+      10,
+      10,
+      10
+    ],
+    "scope": "LOCAL_PUBLIC_GET_NOT_VULTR_NOT_BOUNDARY_TIMING_NOT_PAPER_FILL",
+    "fills": 0
+  },
+  "model_probe": {
+    "status": "CHILD_COMPLETED",
+    "returncode": 0,
+    "elapsed_seconds": 16.32334450003691,
+    "execution_enabled": false,
+    "probe": {
+      "status": "FAILED",
+      "exception_type": "LLMUnavailable",
+      "elapsed_seconds": 12.278196300030686,
+      "usage": null,
+      "completion_status": null,
+      "attempts": 1
+    },
+    "failure": {
+      "status": "LLM_UNAVAILABLE",
+      "kind": "MODEL_SERVICE_ERROR",
+      "stage": "model",
+      "partial_response": true,
+      "exception_types": [
+        "APIError"
+      ],
+      "diagnostics": {}
+    },
+    "initial_launch_failure": "SCRIPT_IMPORT_BEFORE_PROBE_STARTED_NO_MODEL_REQUEST; fixed module invocation"
+  },
+  "model_service_ready": false,
+  "model_failure_root_cause": "UNDETERMINED; APIError partial response, no HTTP status or request ID available; no retry",
+  "deployment_bundle": {
+    "directory": "C:\\Users\\jerry_su\\.tradingagents\\logs\\r14_bundle_release_review_20261025",
+    "manifest_hash": "f94b7b41ead6fd7b55812e5567d9ef121cb850b567fd1fe91748e922f9f85ce0",
+    "files": 20,
+    "source_validation": "PASS"
+  },
+  "monitor_html": "C:\\Users\\jerry_su\\.tradingagents\\logs\\r14_monitor_20261024\\dda810cfd5185c0a2179ad7824bceed43562e607e103587806bb7a46adbcca60.html",
+  "native_btc_policy_hash": "e29998a373c1295791116b026a04f18c4067f5c14a1352cfad2a4b93066dbd64",
+  "layers": {
+    "local_engineering": "CONDITIONAL_PASS_EXISTING_WINDOWS_FAILURES",
+    "ubuntu_lock_and_systemd_syntax": "PASS_IN_DISPOSABLE_WSL_FIXTURE",
+    "full_linux_python313_app_install": "NOT_VERIFIED",
+    "vultr_deployment": "NOT_AUTHORIZED_NOT_PERFORMED",
+    "real_15_second_scheduled_probe": "NOT_VERIFIED",
+    "long_term_stability": "NOT_PROVEN"
+  },
+  "operational_limits": [
+    "F1 default index cap1000; research pauses at800 without deleting archives",
+    "Paper books retain native 32MiB/20000 event caps; no automatic migration or eviction",
+    "Disk floor2GiB; private audits need manual capacity planning",
+    "WSL Python3.12 syntax fixture is not the Python3.13 runtime",
+    "All costs remain paper assumptions and funding trade-open proxies",
+    "No real ETH/SOL forward fills or settlements proven",
+    "First freeze/review R14 release; target platform must prepare its own byte-accurate manifest",
+    "Restore model service, then separately authorize controlled server deployment and later unattended timers"
+  ],
+  "execution_enabled": false,
+  "allow_new_risk": false,
+  "simulation_admitted": false,
+  "raw_evidence_outside_git": [
+    "C:\\Users\\jerry_su\\.tradingagents\\logs\\r14_final_special_20261024.xml",
+    "C:\\Users\\jerry_su\\.tradingagents\\logs\\r14_full_final_20261025.xml",
+    "C:\\Users\\jerry_su\\.tradingagents\\logs\\r14_full_20261024.xml",
+    "C:\\Users\\jerry_su\\.tradingagents\\logs\\r14_midnight_recheck_20261025.txt",
+    "C:\\Users\\jerry_su\\.tradingagents\\logs\\r14_ubuntu_final_20261024.json",
+    "C:\\Users\\jerry_su\\.tradingagents\\logs\\r14_local_public_20261024.json",
+    "C:\\Users\\jerry_su\\.tradingagents\\logs\\r14_local_model_summary_20261024.json",
+    "C:\\Users\\jerry_su\\.tradingagents\\logs\\r14_dry_run_final_20261025.json"
+  ]
+}

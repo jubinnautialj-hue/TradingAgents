@@ -1,0 +1,14 @@
+{
+  "version": "ubuntu-operations-r14-v1",
+  "user": "ta-research",
+  "release_dir": "/opt/tradingagents/releases/r14-reviewed",
+  "data_dir": "/var/lib/tradingagents/r14",
+  "config_dir": "/etc/tradingagents-r14",
+  "python_minor": "3.13",
+  "min_free_bytes": 2147483648,
+  "min_available_memory_bytes": 1073741824,
+  "clock_offset_limit_ms": 1000,
+  "execution_enabled": false,
+  "allow_new_risk": false,
+  "simulation_admitted": false
+}
