@@ -19,7 +19,12 @@ from tradingagents.automation import readonly_registry,readonly_ledger,paused,ex
 def scheduled(sources):
     result=[]
     for source in sources:
-        ledger=readonly_ledger(source['f3'])
+        core=source.get('_paper_engine',paper)
+        if core is paper:
+            ledger=readonly_ledger(source['f3'])
+        else:
+            ledger=object.__new__(core.Ledger)
+            ledger.root=Path(source['f3'])/'production';ledger.path=ledger.root/'ledger.json';ledger.namespace='PRODUCTION'
         for state in ledger.states(ledger.load()).values():
             if state.status=='SCHEDULED':result.append((state.planned_entry_ms,source,state.registration_id))
     return sorted(result,key=lambda row:(row[0],row[1]['name'],row[2]))
@@ -27,6 +32,9 @@ def scheduled(sources):
 
 def step(cfg,source,rid,phase,market,*,scheduled_for_ms):
     """One native-ledger transaction. Re-read after restart; never infer a fill."""
+    paper=source.get('_paper_engine',globals()['paper'])
+    if paper is not globals()['paper'] and isinstance(market,globals()['paper'].Market):
+        market=paper.Market(market.client,market.limits)
     started=r11.utc_ms();ledger=paper.Ledger(source['f3'])
     if paused(cfg,'timely'):return {'status':'PAUSED','registration_id':rid}
     with locked(ledger.path,wait=False) as held:
@@ -38,7 +46,8 @@ def step(cfg,source,rid,phase,market,*,scheduled_for_ms):
         try:
             registry=readonly_registry(source['registry']);record=registry.load(rid)
             conditions,reasons,_=paper._verified_inputs(registry,source['f2'],record,started,existing=True)
-            if (record.instrument!='BTC-USDT-SWAP' or state.namespace!='PRODUCTION'
+            allowed=paper.instrument_allowed(record.instrument) if hasattr(paper,'instrument_allowed') else record.instrument=='BTC-USDT-SWAP'
+            if (not allowed or state.namespace!='PRODUCTION'
                 or record.content_hash!=state.identity['registration_hash']
                 or not any(c['event_id']==state.trigger['event_id'] and c==state.trigger for c in conditions)):
                 raise ValueError('Paper source/condition admission mismatch')

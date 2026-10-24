@@ -1,0 +1,96 @@
+{
+  "version": "forward-paper-instruments-v1",
+  "parent_policy_hash": "e29998a373c1295791116b026a04f18c4067f5c14a1352cfad2a4b93066dbd64",
+  "profiles": [
+    {
+      "instrument": "BTC-USDT-SWAP",
+      "enabled": true,
+      "certificate": {
+        "instrument": "BTC-USDT-SWAP",
+        "fetched_ms": 1792848677021,
+        "source": "/api/v5/public/instruments",
+        "specification": {
+          "instId": "BTC-USDT-SWAP",
+          "instType": "SWAP",
+          "instFamily": "BTC-USDT",
+          "state": "live",
+          "settleCcy": "USDT",
+          "ctType": "linear",
+          "ctValCcy": "BTC",
+          "quoteCcy": "",
+          "ctVal": "0.01",
+          "ctMult": "1",
+          "minSz": "0.01",
+          "lotSz": "0.01",
+          "tickSz": "0.1"
+        },
+        "public_evidence_hash": "b6a29da3deb073d0990ed1bb8bdf842f53d224fc00196e8fee3880971e8bd4dd",
+        "scope": "CURRENT_PUBLIC_SPEC_NOT_HISTORICAL_OR_LIVE_EXECUTION"
+      },
+      "taker_fee_bps": 5,
+      "slippage_bps": 2,
+      "cost_scope": "LOCAL_PAPER_ASSUMPTION_NOT_ACCOUNT_FEE"
+    },
+    {
+      "instrument": "ETH-USDT-SWAP",
+      "enabled": true,
+      "certificate": {
+        "instrument": "ETH-USDT-SWAP",
+        "fetched_ms": 1792848679907,
+        "source": "/api/v5/public/instruments",
+        "specification": {
+          "instId": "ETH-USDT-SWAP",
+          "instType": "SWAP",
+          "instFamily": "ETH-USDT",
+          "state": "live",
+          "settleCcy": "USDT",
+          "ctType": "linear",
+          "ctValCcy": "ETH",
+          "quoteCcy": "",
+          "ctVal": "0.1",
+          "ctMult": "1",
+          "minSz": "0.01",
+          "lotSz": "0.01",
+          "tickSz": "0.01"
+        },
+        "public_evidence_hash": "187ebfdf8bf09391dbef7b836ca0b0894743b5ab32e85b28868a0be710b2c4ce",
+        "scope": "CURRENT_PUBLIC_SPEC_NOT_HISTORICAL_OR_LIVE_EXECUTION"
+      },
+      "taker_fee_bps": 5,
+      "slippage_bps": 2,
+      "cost_scope": "LOCAL_PAPER_ASSUMPTION_NOT_ACCOUNT_FEE"
+    },
+    {
+      "instrument": "SOL-USDT-SWAP",
+      "enabled": true,
+      "certificate": {
+        "instrument": "SOL-USDT-SWAP",
+        "fetched_ms": 1792848682248,
+        "source": "/api/v5/public/instruments",
+        "specification": {
+          "instId": "SOL-USDT-SWAP",
+          "instType": "SWAP",
+          "instFamily": "SOL-USDT",
+          "state": "live",
+          "settleCcy": "USDT",
+          "ctType": "linear",
+          "ctValCcy": "SOL",
+          "quoteCcy": "",
+          "ctVal": "1",
+          "ctMult": "1",
+          "minSz": "0.01",
+          "lotSz": "0.01",
+          "tickSz": "0.01"
+        },
+        "public_evidence_hash": "ddd604310b24b1e6b49b1365410b8fc214fdac6af068d9c100eb59271cc3e870",
+        "scope": "CURRENT_PUBLIC_SPEC_NOT_HISTORICAL_OR_LIVE_EXECUTION"
+      },
+      "taker_fee_bps": 5,
+      "slippage_bps": 2,
+      "cost_scope": "LOCAL_PAPER_ASSUMPTION_NOT_ACCOUNT_FEE"
+    }
+  ],
+  "simulation_admitted": false,
+  "allow_new_risk": false,
+  "execution_enabled": false
+}

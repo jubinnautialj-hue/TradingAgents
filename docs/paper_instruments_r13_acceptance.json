@@ -1,0 +1,334 @@
+{
+  "stage": "R1.3",
+  "recommendation": "CONDITIONAL_ENGINEERING_PASS",
+  "baseline_commit": "4280003d92a634dd472c6e19938272648b422fb8",
+  "branch": "codex/auto-research-r13",
+  "generated_utc": "2026-10-24T13:51:43.123479+00:00",
+  "protocol": "forward-paper-instruments-v1",
+  "parent_policy_hash": "e29998a373c1295791116b026a04f18c4067f5c14a1352cfad2a4b93066dbd64",
+  "legacy_f3_source_hash": "9a052606a2f18d032d2e9dec90371ab5c14c07a9b64600f5d89ae92d848ecc22",
+  "profile_hash": "e817ba347aef066b92254550dd29ff78c86d0247b452361b8a893ec50e629022",
+  "source_sha256": {
+    "tradingagents/paper_instruments.py": "dc12f4d9f53ced4116b6b69d5cdf89e4b56b32aa965512907d25a8036cda1f6b",
+    "tradingagents/paper_timing.py": "2fd7339304793c6a3e9912df71b3b51b8d9437162307476ee06a84e2fe400313",
+    "tests/test_paper_instruments.py": "a6b3abb7465343719fb55c45309be73bb9e3f398174d71366480f9bb2ed78252",
+    "docs/paper_instruments_r13.json": "111c01beb72dc43f5b28014e464e987bb6d8e9f2d793b3f9d28290292b7f3ea4",
+    "docs/paper_instruments_r13.schema.json": "fc3e4ffe7887937b9bbc4e562d65ea6b3b4061ef04ea03432b89223ba5589387",
+    "docs/paper_instruments_r13.md": "69277abe3380eef3e088acdb1db883869f722f52cf00fa23715be024fee9c48d"
+  },
+  "instrument_policy_hashes": {
+    "BTC-USDT-SWAP": "e29998a373c1295791116b026a04f18c4067f5c14a1352cfad2a4b93066dbd64",
+    "ETH-USDT-SWAP": "153f1114a5db46c093247e9f086f26047774d07a2ef407aab04a1551d261590e",
+    "SOL-USDT-SWAP": "9458c25f4dd1d681e7d4771b22eb0ac2508ac28280eec8be249cc3bac44270b1"
+  },
+  "tests": {
+    "r13_specialized": {
+      "passed": 57,
+      "failed": 0
+    },
+    "specialized_plus_r12_and_f3": {
+      "passed": 147,
+      "failed": 0,
+      "seconds": 49.11
+    },
+    "full": {
+      "passed": 2144,
+      "failed": 5,
+      "skipped": 4,
+      "deselected": 13,
+      "subtests_passed": 100,
+      "seconds": 158.11,
+      "failure_ids": [
+        "tests.test_chatgpt_auth::test_a_token_near_expiry_is_renewed_with_the_stored_refresh_token",
+        "tests.test_chatgpt_auth::test_signing_in_by_pasting_the_redirect_saves_a_private_sign_in",
+        "tests.test_cli_updates::test_the_upgrade_command_follows_the_install",
+        "tests.test_cli_updates::test_a_uv_git_install_is_upgraded_with_uv",
+        "tests.test_suite_isolation::test_yfinance_keeps_its_cache_out_of_the_users_home"
+      ]
+    },
+    "same_failures_as_r12": true
+  },
+  "public_verification": {
+    "logical_get_calls": 10,
+    "instruments": [
+      {
+        "instrument": "BTC-USDT-SWAP",
+        "specification": {
+          "instId": "BTC-USDT-SWAP",
+          "instType": "SWAP",
+          "instFamily": "BTC-USDT",
+          "state": "live",
+          "settleCcy": "USDT",
+          "ctType": "linear",
+          "ctValCcy": "BTC",
+          "quoteCcy": "",
+          "ctVal": "0.01",
+          "ctMult": "1",
+          "minSz": "0.01",
+          "lotSz": "0.01",
+          "tickSz": "0.1"
+        },
+        "fetched_utc": "2026-10-24T13:42:16.126000+00:00",
+        "two_closed_candle_units_verified": true,
+        "closed_bars": 2,
+        "realized_funding_events": 10,
+        "first_settlement_ms": 1792569600000,
+        "last_settlement_ms": 1792828800000,
+        "observed_interval_hours": {
+          "8.0": 9
+        }
+      },
+      {
+        "instrument": "ETH-USDT-SWAP",
+        "specification": {
+          "instId": "ETH-USDT-SWAP",
+          "instType": "SWAP",
+          "instFamily": "ETH-USDT",
+          "state": "live",
+          "settleCcy": "USDT",
+          "ctType": "linear",
+          "ctValCcy": "ETH",
+          "quoteCcy": "",
+          "ctVal": "0.1",
+          "ctMult": "1",
+          "minSz": "0.01",
+          "lotSz": "0.01",
+          "tickSz": "0.01"
+        },
+        "fetched_utc": "2026-10-24T13:42:18.345000+00:00",
+        "two_closed_candle_units_verified": true,
+        "closed_bars": 2,
+        "realized_funding_events": 10,
+        "first_settlement_ms": 1792569600000,
+        "last_settlement_ms": 1792828800000,
+        "observed_interval_hours": {
+          "8.0": 9
+        }
+      },
+      {
+        "instrument": "SOL-USDT-SWAP",
+        "specification": {
+          "instId": "SOL-USDT-SWAP",
+          "instType": "SWAP",
+          "instFamily": "SOL-USDT",
+          "state": "live",
+          "settleCcy": "USDT",
+          "ctType": "linear",
+          "ctValCcy": "SOL",
+          "quoteCcy": "",
+          "ctVal": "1",
+          "ctMult": "1",
+          "minSz": "0.01",
+          "lotSz": "0.01",
+          "tickSz": "0.01"
+        },
+        "fetched_utc": "2026-10-24T13:42:23.639000+00:00",
+        "two_closed_candle_units_verified": true,
+        "closed_bars": 2,
+        "realized_funding_events": 10,
+        "first_settlement_ms": 1792569600000,
+        "last_settlement_ms": 1792828800000,
+        "observed_interval_hours": {
+          "8.0": 9
+        }
+      }
+    ],
+    "fills": 0,
+    "llm_calls": 0,
+    "scope": "UNBOUND_PUBLIC_VERIFICATION_NOT_A_FORWARD_FILL",
+    "limitations": "Two recent closed bars and ten realized rate events per asset; not exhaustive history or opening SLA"
+  },
+  "production_scan": {
+    "results": [
+      {
+        "instrument": "BTC-USDT-SWAP",
+        "status": "COMPLETED",
+        "research": {
+          "total": 1,
+          "prospective": 1,
+          "completed_wait": 1,
+          "failed": 0,
+          "valid_candidates": 0,
+          "observation_qualified": 0,
+          "observation_rate": null,
+          "paper_scheduled": 0,
+          "condition_triggered": 0,
+          "condition_trigger_denominator": 0,
+          "condition_trigger_rate": null,
+          "observed_expired": 0,
+          "observed_invalidated": 0,
+          "f2_reviewed": 0,
+          "f2_paused": 0
+        },
+        "paper": {
+          "trades": 0,
+          "settled": 0,
+          "unsettled": 0,
+          "wins": 0,
+          "losses": 0,
+          "win_rate": null,
+          "average_win": null,
+          "average_loss": null,
+          "net_pnl": null,
+          "gross_pnl_after_slippage": null,
+          "gross_pnl_before_costs": null,
+          "profit_factor": null,
+          "payoff_ratio": null,
+          "fees_usdt": 0,
+          "slippage_usdt": 0,
+          "funding_cashflow_usdt": 0,
+          "realized_only_drawdown_by_group": {},
+          "equity_curves": {},
+          "settled_history_closed_candle_drawdown_by_group": {},
+          "settled_history_closed_candle_equity": {},
+          "complete_net_equity_available": true
+        }
+      },
+      {
+        "instrument": "ETH-USDT-SWAP",
+        "status": "COMPLETED",
+        "research": {
+          "total": 0,
+          "prospective": 0,
+          "completed_wait": 0,
+          "failed": 0,
+          "valid_candidates": 0,
+          "observation_qualified": 0,
+          "observation_rate": null,
+          "paper_scheduled": 0,
+          "condition_triggered": 0,
+          "condition_trigger_denominator": 0,
+          "condition_trigger_rate": null,
+          "observed_expired": 0,
+          "observed_invalidated": 0,
+          "f2_reviewed": 0,
+          "f2_paused": 0
+        },
+        "paper": {
+          "trades": 0,
+          "settled": 0,
+          "unsettled": 0,
+          "wins": 0,
+          "losses": 0,
+          "win_rate": null,
+          "average_win": null,
+          "average_loss": null,
+          "net_pnl": null,
+          "gross_pnl_after_slippage": null,
+          "gross_pnl_before_costs": null,
+          "profit_factor": null,
+          "payoff_ratio": null,
+          "fees_usdt": 0,
+          "slippage_usdt": 0,
+          "funding_cashflow_usdt": 0,
+          "realized_only_drawdown_by_group": {},
+          "equity_curves": {},
+          "settled_history_closed_candle_drawdown_by_group": {},
+          "settled_history_closed_candle_equity": {},
+          "complete_net_equity_available": true
+        }
+      },
+      {
+        "instrument": "SOL-USDT-SWAP",
+        "status": "COMPLETED",
+        "research": {
+          "total": 0,
+          "prospective": 0,
+          "completed_wait": 0,
+          "failed": 0,
+          "valid_candidates": 0,
+          "observation_qualified": 0,
+          "observation_rate": null,
+          "paper_scheduled": 0,
+          "condition_triggered": 0,
+          "condition_trigger_denominator": 0,
+          "condition_trigger_rate": null,
+          "observed_expired": 0,
+          "observed_invalidated": 0,
+          "f2_reviewed": 0,
+          "f2_paused": 0
+        },
+        "paper": {
+          "trades": 0,
+          "settled": 0,
+          "unsettled": 0,
+          "wins": 0,
+          "losses": 0,
+          "win_rate": null,
+          "average_win": null,
+          "average_loss": null,
+          "net_pnl": null,
+          "gross_pnl_after_slippage": null,
+          "gross_pnl_before_costs": null,
+          "profit_factor": null,
+          "payoff_ratio": null,
+          "fees_usdt": 0,
+          "slippage_usdt": 0,
+          "funding_cashflow_usdt": 0,
+          "realized_only_drawdown_by_group": {},
+          "equity_curves": {},
+          "settled_history_closed_candle_drawdown_by_group": {},
+          "settled_history_closed_candle_equity": {},
+          "complete_net_equity_available": true
+        }
+      }
+    ],
+    "meter": {
+      "llm_calls": 0,
+      "http_dispatches": 3,
+      "reported_total_tokens": 0,
+      "usage_available": false,
+      "budget_error": null,
+      "execution_enabled": false
+    },
+    "timely_status": "NO_PENDING_OPEN_IN_WINDOW",
+    "timely_meter": {
+      "llm_calls": 0,
+      "http_dispatches": 0,
+      "reported_total_tokens": 0,
+      "usage_available": false,
+      "budget_error": null,
+      "execution_enabled": false
+    },
+    "actual_forward_fills_verified": false
+  },
+  "frozen_audit": {
+    "original_archives_checked": 11,
+    "original_archives_changed": [],
+    "frozen_experiments_checked": 146,
+    "frozen_experiments_changed": []
+  },
+  "windows_xml": {
+    "in_memory_validated": 4,
+    "registered": 0
+  },
+  "ubuntu_deployed": false,
+  "credential_pattern_findings": 0,
+  "credential_pattern_scope": "Only explicit modified/new source, tests and documentation; not a comprehensive security audit",
+  "raw_evidence_outside_git": [
+    "C:\\Users\\jerry_su\\.tradingagents\\logs\\r13_public_probe_20261024.json",
+    "C:\\Users\\jerry_su\\.tradingagents\\logs\\r13_public_verified_20261024.json",
+    "C:\\Users\\jerry_su\\.tradingagents\\logs\\r13_special_final_20261024.xml",
+    "C:\\Users\\jerry_su\\.tradingagents\\logs\\r13_full_20261024.xml",
+    "C:\\Users\\jerry_su\\.tradingagents\\logs\\r13_actual_paper_scan_20261024.json",
+    "C:\\Users\\jerry_su\\.tradingagents\\logs\\r13_actual_timely_20261024.json",
+    "C:\\Users\\jerry_su\\.tradingagents\\logs\\r13_status_after_20261024.json",
+    "C:\\Users\\jerry_su\\.tradingagents\\logs\\r13_frozen_audit_20261024.json",
+    "C:\\Users\\jerry_su\\.tradingagents\\logs\\r13_windows_xml_20261024.json"
+  ],
+  "limits": [
+    "No real ETH/SOL prospective candidates or on-time fills yet",
+    "No claim of profitability or execution liquidity",
+    "Independent per-instrument capital, not shared portfolio capital",
+    "Funding uses hourly trade-open proxy, not exact settlement mark",
+    "Legacy engine dependency binding requires review/regression after upstream changes",
+    "Five existing Windows/environment regression failures remain",
+    "No model service validation in this phase; no expensive model requests made",
+    "No installed scheduler or deployment SLA"
+  ],
+  "execution_enabled": false,
+  "simulation_admitted": false,
+  "allow_new_risk": false,
+  "committed": false,
+  "pushed": false
+}
