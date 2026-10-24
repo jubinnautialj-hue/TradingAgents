@@ -1,0 +1,232 @@
+{
+  "stage": "F1 supplemental final acceptance",
+  "generated_at_utc": "2026-10-24T06:24:07.710767+00:00",
+  "branch": "codex/forward-validation-f1",
+  "baseline_commit": "c16266672928c44b7769d8ac5f8b71599cfa1fbd",
+  "recommendation": "SUPPLEMENTAL_SCOPE_PASS_OVERALL_CONDITIONAL_PASS",
+  "execution_enabled": false,
+  "source_changed_this_review": false,
+  "accepted_source_fingerprints_match": true,
+  "protocol_version": "forward-f1-v1",
+  "protocol_hash": "7a1676999fd95a0173576403a6c2ef7a119d8b7d1d768ccdbdfeef8b2720a76e",
+  "original_146_experiment_hashes_match": true,
+  "old_failure": {
+    "registration_id": "648e415e0cbb99ba30a21a25cc106268febbabb3a0f69240a665d791e5ea0605",
+    "research_id": "105fa338bb24414db708e21710f05dfe",
+    "category": "RESEARCH_FAILED",
+    "kind": "MODEL_SERVICE_ERROR",
+    "exception_types": [
+      "APIError"
+    ],
+    "stage": "Market Analyst",
+    "partial_response": true,
+    "http_status": null,
+    "request_id_sha256": null,
+    "diagnostics": {},
+    "provenance": "C:\\Users\\jerry_su\\.tradingagents\\logs\\BTC-USDT-SWAP\\TradingAgentsStrategy_logs\\okx_4h_2026-10-24_7ce22d0362ff.json",
+    "limitations": "Original sanitized graph log retains no HTTP/trace metadata or raw provider message. Cannot reconstruct missing details or infer network/quota/authentication root cause."
+  },
+  "new_probe": {
+    "started_at_utc": "2026-10-24T06:10:48.790948+00:00",
+    "model_config": {
+      "llm_provider": "chatgpt",
+      "quick_think_provider": null,
+      "deep_think_provider": null,
+      "quick_think_llm": "gpt-6.1-sol",
+      "deep_think_llm": "gpt-6.1-sol",
+      "llm_max_retries": 0,
+      "max_tokens": 1200,
+      "temperature": null,
+      "openai_reasoning_effort": null,
+      "output_language": "English",
+      "endpoint_host": "api.openai.com",
+      "model_proxy_configured": true
+    },
+    "attempts": 1,
+    "usage": {
+      "input_tokens": 21,
+      "output_tokens": 5,
+      "total_tokens": 26,
+      "input_token_details": {
+        "cache_creation": 0,
+        "cache_read": 0
+      },
+      "output_token_details": {
+        "reasoning": 0
+      }
+    },
+    "execution_enabled": false,
+    "status": "COMPLETED",
+    "response": "OK",
+    "completion_status": "completed",
+    "elapsed_seconds": 12.072604999993928
+  },
+  "new_real_workflow": {
+    "registration_id": "8a2327573a1b6d0e12e5174b2066034283afbdd41d26a82aad00d9a76b1949fe",
+    "research_id": "c1da79c653d04666962d10e9dd51832c",
+    "origin": "PROSPECTIVE",
+    "workflow_status": "COMPLETED",
+    "llm_status": "AVAILABLE",
+    "data_quality": "VALID",
+    "action": "WAIT",
+    "plan_valid": false,
+    "allow_new_risk": false,
+    "simulation_pool_eligible": false,
+    "execution_enabled": false,
+    "snapshot_id": "b5dddd55ddefe22a627bdb599cabf5ae5ecd5e21c9f3a5350d1ee5f35bee6184",
+    "protocol_hash": "7a1676999fd95a0173576403a6c2ef7a119d8b7d1d768ccdbdfeef8b2720a76e",
+    "report_directory": "C:\\Users\\jerry_su\\.tradingagents\\logs\\reports\\okx_BTC-USDT-SWAP_multi_f2b0b72d5a45",
+    "category": "WAIT",
+    "times": {
+      "started_ms": {
+        "ms": 1792822312322,
+        "utc": "2026-10-24T06:11:52.322000+00:00",
+        "beijing": "2026-10-24T14:11:52.322000+08:00"
+      },
+      "cutoff_ms": {
+        "ms": 1792822319231,
+        "utc": "2026-10-24T06:11:59.231000+00:00",
+        "beijing": "2026-10-24T14:11:59.231000+08:00"
+      },
+      "data_available_ms": {
+        "ms": 1792822330312,
+        "utc": "2026-10-24T06:12:10.312000+00:00",
+        "beijing": "2026-10-24T14:12:10.312000+08:00"
+      },
+      "completed_ms": {
+        "ms": 1792822795824,
+        "utc": "2026-10-24T06:19:55.824000+00:00",
+        "beijing": "2026-10-24T14:19:55.824000+08:00"
+      },
+      "registered_ms": {
+        "ms": 1792822795844,
+        "utc": "2026-10-24T06:19:55.844000+00:00",
+        "beijing": "2026-10-24T14:19:55.844000+08:00"
+      },
+      "first_bar_open_ms": {
+        "ms": 1792825200000,
+        "utc": "2026-10-24T07:00:00+00:00",
+        "beijing": "2026-10-24T15:00:00+08:00"
+      },
+      "first_check_ms": {
+        "ms": 1792828800000,
+        "utc": "2026-10-24T08:00:00+00:00",
+        "beijing": "2026-10-24T16:00:00+08:00"
+      }
+    },
+    "timeframe_latest_close_ms": {
+      "1h": 1792821600000,
+      "4h": 1792814400000,
+      "1d": 1792800000000
+    },
+    "role_reports_present": {
+      "1_analysts/market.md": true,
+      "2_research/bull.md": true,
+      "2_research/bear.md": true,
+      "2_research/manager.md": true,
+      "3_trading/trader.md": true,
+      "4_risk/aggressive.md": true,
+      "4_risk/conservative.md": true,
+      "4_risk/neutral.md": true,
+      "5_portfolio/decision.md": true
+    },
+    "report_and_snapshot_verified": true,
+    "audit_events_verified": true,
+    "result_plan_status": "WAIT",
+    "original_requires_revalidation": false,
+    "observation_events": 0,
+    "simulated_fills": 0,
+    "wall_seconds": 483.502
+  },
+  "run_controls": {
+    "minimal_probe_calls": 1,
+    "complete_workflow_runs": 1,
+    "explicit_llm_max_retries": 0,
+    "debate_rounds": 1,
+    "risk_rounds": 1,
+    "strategy_or_prompts_changed": false,
+    "global_proxy_mcp_or_account_settings_changed": false
+  },
+  "state_coverage": {
+    "WAIT": {
+      "real_registration_id": "8a2327573a1b6d0e12e5174b2066034283afbdd41d26a82aad00d9a76b1949fe",
+      "fixture": "test_native_mock_workflow_registers_wait_and_default_off; test_actions_preserved[WAIT]",
+      "passed": true
+    },
+    "VALID_CANDIDATE": {
+      "mode": "ISOLATED_DETERMINISTIC_FIXTURE_NOT_REAL_MARKET_SAMPLE",
+      "fixture": "test_valid_candidate_and_sealed_read",
+      "passed": true
+    },
+    "RESEARCH_FAILED": {
+      "real_registration_id": "648e415e0cbb99ba30a21a25cc106268febbabb3a0f69240a665d791e5ea0605",
+      "fixture": "test_failure_not_direction",
+      "passed": true
+    }
+  },
+  "tests": {
+    "f1_cli_plan": {
+      "passed": 93,
+      "seconds": 65.77,
+      "xml": "C:\\Users\\jerry_su\\.tradingagents\\logs\\forward_f1_supplement_tests.xml"
+    },
+    "reliability_recovery_retry": {
+      "passed": 67,
+      "seconds": 7.97,
+      "xml": "C:\\Users\\jerry_su\\.tradingagents\\logs\\forward_f1_supplement_reliability.xml"
+    },
+    "safe_diagnostics_fixture": {
+      "scope": "SYNTHETIC_EXCEPTION_ONLY_NOT_REAL_PROVIDER_FAILURE",
+      "summary": {
+        "status": "LLM_UNAVAILABLE",
+        "kind": "TRANSIENT_SERVICE_ERROR",
+        "stage": "model",
+        "partial_response": false,
+        "exception_types": [
+          "InternalServerError"
+        ],
+        "diagnostics": {
+          "http_status": 503,
+          "provider_code": "server_error",
+          "retry_after_seconds": 2.0,
+          "request_id_sha256": "88762289371f2010307e9182aab904f9eb097dee17e2a6569602d7a4e0fc8010"
+        }
+      },
+      "raw_body_or_headers_logged": false,
+      "passed": true
+    },
+    "previous_full_suite_not_rerun": {
+      "passed": 1905,
+      "known_failures": 5,
+      "scope": "Prior full suite retained; no source changes this review; 160 related cases rerun"
+    }
+  },
+  "new_real_evidence_quality": {
+    "core": "VALID",
+    "derivatives": "PARTIAL",
+    "stale_live_components": [
+      "oi_current",
+      "funding_current",
+      "mark_current",
+      "index_current",
+      "trade_current",
+      "orderbook"
+    ],
+    "handling": "Preserved; no TTL extension or candidate promotion"
+  },
+  "limits": [
+    "One successful real workflow does not establish ongoing service reliability",
+    "Original failure has no recoverable HTTP status/request ID",
+    "Real candidate not forced; candidate registration validated with isolated fixtures",
+    "No F2/F3 or future observations/settlement",
+    "Five previously disclosed Windows full-suite failures remain",
+    "Local clocks/hash archives are not externally signed/WORM"
+  ],
+  "artifact_paths": {
+    "new_cli_log": "C:\\Users\\jerry_su\\.tradingagents\\logs\\forward_f1_final_btc_20261024_01.txt",
+    "real_verification": "C:\\Users\\jerry_su\\.tradingagents\\logs\\forward_f1_supplement_real_verification.json",
+    "registry": "C:\\Users\\jerry_su\\.tradingagents\\logs\\forward_validation\\f1"
+  },
+  "commit_or_push_performed": false,
+  "supplement_document_sha256": "eb3348b64ae4cebc50c5071f06e9b45d74d4d2761c3ebdc309f0d1c7a02bf177"
+}

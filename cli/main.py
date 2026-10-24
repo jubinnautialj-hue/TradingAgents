@@ -171,6 +171,7 @@ def okx_research(
     orderflow: bool = typer.Option(False, "--orderflow", help="Optional bounded closed-minute taker Delta/CVD and matching spot evidence"),
     market_checks: bool = typer.Option(False, "--market-checks", help="Optional public crowding, Binance cross-check and sampled liquidations; never execution"),
     price_depth: bool = typer.Option(False, "--price-depth", help="Optional deterministic price action/volatility and continuous public book segments"),
+    forward_register: bool = typer.Option(False, "--forward-register", help="Seal this new research in the F1 registry; never tracks or executes"),
     events: bool = typer.Option(False, "--events", help="Official publication snapshot; reuse existing News/Sentiment Analysts without external tools"),
     depth_seconds: int = typer.Option(10, "--depth-seconds", min=0, max=30, help="On-demand book/trade sample before cutoff; 0 disables book sampling"),
     liquidation_seconds: int = typer.Option(10, "--liquidation-seconds", min=0, max=30, help="On-demand public WS sample before cutoff; 0 disables; no historical backfill"),
@@ -197,6 +198,8 @@ def okx_research(
 
     try:
         validate_symbol(instrument)
+        if forward_register and data_only:
+            raise ValueError("--forward-register requires a model research attempt; data-only reports are not research samples")
         if interval not in BARS:
             raise ValueError("interval must be 1h, 4h or 1d")
         day = _validate_trade_date(date or datetime.now(UTC).strftime("%Y-%m-%d"))
@@ -233,6 +236,11 @@ def okx_research(
         portfolio = load_portfolio(portfolio_file) if portfolio_file else None
         # Accurate configured source labels; all market tools use the bundle.
         config["data_vendors"].update(core_stock_apis="okx", technical_indicators="okx")
+        forward_registry = forward_token = None
+        if forward_register:
+            from tradingagents.forward_validation import Registry
+            forward_registry = Registry(Path(config["results_dir"]) / "forward_validation" / "f1")
+            forward_token = forward_registry.begin(instrument, config)
         if data_only:
             state = {"company_of_interest": instrument, "trade_date": day}
             if trade_plan:
@@ -262,6 +270,28 @@ def okx_research(
         mode_label = "multi" if multi_timeframe else interval
         folder = Path(config["results_dir"]) / "reports" / f"okx_{instrument}_{mode_label}_{uuid4().hex[:12]}"
         report = write_report_tree(state, instrument, folder, settings=settings)
+        if forward_register:
+            # The report writer runs the existing final quality gate again.
+            # Seal the authoritative archived values, never an earlier in-memory plan.
+            import json
+            sealed_state = dict(state)
+            for filename, key in (("research_result.json", "research_result"),
+                                  ("multitimeframe_snapshot.json", "market_snapshot")):
+                if (folder / filename).exists():
+                    sealed_state[key] = json.loads((folder / filename).read_text(encoding="utf-8"))
+            sealed_state["data_quality"] = (sealed_state.get("research_result") or {}).get(
+                "data_quality", sealed_state.get("market_snapshot", {}).get("status", "DATA_UNAVAILABLE"))
+            from tradingagents.memory.okx_simulation import utc_ms
+            forward_completed_ms = utc_ms()
+            try:
+                registration = forward_registry.register(folder, sealed_state, token=forward_token,
+                                                          completed_ms=forward_completed_ms)
+            except (ValueError, OSError) as exc:
+                typer.echo(f"Report preserved: {report}", err=True)
+                typer.echo(f"F1 registration failed ({type(exc).__name__}); intent token={forward_token}. "
+                           "Resume only if its journal exists; do not rerun the model to repair registration.", err=True)
+                raise typer.Exit(code=4) from None
+            typer.echo(f"F1 registration: {registration.registration_id}; origin={registration.origin}; status={registration.status}")
         if state.get("market_snapshot", {}).get("derivatives"):
             from tradingagents.dataflows.vendors.okx_derivatives import evidence_view
 

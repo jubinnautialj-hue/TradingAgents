@@ -1,0 +1,461 @@
+{
+  "$defs": {
+    "ForwardProtocol": {
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": "forward-f1-v1",
+          "title": "Version",
+          "type": "string"
+        },
+        "execution_enabled": {
+          "const": false,
+          "title": "Execution Enabled",
+          "type": "boolean"
+        },
+        "registration_max_delay_ms": {
+          "exclusiveMinimum": 0,
+          "maximum": 60000,
+          "title": "Registration Max Delay Ms",
+          "type": "integer"
+        },
+        "prospective_cutoff_max_age_ms": {
+          "exclusiveMinimum": 0,
+          "maximum": 300000,
+          "title": "Prospective Cutoff Max Age Ms",
+          "type": "integer"
+        },
+        "clock": {
+          "title": "Clock",
+          "type": "string"
+        },
+        "lifecycle": {
+          "title": "Lifecycle",
+          "type": "string"
+        },
+        "entry": {
+          "title": "Entry",
+          "type": "string"
+        },
+        "costs": {
+          "additionalProperties": true,
+          "title": "Costs",
+          "type": "object"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "metrics": {
+          "additionalProperties": true,
+          "title": "Metrics",
+          "type": "object"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "version",
+        "execution_enabled",
+        "registration_max_delay_ms",
+        "prospective_cutoff_max_age_ms",
+        "clock",
+        "lifecycle",
+        "entry",
+        "costs",
+        "labels",
+        "metrics",
+        "limitations"
+      ],
+      "title": "ForwardProtocol",
+      "type": "object"
+    },
+    "FutureBarObservation": {
+      "additionalProperties": false,
+      "description": "F2 interchange contract only; F1 does not collect or process bars.",
+      "properties": {
+        "version": {
+          "const": "forward-observation-v1",
+          "default": "forward-observation-v1",
+          "title": "Version",
+          "type": "string"
+        },
+        "registration_id": {
+          "title": "Registration Id",
+          "type": "string"
+        },
+        "bar_open_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Bar Open Ms",
+          "type": "integer"
+        },
+        "bar_close_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Bar Close Ms",
+          "type": "integer"
+        },
+        "available_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Available Ms",
+          "type": "integer"
+        },
+        "recorded_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Recorded Ms",
+          "type": "integer"
+        },
+        "bar_fingerprint": {
+          "maxLength": 64,
+          "minLength": 64,
+          "title": "Bar Fingerprint",
+          "type": "string"
+        },
+        "confirm": {
+          "const": "1",
+          "default": "1",
+          "title": "Confirm",
+          "type": "string"
+        },
+        "execution_enabled": {
+          "const": false,
+          "default": false,
+          "title": "Execution Enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "registration_id",
+        "bar_open_ms",
+        "bar_close_ms",
+        "available_ms",
+        "recorded_ms",
+        "bar_fingerprint"
+      ],
+      "title": "FutureBarObservation",
+      "type": "object"
+    },
+    "Registration": {
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": "forward-f1-v1",
+          "default": "forward-f1-v1",
+          "title": "Version",
+          "type": "string"
+        },
+        "registration_id": {
+          "title": "Registration Id",
+          "type": "string"
+        },
+        "research_id": {
+          "title": "Research Id",
+          "type": "string"
+        },
+        "origin": {
+          "enum": [
+            "PROSPECTIVE",
+            "HISTORICAL_IMPORT",
+            "LATE_REGISTRATION",
+            "TEST_REPLAY"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "exchange": {
+          "const": "OKX",
+          "default": "OKX",
+          "title": "Exchange",
+          "type": "string"
+        },
+        "instrument": {
+          "title": "Instrument",
+          "type": "string"
+        },
+        "timeframes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Timeframes",
+          "type": "array"
+        },
+        "cutoff_ms": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cutoff Ms"
+        },
+        "started_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Started Ms",
+          "type": "integer"
+        },
+        "completed_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Completed Ms",
+          "type": "integer"
+        },
+        "registered_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Registered Ms",
+          "type": "integer"
+        },
+        "data_available_ms": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Data Available Ms"
+        },
+        "first_bar_open_ms": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "First Bar Open Ms"
+        },
+        "first_check_ms": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "First Check Ms"
+        },
+        "expires_ms": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expires Ms"
+        },
+        "git_commit": {
+          "title": "Git Commit",
+          "type": "string"
+        },
+        "git_branch": {
+          "title": "Git Branch",
+          "type": "string"
+        },
+        "source_hashes": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Source Hashes",
+          "type": "object"
+        },
+        "protocol_hash": {
+          "title": "Protocol Hash",
+          "type": "string"
+        },
+        "protocol": {
+          "additionalProperties": true,
+          "title": "Protocol",
+          "type": "object"
+        },
+        "config": {
+          "additionalProperties": true,
+          "title": "Config",
+          "type": "object"
+        },
+        "failure": {
+          "additionalProperties": true,
+          "title": "Failure",
+          "type": "object"
+        },
+        "original_judgment": {
+          "title": "Original Judgment",
+          "type": "string"
+        },
+        "lifecycle_state": {
+          "title": "Lifecycle State",
+          "type": "string"
+        },
+        "action": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Action"
+        },
+        "workflow_status": {
+          "title": "Workflow Status",
+          "type": "string"
+        },
+        "llm_status": {
+          "title": "Llm Status",
+          "type": "string"
+        },
+        "data_quality": {
+          "title": "Data Quality",
+          "type": "string"
+        },
+        "plan_valid": {
+          "title": "Plan Valid",
+          "type": "boolean"
+        },
+        "allow_new_risk": {
+          "title": "Allow New Risk",
+          "type": "boolean"
+        },
+        "simulation_pool_eligible": {
+          "title": "Simulation Pool Eligible",
+          "type": "boolean"
+        },
+        "requires_revalidation": {
+          "const": true,
+          "default": true,
+          "title": "Requires Revalidation",
+          "type": "boolean"
+        },
+        "execution_enabled": {
+          "const": false,
+          "default": false,
+          "title": "Execution Enabled",
+          "type": "boolean"
+        },
+        "status": {
+          "enum": [
+            "AWAITING_F2",
+            "ARCHIVED_ONLY"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "pair_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Pair Id"
+        },
+        "snapshot_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Snapshot Id"
+        },
+        "result_hash": {
+          "title": "Result Hash",
+          "type": "string"
+        },
+        "original_result": {
+          "additionalProperties": true,
+          "title": "Original Result",
+          "type": "object"
+        },
+        "quality_evidence": {
+          "additionalProperties": true,
+          "title": "Quality Evidence",
+          "type": "object"
+        },
+        "memory_links": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Memory Links",
+          "type": "array"
+        },
+        "report_directory": {
+          "title": "Report Directory",
+          "type": "string"
+        },
+        "artifact_hashes": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Artifact Hashes",
+          "type": "object"
+        },
+        "content_hash": {
+          "default": "",
+          "title": "Content Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "registration_id",
+        "research_id",
+        "origin",
+        "instrument",
+        "timeframes",
+        "started_ms",
+        "completed_ms",
+        "registered_ms",
+        "first_check_ms",
+        "expires_ms",
+        "git_commit",
+        "git_branch",
+        "source_hashes",
+        "protocol_hash",
+        "protocol",
+        "config",
+        "original_judgment",
+        "lifecycle_state",
+        "action",
+        "workflow_status",
+        "llm_status",
+        "data_quality",
+        "plan_valid",
+        "allow_new_risk",
+        "simulation_pool_eligible",
+        "status",
+        "pair_id",
+        "snapshot_id",
+        "result_hash",
+        "original_result",
+        "quality_evidence",
+        "report_directory",
+        "artifact_hashes"
+      ],
+      "title": "Registration",
+      "type": "object"
+    }
+  },
+  "title": "TradingAgents F1 registry and F2 observation contracts"
+}

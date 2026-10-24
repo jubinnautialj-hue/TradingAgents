@@ -1,0 +1,47 @@
+{
+  "version": "forward-f1-v1",
+  "execution_enabled": false,
+  "registration_max_delay_ms": 60000,
+  "prospective_cutoff_max_age_ms": 300000,
+  "clock": "UTC epoch milliseconds; aware UTC presentation",
+  "lifecycle": "tradingagents.dataflows.plan_lifecycle.evaluate_signal; unchanged breakout-retest-v1",
+  "entry": "First complete hourly bar opening at/after max(cutoff, completion, registration, data availability); confirmation close precedes next-open fill; fresh revalidation mandatory",
+  "costs": {
+    "initial_equity": 10000,
+    "notional_usdt": 1000,
+    "taker_fee_bps": 5,
+    "maker_fee_bps": null,
+    "slippage_bps": 2,
+    "confirmation_bars": 6,
+    "max_holding_bars": 12,
+    "funding": "actual settlement events only; missing coverage invalidates settlement; historical mark proxy must be disclosed",
+    "fill": "D ledger next open adverse slippage; stop-first if both touched; no leverage/liquidation validation",
+    "source": "docs/okx_d3_strategy_freeze.json; tradingagents.okx_backtest"
+  },
+  "labels": [
+    "UNOBSERVED",
+    "TRIGGERED",
+    "INVALIDATED",
+    "EXPIRED_UNTRIGGERED",
+    "SIMULATED_FILL",
+    "TAKE_PROFIT",
+    "STOP_LOSS",
+    "NET_PNL",
+    "MAE",
+    "MFE"
+  ],
+  "metrics": {
+    "trigger_rate": "triggered / eligible candidate registrations",
+    "win_rate": "positive settled simulated trades / all settled simulated trades",
+    "coverage": "observed / eligible; failures, WAIT and invalid plans separate",
+    "direction_accuracy": "disabled without separately frozen target/horizon/truth definition"
+  },
+  "limitations": [
+    "No F2 observations or F3 settlement in F1",
+    "No optional missing/stale evidence directional inference",
+    "No automatic Memory or Reflection learning",
+    "Local hashes detect accidental modification, not malicious rewriting of all files",
+    "Historical and late imports excluded from prospective performance",
+    "Pair by exchange instrument cutoff and timeframe set; reports are not independent market samples"
+  ]
+}
