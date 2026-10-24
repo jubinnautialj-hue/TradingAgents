@@ -170,6 +170,8 @@ def okx_research(
     derivatives: bool = typer.Option(False, "--derivatives", help="Include optional public OI/funding/mark/index/depth evidence"),
     orderflow: bool = typer.Option(False, "--orderflow", help="Optional bounded closed-minute taker Delta/CVD and matching spot evidence"),
     market_checks: bool = typer.Option(False, "--market-checks", help="Optional public crowding, Binance cross-check and sampled liquidations; never execution"),
+    price_depth: bool = typer.Option(False, "--price-depth", help="Optional deterministic price action/volatility and continuous public book segments"),
+    depth_seconds: int = typer.Option(10, "--depth-seconds", min=0, max=30, help="On-demand book/trade sample before cutoff; 0 disables book sampling"),
     liquidation_seconds: int = typer.Option(10, "--liquidation-seconds", min=0, max=30, help="On-demand public WS sample before cutoff; 0 disables; no historical backfill"),
     flow_minutes: int = typer.Option(1, "--flow-minutes", min=1, max=60),
     flow_max_pages: int = typer.Option(60, "--flow-max-pages", min=1, max=100),
@@ -219,6 +221,7 @@ def okx_research(
                       okx_orderflow_max_pages=flow_max_pages)
         config.update(okx_market_checks_enabled=market_checks,
                       okx_market_checks_liquidation_seconds=liquidation_seconds)
+        config.update(okx_price_depth_enabled=price_depth, okx_price_depth_seconds=depth_seconds)
         multi_timeframe = multi_timeframe or trade_plan
         config["okx_multi_timeframe"] = multi_timeframe
         config["okx_trade_plan_enabled"] = trade_plan
@@ -248,6 +251,7 @@ def okx_research(
             settings.update({k: v for k, v in config.items() if k.startswith("okx_plan_") or k == "okx_trade_plan_enabled"})
             settings.update({k: v for k, v in config.items() if k.startswith("okx_orderflow_")})
             settings.update({k: v for k, v in config.items() if k.startswith("okx_market_checks_")})
+            settings.update({k: v for k, v in config.items() if k.startswith("okx_price_depth_")})
         else:
             graph = TradingAgentsGraph(selected_analysts=["market"], config=config)
             state, _ = graph.propagate(instrument, day, asset_type="crypto", portfolio=portfolio)

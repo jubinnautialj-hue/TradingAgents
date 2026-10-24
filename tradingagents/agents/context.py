@@ -205,6 +205,15 @@ def get_instrument_context_from_state(state: Mapping[str, Any]) -> str:
                     "Compare only aligned windows and units; missing/stale evidence cannot establish direction "
                     "or causality. Explain supporting and opposing evidence without changing frozen plans.\n"
                     + render_checks(state["market_checks_evidence"]))
+    if state.get("price_depth_evidence"):
+        from tradingagents.dataflows.vendors.okx_price_depth import render_price_depth
+
+        context += ("\nUse confirmed BOS/CHoCH and volatility as descriptive evidence only. "
+                    "Separate price sweep shapes from proven execution. Book changes are visible size changes, "
+                    "not identified cancellations, manipulation or iceberg intent. Never bridge discontinuous "
+                    "segments or combine mismatched hour/minute/second windows as causal confirmation. "
+                    "Retain opposing evidence and frozen strategy rules.\n"
+                    + render_price_depth(state["price_depth_evidence"]))
     if state.get("plan_mode"):
         context += ("\nPerpetual research actions use explicit OPEN_LONG_CANDIDATE / OPEN_SHORT_CANDIDATE / WAIT / "
                     "REDUCE_LONG / REDUCE_SHORT / EXIT_CANDIDATE; legacy Sell does not mean open short. "

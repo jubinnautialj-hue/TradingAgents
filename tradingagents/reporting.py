@@ -60,6 +60,10 @@ def _header(ticker: str, final_state: dict, settings: dict | None) -> str:
         lines.append(f"- Memory log: {final_state['memory_note']}")
     if final_state.get("market_snapshot"):
         lines.append("\n" + describe(final_state["market_snapshot"]))
+    if final_state.get("price_depth_evidence"):
+        from tradingagents.dataflows.vendors.okx_price_depth import render_price_depth
+
+        lines.append(render_price_depth(final_state["price_depth_evidence"]))
     if final_state.get("market_checks_evidence"):
         from tradingagents.dataflows.vendors.okx_market_checks import render_checks
 
@@ -165,6 +169,14 @@ def write_report_tree(final_state: dict, ticker: str, save_path, settings: dict 
 
         raw = final_state["market_checks_evidence"]
         (save_path / "market_checks_snapshot.json").write_text(json.dumps(
+            {"original": raw, "effective_view": evidence_view(raw), "execution_enabled": False},
+            indent=2, allow_nan=False), encoding="utf-8")
+    if final_state.get("price_depth_evidence"):
+        import json
+        from tradingagents.dataflows.vendors.okx_price_depth import evidence_view
+
+        raw = final_state["price_depth_evidence"]
+        (save_path / "price_depth_snapshot.json").write_text(json.dumps(
             {"original": raw, "effective_view": evidence_view(raw), "execution_enabled": False},
             indent=2, allow_nan=False), encoding="utf-8")
     parts = _report_parts(final_state)

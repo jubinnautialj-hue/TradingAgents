@@ -6,6 +6,11 @@ from tradingagents.dataflows.vendors.okx import build_bundle, check_bundle, desc
 
 def preflight(state):
     config = get_config()
+    depth_sample = None
+    if config.get("okx_price_depth_enabled", False):
+        from tradingagents.dataflows.vendors.okx_price_depth import prepare_depth
+
+        depth_sample = prepare_depth(state["company_of_interest"], state["trade_date"], config)
     samples = None
     if config.get("okx_market_checks_enabled", False):
         from tradingagents.dataflows.vendors.okx_market_checks import prepare_liquidations
@@ -25,6 +30,10 @@ def preflight(state):
         from tradingagents.dataflows.vendors.okx_orderflow import collect_orderflow
 
         update["orderflow_evidence"] = collect_orderflow(bundle, config)
+    if config.get("okx_price_depth_enabled", False) and bundle.get("status") == "VALID":
+        from tradingagents.dataflows.vendors.okx_price_depth import collect_price_depth
+
+        update["price_depth_evidence"] = collect_price_depth(bundle, config, depth_sample, update.get("orderflow_evidence"))
     if config.get("okx_trade_plan_enabled", False):
         from uuid import uuid4
 
@@ -83,4 +92,8 @@ def final_gate(state, config=None, *, revalidate=False):
             from tradingagents.dataflows.vendors.okx_market_checks import evidence_view
 
             update["research_result"]["evidence"]["market_checks"] = evidence_view(state["market_checks_evidence"])
+        if state.get("price_depth_evidence"):
+            from tradingagents.dataflows.vendors.okx_price_depth import evidence_view
+
+            update["research_result"]["evidence"]["price_depth"] = evidence_view(state["price_depth_evidence"])
     return update

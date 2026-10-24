@@ -1,0 +1,110 @@
+{
+  "branch": "codex/okx-price-action-orderbook-volatility",
+  "base_commit": "076717e611bb30762df6122fefff74c0a4742a9a",
+  "frozen_rules": {
+    "tradingagents\\dataflows\\perpetual_plan.py": true,
+    "tradingagents\\dataflows\\plan_lifecycle.py": true,
+    "tradingagents\\dataflows\\vendors\\okx_multitimeframe.py": true
+  },
+  "strategy_fingerprint": "b61aa92741f23a9db0120211654ab56317490b22878622adeb77fe538eca79cf",
+  "original_experiment_files": 146,
+  "original_experiment_unchanged": true,
+  "credential_pattern_findings": [],
+  "source_sha256": {
+    "cli/main.py": "b3651ff2c33d70b29f235cf7f5b073c9d91fd0c2ae743d4bba27cb95454583f2",
+    "tradingagents/agents/context.py": "5279744b5717866b87b73fc00ff4db1a019cf8ed6edcf67d0f69954d00dbbe92",
+    "tradingagents/agents/state.py": "d672518e16ec59e09131089cbfb33da7ffe45ce1e0ad25bd51336c8b00933c73",
+    "tradingagents/dataflows/okx_research.py": "776be2ab1be664ad6deb76a27d7c436eb10bd07052dbf889e38eeb1ceb029dfc",
+    "tradingagents/default_config.py": "8e8b0724d070028d45d704c7d7f5e75e6ae0fd2395e938d6a887ab05473d1df7",
+    "tradingagents/graph/trading_graph.py": "db3e52a992de568c1f9a3943711cf77661ad1e625f3b0f5f18e4cc9252bc8121",
+    "tradingagents/report_html.py": "f39ccd5f16bd7fa53bb385fb9a19e291c2886f64a35299d6aa77af4f0394a140",
+    "tradingagents/reporting.py": "4f0e2951fee87df4ec1ba210b8142492b69c75e8a90eeb59d445531164486040",
+    "docs/okx_v2_3.md": "707d79e3acbcd126a34118a36361e0ceeb915dff9f6ebf569783bacca4823f18",
+    "tests/test_okx_price_depth.py": "dc866ad9e156ed1d0279538eb14ec3203459f56a4f7d0204901e084ef10d3a1a",
+    "tradingagents/dataflows/vendors/okx_price_depth.py": "8574b5e5944206f2bf1b91f7a0ce100edbc507bf5200b1ba9c7bf6d6c4d358f5"
+  },
+  "execution_enabled": false,
+  "source_hash_scope": "Raw uncommitted workspace bytes; excludes this self-referential manifest and user AGENTS.md. Computational module unchanged during real research; report_html display-only addition tested afterwards.",
+  "acceptance": "CONDITIONAL_PASS",
+  "tests": {
+    "passed": 1842,
+    "failed_existing_windows": 5,
+    "skipped": 4,
+    "deselected": 13,
+    "subtests_passed": 100,
+    "seconds": 131.33,
+    "v23_unit_tests": 34,
+    "combined_v21_v22_v23_special_passed": 94
+  },
+  "public_probe_report": "okx_BTC-USDT-SWAP_multi_4934d2f0926c",
+  "real_research": {
+    "directory": "C:\\Users\\jerry_su\\.tradingagents\\logs\\reports\\okx_BTC-USDT-SWAP_multi_c37443bfea21",
+    "model": "AVAILABLE",
+    "workflow": "COMPLETED",
+    "cutoff_utc": "2026-10-24T01:23:01.275000+00:00",
+    "action": "WAIT",
+    "plan_status": "WAIT",
+    "plan_valid": false,
+    "allow_new_risk": false,
+    "execution_enabled": false,
+    "original_evidence": "VALID",
+    "final_evidence": "STALE_DATA",
+    "json_evidence": "STALE_DATA",
+    "role_report_files": 9,
+    "book_summaries": [
+      {
+        "status": "VALID",
+        "start_ms": 1792804955107,
+        "end_ms": 1792804964407,
+        "observations": 94,
+        "mid_change_bps": 1.0892133837092643,
+        "spread_start_bps": 0.012377424815600602,
+        "spread_end_bps": 0.012376076796752117,
+        "top20_depth_change_fraction": 0.4850880434986877,
+        "imbalance_change": 0.4353589152030026,
+        "liquidity_deterioration_clue": false,
+        "observed_trade_count": 80,
+        "observed_buy_base": 1.0784,
+        "observed_sell_base": 0.5432,
+        "observed_delta_base": 0.5352,
+        "possible_absorption_clue": false,
+        "trade_coverage": "Observed public trade stream only, not reconciled complete volume; ordering across channels not guaranteed",
+        "depth_scope": "Top 20 visible levels per side, changing price ranges; size loss is not identified cancellation",
+        "large_level_threshold_usdt": 10000,
+        "large_level_changes_retained": 200,
+        "large_level_changes_observed": 1824,
+        "large_level_changes_truncated": true,
+        "invalidation": "Any sequence gap invalidates this segment; never concatenate across reconnects"
+      }
+    ],
+    "hashes": {
+      "complete_report.html": "f8b8c484b2de1f7390f138d43de3992d1421bd6b68178b158b0f2775454163ef",
+      "complete_report_v23_evidence.html": "7ed87a6229bc53d48f0b54b9f84b753ca610ff6a91a542bce471551d5ebd6556",
+      "complete_report.md": "5e10b3a52640f2ecd9a651d494755956a81836ec27a9b1f857338ad21f78f48b",
+      "research_result.json": "3af8b23b0c6093c2a2929c8e3bdc53cf32322012b73225f8c513fc29228c0f46",
+      "price_depth_snapshot.json": "791dad5bd0c6ae008dc0032cb23aedaf82caa090e5fc7f0fd20e1c7d20129317"
+    },
+    "enhanced_html_note": "Same actual research state/cutoff rendered after display-only fix; original HTML/JSON not overwritten; no additional model call"
+  },
+  "test_evidence_sha256": {
+    "regression_release.txt": "77b4a3d8106326f624b11b8b3cdb2061befdae3654d61bd95605c4b6ba2d12ee",
+    "regression_release.xml": "0136f39c451e4ea61a7030c89c97d6884ded39333fb93f3765a49e5315a7f966",
+    "special_tests.txt": "c15cd445c7eb2e3b3763f8f592046bb99b021060a5883c818d2b7d344c0c54c4",
+    "special_final.txt": "519dcf023695124c125c5821e0ce39166136b012f9184a7bda7cabd3f477521b",
+    "public_cli.txt": "4cf4f9106a9c620f0c33dbdb21e582bb8ee1ecc2ba2f6871cbe36dca38d1c4d4",
+    "real_research.txt": "623539a6589bc59da3c9b22f1680bed528a559c9d902c691daabf10d69fb7b32"
+  },
+  "limitations": [
+    "Only published 100ms depth sampled; not all exchange engine states",
+    "Displayed size changes are not identified order cancellations or manipulation",
+    "Trades are observed samples without full volume reconciliation",
+    "No persistent historical raw-book archive; no full independent reconstruction of live sample from saved metrics",
+    "BOS/CHoCH are latest-bar definitions, not a persistent strategy lifecycle",
+    "Evidence expires after 300 seconds; original reports and archived analysis preserved",
+    "Existing five Windows test failures remain; no accuracy/profit improvement proven"
+  ],
+  "official_sources": [
+    "https://www.okx.com/docs-v5/en/#order-book-trading-market-data-ws-order-book-channel",
+    "https://www.okx.com/docs-v5/log_en/"
+  ]
+}

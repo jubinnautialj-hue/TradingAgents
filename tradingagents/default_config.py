@@ -113,6 +113,8 @@ def build_default_config() -> dict:
         "okx_derivatives_enabled": False,
         "okx_orderflow_enabled": False,
         "okx_market_checks_enabled": False,
+        "okx_price_depth_enabled": False,
+        "okx_price_depth_seconds": 10,
         "okx_market_checks_liquidation_seconds": 10,
         "okx_orderflow_minutes": 1,
         "okx_orderflow_max_pages": 60,
