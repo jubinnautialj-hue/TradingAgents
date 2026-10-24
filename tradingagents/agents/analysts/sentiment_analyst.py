@@ -55,6 +55,10 @@ def create_sentiment_analyst(llm):
     structured_llm = bind_structured(llm, SentimentReport, "Sentiment Analyst")
 
     def sentiment_analyst_node(state):
+        if state.get("event_research_mode"):
+            from tradingagents.agents.analysts.event_context import pinned_event_report
+
+            return pinned_event_report(llm, state, "Sentiment Analyst")
         ticker = state["company_of_interest"]
         end_date = state["trade_date"]
         start_date = _seven_days_back(end_date)

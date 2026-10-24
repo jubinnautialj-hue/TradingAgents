@@ -20,6 +20,10 @@ TOOLS = (
 
 def create_news_analyst(llm):
     def news_analyst_node(state):
+        if state.get("event_research_mode"):
+            from tradingagents.agents.analysts.event_context import pinned_event_report
+
+            return pinned_event_report(llm, state, "News Analyst")
         current_date = state["trade_date"]
         asset_type = state.get("asset_type", "stock")
         asset_label = "company" if asset_type == "stock" else "asset"

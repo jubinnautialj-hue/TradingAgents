@@ -214,6 +214,14 @@ def get_instrument_context_from_state(state: Mapping[str, Any]) -> str:
                     "segments or combine mismatched hour/minute/second windows as causal confirmation. "
                     "Retain opposing evidence and frozen strategy rules.\n"
                     + render_price_depth(state["price_depth_evidence"]))
+    if state.get("event_evidence"):
+        from tradingagents.dataflows.vendors.okx_events import render_events
+
+        context += ("\nNews and Sentiment interpret the SAME unique event IDs. Do not double-count them "
+                    "as independent evidence. Publisher facts, headline framing, market causality and "
+                    "trade suitability are different. Missing schedules, actual values and consensus "
+                    "must remain missing; no training-memory releases or inferred unlocks.\n"
+                    + render_events(state["event_evidence"]))
     if state.get("plan_mode"):
         context += ("\nPerpetual research actions use explicit OPEN_LONG_CANDIDATE / OPEN_SHORT_CANDIDATE / WAIT / "
                     "REDUCE_LONG / REDUCE_SHORT / EXIT_CANDIDATE; legacy Sell does not mean open short. "

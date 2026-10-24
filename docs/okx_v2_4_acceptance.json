@@ -1,0 +1,199 @@
+{
+  "branch": "codex/okx-macro-events-signal-calibration",
+  "base_commit": "8c6384332d25aa30132e7da08f0fcf93c8fc2b1e",
+  "frozen_rules": {
+    "tradingagents\\dataflows\\perpetual_plan.py": true,
+    "tradingagents\\dataflows\\plan_lifecycle.py": true,
+    "tradingagents\\dataflows\\vendors\\okx_multitimeframe.py": true
+  },
+  "strategy_fingerprint": "b61aa92741f23a9db0120211654ab56317490b22878622adeb77fe538eca79cf",
+  "original_experiment_files": 146,
+  "original_experiment_unchanged": true,
+  "credential_pattern_findings": [],
+  "source_sha256": {
+    "cli/main.py": "403a166456180ca0959472f21ae7a6930974a3f0da0a33a4c719015af4520788",
+    "tradingagents/agents/analysts/news_analyst.py": "e39faf8a7795062da6ef39ba6bb507772bb3dc8ce1f1ccd29cf096b6a411590d",
+    "tradingagents/agents/analysts/sentiment_analyst.py": "89525d2e4d3434c604ff204a67d493376165b18bb20246e33cec68db14473d5a",
+    "tradingagents/agents/context.py": "86509f51a54b56ba26d05cd36c2dc3a24f80f784ee05a72a5ea0c9b345ece230",
+    "tradingagents/agents/state.py": "467e6a4e8d86d7c53e216967ee3754f5b9347262a3a5a937c6ccc1bab8d8e351",
+    "tradingagents/dataflows/okx_research.py": "ad5650432801e69596363a0912ac6dc2331aa611d13794980819ad8c3ca75553",
+    "tradingagents/dataflows/vendors/okx.py": "cd6e333e16d9b3a351d54d2073c0e59eb9dcddeeb15b989d2885780b107a18b4",
+    "tradingagents/default_config.py": "f81f9b0c772256152b6d9ba1ca51c0647ee372275aa54d1dd316dbfb5ceb0ec7",
+    "tradingagents/graph/setup.py": "ab4e46efd64205cf6f60ba038992c96c4dcb3a141af085ea1bc251beb76220c6",
+    "tradingagents/graph/trading_graph.py": "e304d81462ad15aeacd1946f4c493a4ce3239fdbe2155408644b1e9243104440",
+    "tradingagents/report_html.py": "857494f3f68d0a567bb1df067f24ee0c16fab9aefc948852afdc361d3e57fd03",
+    "tradingagents/reporting.py": "910ff867e7ef0e9b3f3dd8d21c956cc4c4c8024e851f6297a55b1b7a078cc942",
+    "docs/okx_v2_4.md": "fa8b350d2d63d1c32950e908254de6aeb3bae9543566a0f93196ffcb81baa32e",
+    "tests/test_okx_events.py": "ddb0157ced57150a3feb55c6dac49ec3b5adae1dd6d73e3994ed8c11e260f482",
+    "tests/test_okx_signal_audit.py": "10bf6aad6e7e3fdd066ba451bd16a78be7bbe12d7042d9ddb49c21270adf7222",
+    "tradingagents/agents/analysts/event_context.py": "08e915182fe2e69b878c9df055ab3d00684ed57dbfa276972de03b426582f341",
+    "tradingagents/dataflows/vendors/okx_events.py": "b3202beea782ffd13ef1a97dddff63dd289b0a0edff75897a6d914ab7e72bc5c",
+    "tradingagents/okx_signal_audit.py": "2ae380dc7b2856e871c35046d722bc11f7557c8fdb2b47bf4fc29ed04ea43cdf"
+  },
+  "execution_enabled": false,
+  "hash_scope": "Raw uncommitted workspace bytes; excludes this self-referential manifest and user AGENTS.md. No source modifications after the real model run started.",
+  "acceptance": "CONDITIONAL_PASS_LIMITED_SCOPE",
+  "tests": {
+    "passed": 1874,
+    "failed_existing_windows": 5,
+    "skipped": 4,
+    "deselected": 13,
+    "subtests_passed": 100,
+    "seconds": 62.09,
+    "v24_special_passed": 32
+  },
+  "implemented_scope": [
+    "Official publication headlines with publication/first-seen cutoff gates and source quality",
+    "Existing News/Sentiment roles on pinned evidence, without external tools",
+    "Descriptive baseline simulation/Memory audits, no probability calibration",
+    "Fixed archived-input fingerprints and strict same-core/cutoff evidence diff"
+  ],
+  "not_implemented": [
+    "Complete macro calendar and verified event occurrence schedule",
+    "Structured economic actual values and market expectations",
+    "Universal token-unlock/supply/security-incident history",
+    "Formal probability calibration and fixed-horizon signal market-return labels",
+    "Automatic historical model replay or forward simulation tracker",
+    "Automatic live Graph Memory/Reflection learning"
+  ],
+  "real_research": {
+    "directory": "C:\\Users\\jerry_su\\.tradingagents\\logs\\reports\\okx_BTC-USDT-SWAP_multi_716c64fd94e0",
+    "model": "AVAILABLE",
+    "workflow": "COMPLETED",
+    "cutoff_utc": "2026-10-24T02:19:44.796000+00:00",
+    "action": "WAIT",
+    "plan_status": "WAIT",
+    "plan_valid": false,
+    "allow_new_risk": false,
+    "execution_enabled": false,
+    "role_reports": 11,
+    "event_count": 3,
+    "initial_events_status": "PARTIAL",
+    "final_events_status": "PARTIAL",
+    "json_events_status": "PARTIAL",
+    "event_metadata": {
+      "prompt_version": "okx-pinned-publication-v1",
+      "settings": {
+        "version": "0.7.0",
+        "llm_provider": "chatgpt",
+        "deep_think_provider": "chatgpt",
+        "quick_think_provider": "chatgpt",
+        "deep_think_llm": "gpt-6.1-sol",
+        "quick_think_llm": "gpt-6.1-sol",
+        "analysts": [
+          "market",
+          "news",
+          "social"
+        ],
+        "max_debate_rounds": 1,
+        "max_risk_discuss_rounds": 1,
+        "output_language": "Chinese",
+        "market_mode": "okx_usdt_perpetual",
+        "okx_interval": "4h",
+        "okx_events_enabled": true,
+        "okx_events_lookback_days": 14
+      },
+      "code_sha256": {
+        "events": "b3202beea782ffd13ef1a97dddff63dd289b0a0edff75897a6d914ab7e72bc5c",
+        "event_prompt": "08e915182fe2e69b878c9df055ab3d00684ed57dbfa276972de03b426582f341"
+      }
+    },
+    "source_quality": {
+      "fed_policy": {
+        "status": "VALID",
+        "issues": []
+      },
+      "fed_speeches": {
+        "status": "VALID",
+        "issues": []
+      },
+      "cpi": {
+        "status": "DATA_UNAVAILABLE",
+        "issues": [
+          "Official feed HTTP_403; no bypass attempted"
+        ]
+      },
+      "ppi": {
+        "status": "DATA_UNAVAILABLE",
+        "issues": [
+          "Official feed HTTP_403; no bypass attempted"
+        ]
+      },
+      "employment": {
+        "status": "DATA_UNAVAILABLE",
+        "issues": [
+          "Official feed HTTP_403; no bypass attempted"
+        ]
+      },
+      "sec": {
+        "status": "VALID",
+        "issues": []
+      },
+      "btc_core": {
+        "status": "VALID",
+        "issues": []
+      },
+      "okx_announcements": {
+        "status": "VALID",
+        "issues": []
+      }
+    },
+    "hashes": {
+      "complete_report.html": "1ce74259c4b8f7dfdd2f68db82866cfe910ea529885639fe6baceaba39e65bc6",
+      "complete_report.md": "0b9fc5a1f03d28c4d613e3ac1e8e61a97c1afdee0a036ab0a0787992ccf9e949",
+      "research_result.json": "5b4e677a746d7afbbee1eb97275e228a38365fbe84b664f40e8c485c95a3cd13",
+      "events_snapshot.json": "0d7a88aae60d5ce7bc80b4b102d8f77ff1ae2986ab503a421880c25ac78eae60"
+    },
+    "data_partition": "OBSERVED_REALTIME_ENGINEERING_ACCEPTANCE_NOT_UNSEEN_TEST"
+  },
+  "descriptive_statistics": {
+    "decision_count": 2316,
+    "actions": {
+      "OPEN_LONG_CANDIDATE": 49,
+      "OPEN_SHORT_CANDIDATE": 230,
+      "WAIT": 2037
+    },
+    "trade_outcomes": {
+      "flat": 0,
+      "losses": 10,
+      "predictive_success_probability": null,
+      "sample_status": "INSUFFICIENT_FOR_INFERENCE",
+      "simulated_trade_net_sum_usdt": -21.964830034775577,
+      "trades": 14,
+      "wins": 4
+    },
+    "candidate_without_resolved_trade": 265,
+    "memory_records": 14,
+    "memory_statuses": {
+      "COMPLETED": 6,
+      "MODEL_FAILED": 8
+    },
+    "memory_actions": {
+      "ACCEPT": 6,
+      "NO_COMPLETE_DECISION": 8
+    },
+    "scope": "Existing development ledger and isolated D.5 feedback; not an Agent portfolio or future probabilities"
+  },
+  "audit_artifact_sha256": {
+    "special_tests.txt": "ae445674fc500cbeb886ba1c91dc68cbf41e1e20898c32d2f7192e4ae910ce59",
+    "regression.txt": "7efc5192d36971767010b0af5677173cc196db71e7220ce23296abeb5853e919",
+    "regression.xml": "f19d9c72a52c205ff2b04d08915771eb971fe71695a98b4b43b76bef6503efca",
+    "public_cli.txt": "b34d1967b29f93c8b032c897adb52659ca3af81c5e510e82c165acb0352be8b9",
+    "real_research.txt": "8b540405e4a537a3ab88960a0f4d7609ffce1bdbdaa474de7a5268a1236747e4",
+    "ledger_statistics.json": "0e922f041e66339c596426ccdce936bc5ca33a5166dcf5bd4e4464612f5e532d",
+    "memory_statistics.json": "24f20ed2068b7ac130a763c3bbb58ae09f9175f23d6192ebba63f25de059750f",
+    "public_fixed_snapshot.json": "fd25448089f54a90dc936916b123505a2469a37c970a3bc7d23ba8af07625846",
+    "public_identity_diff.json": "82fd483b00fd06a77d250699897c19a96b884c7a19109029204f893b73e6df8e",
+    "real_fixed_snapshot.json": "bbab833b2a20f99a718cb4fd6bd364ed15ba6d30d82d1e04ffc9804f03f07f0e",
+    "real_identity_diff.json": "b834b7a04cfee5d168f6ffff2619b99fc3272291067b171d378096a24c029e25"
+  },
+  "limitations": [
+    "BLS CPI/PPI/employment RSS returned 403; not bypassed",
+    "NEAR feed probe returned 404; no reliable generic unlock/security feed",
+    "Publisher-reported timestamps are not a historical publication-version archive",
+    "Exact URL/title-day grouping is not complete semantic cross-source deduplication",
+    "Configured model names do not pin provider backend weights or eliminate training knowledge contamination",
+    "Four-batch optional evidence integration does not demonstrate accuracy/profit improvement",
+    "Existing five Windows failures remain; no paid services or credentials used"
+  ]
+}

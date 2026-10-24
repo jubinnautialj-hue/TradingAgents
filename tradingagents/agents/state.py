@@ -59,6 +59,8 @@ class AgentState(MessagesState):
     orderflow_evidence: dict
     market_checks_evidence: dict
     price_depth_evidence: dict
+    event_evidence: dict
+    event_research_mode: bool
     data_quality: str
     allow_new_risk: bool
     execution_enabled: bool

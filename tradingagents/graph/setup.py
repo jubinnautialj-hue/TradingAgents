@@ -35,7 +35,12 @@ def _model_failure_boundary(node, stage):
         from tradingagents.llm_clients.reliability import classify_failure
         try:
             result = node.invoke(state, config=config) if hasattr(node, "invoke") else node(state)
-            return {**result, "llm_status": "AVAILABLE", "workflow_status": "RUNNING"}
+            # Parallel pinned analysts return only their distinct report keys.
+            # Market remains the single status writer at this fan-out step;
+            # failures in ANY analyst still raise through this same boundary.
+            status = {} if stage in {"News Analyst", "Sentiment Analyst"} else {
+                "llm_status": "AVAILABLE", "workflow_status": "RUNNING"}
+            return {**result, **status}
         except Exception as exc:
             failure = classify_failure(exc)
             if failure is None:
@@ -166,6 +171,11 @@ class GraphSetup:
             return _model_failure_boundary(node, stage) if self.okx_mode else node
 
         for spec in plan.specs:
+            if self.okx_mode and spec.key in {"news", "social"}:
+                from dataclasses import replace
+
+                # Pinned analysts cannot execute their legacy external tools.
+                spec = replace(spec, tools=())
             workflow.add_node(spec.agent_node,
                               model_node(analyst_factories[spec.key]() if historical_filter else
                                          _analyst_graph(spec, analyst_factories[spec.key](), self.max_tool_rounds), spec.agent_node))

@@ -60,6 +60,10 @@ def _header(ticker: str, final_state: dict, settings: dict | None) -> str:
         lines.append(f"- Memory log: {final_state['memory_note']}")
     if final_state.get("market_snapshot"):
         lines.append("\n" + describe(final_state["market_snapshot"]))
+    if final_state.get("event_evidence"):
+        from tradingagents.dataflows.vendors.okx_events import render_events
+
+        lines.append(render_events(final_state["event_evidence"]))
     if final_state.get("price_depth_evidence"):
         from tradingagents.dataflows.vendors.okx_price_depth import render_price_depth
 
@@ -178,6 +182,25 @@ def write_report_tree(final_state: dict, ticker: str, save_path, settings: dict 
         raw = final_state["price_depth_evidence"]
         (save_path / "price_depth_snapshot.json").write_text(json.dumps(
             {"original": raw, "effective_view": evidence_view(raw), "execution_enabled": False},
+            indent=2, allow_nan=False), encoding="utf-8")
+    if final_state.get("event_evidence"):
+        import json
+        import hashlib
+        from tradingagents.agents.analysts import event_context
+        from tradingagents.dataflows.vendors import okx_events
+        from tradingagents.dataflows.vendors.okx_events import evidence_view
+
+        raw = final_state["event_evidence"]
+        allowed = ("version", "llm_provider", "deep_think_provider", "quick_think_provider",
+                   "deep_think_llm", "quick_think_llm", "analysts", "max_debate_rounds",
+                   "max_risk_discuss_rounds", "output_language", "market_mode", "okx_interval",
+                   "okx_events_enabled", "okx_events_lookback_days")
+        metadata = {"prompt_version": event_context.PROMPT_VERSION,
+                    "settings": {k: settings[k] for k in allowed if settings and k in settings},
+                    "code_sha256": {name: hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest()
+                                    for name, module in (("events", okx_events), ("event_prompt", event_context))}}
+        (save_path / "events_snapshot.json").write_text(json.dumps(
+            {"original": raw, "effective_view": evidence_view(raw), "research_metadata": metadata, "execution_enabled": False},
             indent=2, allow_nan=False), encoding="utf-8")
     parts = _report_parts(final_state)
     sections = []

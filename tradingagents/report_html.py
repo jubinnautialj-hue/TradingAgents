@@ -229,6 +229,11 @@ def _run_details(final_state: dict, settings: dict | None) -> list[tuple[str, st
         details.append(("Research plan", escape(f"{r['proposed_action']} / {r['plan_status']} / plan_valid={r['plan_valid']} / execution_enabled=False")))
     if final_state.get("llm_status"):
         details.append(("Model / workflow", escape(f"{final_state['llm_status']} / {final_state.get('workflow_status', 'NOT_STARTED')}")))
+    if final_state.get("event_evidence"):
+        from tradingagents.dataflows.vendors.okx_events import render_events
+
+        details.append(("Official publications / catalysts",
+                        "<pre>" + escape(render_events(final_state["event_evidence"])) + "</pre>"))
     if final_state.get("price_depth_evidence"):
         from tradingagents.dataflows.vendors.okx_price_depth import render_price_depth
 

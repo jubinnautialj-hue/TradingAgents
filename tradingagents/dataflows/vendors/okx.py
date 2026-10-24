@@ -25,6 +25,7 @@ from tradingagents.dataflows.errors import VendorUnavailableError
 MODE = "okx_usdt_perpetual"
 BASE_URL = "https://www.okx.com"
 PUBLIC_PATHS = frozenset({
+    "/api/v5/support/announcements",
     "/api/v5/rubik/stat/contracts/long-short-account-ratio-contract",
     "/api/v5/rubik/stat/contracts/long-short-account-ratio-contract-top-trader",
     "/api/v5/rubik/stat/contracts/long-short-position-ratio-contract-top-trader",

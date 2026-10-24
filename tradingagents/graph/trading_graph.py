@@ -73,7 +73,8 @@ class TradingAgentsGraph:
         self.config = config or DEFAULT_CONFIG
         if self.config.get("market_mode", "stock") not in {"stock", "okx_usdt_perpetual"}:
             raise ValueError("Unknown market_mode")
-        if okx_enabled(self.config) and tuple(selected_analysts) != ("market",):
+        event_analysts = self.config.get("okx_events_enabled", False) and tuple(selected_analysts) == ("market", "news", "social")
+        if okx_enabled(self.config) and tuple(selected_analysts) != ("market",) and not event_analysts:
             raise ValueError("Phase-one OKX mode requires selected_analysts=['market']; news/social are not yet mapped to swaps")
         if self.config.get("okx_trade_plan_enabled") and (
                 not okx_enabled(self.config) or not self.config.get("okx_multi_timeframe") or not self.config.get("okx_derivatives_enabled")):
@@ -293,6 +294,7 @@ class TradingAgentsGraph:
             **{k: v for k, v in cfg.items() if k.startswith("okx_orderflow_")},
             **{k: v for k, v in cfg.items() if k.startswith("okx_market_checks_")},
             **{k: v for k, v in cfg.items() if k.startswith("okx_price_depth_")},
+            **{k: v for k, v in cfg.items() if k.startswith("okx_events_")},
             **{k: v for k, v in cfg.items() if k.startswith("okx_plan_") or k == "okx_trade_plan_enabled"},
             "okx_pivot_window": cfg.get("okx_pivot_window", 2),
             "okx_structure_window": cfg.get("okx_structure_window", 20),
@@ -539,6 +541,7 @@ class TradingAgentsGraph:
             **({"orderflow_evidence": final_state["orderflow_evidence"]} if final_state.get("orderflow_evidence") else {}),
             **({"market_checks_evidence": final_state["market_checks_evidence"]} if final_state.get("market_checks_evidence") else {}),
             **({"price_depth_evidence": final_state["price_depth_evidence"]} if final_state.get("price_depth_evidence") else {}),
+            **({"event_evidence": final_state["event_evidence"], "event_research_mode": True} if final_state.get("event_evidence") else {}),
             **({k: final_state.get(k) for k in ("research_id", "position_context", "research_choice", "trader_choice",
                 "portfolio_choice", "portfolio_schema_valid", "research_result", "entry_revalidation")} if self.config.get("okx_trade_plan_enabled") else {}),
         }
