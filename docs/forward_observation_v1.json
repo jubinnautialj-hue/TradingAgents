@@ -1,0 +1,20 @@
+{
+  "version": "forward-observation-v1",
+  "scope": "OBSERVATION_ONLY_NOT_RISK_OR_SIMULATION_ADMISSION",
+  "require": [
+    "PROSPECTIVE_F1_V1",
+    "COMPLETED_AVAILABLE",
+    "VALID_ORIGINAL_PLAN_SCHEMA",
+    "OPEN_CANDIDATE",
+    "VALID_ARCHIVED_CORE_AND_EVIDENCE",
+    "F1_POOL_ELIGIBLE",
+    "COHERENT_IDENTITIES_PRICES_AND_C1_CLOCK",
+    "REGISTERED_BEFORE_FIRST_CONFIRMATION_BAR"
+  ],
+  "allow_new_risk": "Preserve both original fields. False is NOT an observation exclusion; mismatch is rejected.",
+  "research_evidence": "Validate frozen quality at research/registration; do not renew TTL. Future entry evidence remains separate.",
+  "expiry": "No new observation admission after expiry. An already enrolled chain may record calendar expiry only.",
+  "legacy": "F1 records immutable; re-assess through separate audit. Old F2 chains read-only/paused, no silent migration.",
+  "simulation_admitted": false,
+  "execution_enabled": false
+}

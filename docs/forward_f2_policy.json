@@ -1,0 +1,31 @@
+{
+  "version": "forward-f2-v1",
+  "execution_enabled": false,
+  "market_source": "OKX official API V5 public REST",
+  "official_documentation": "https://www.okx.com/docs-v5/en/#order-book-trading-market-data-get-candlesticks-history",
+  "cycle": "1h UTC confirmed closed candles only; original 1h/4h/1d research context frozen",
+  "state_machine": "tradingagents.dataflows.plan_lifecycle.evaluate_signal / breakout-retest-v1 (unchanged)",
+  "permission_rule": "Require PROSPECTIVE, COMPLETED, AVAILABLE, valid data/plan, F1 pool and queued status, root and original_result allow_new_risk both true; otherwise archive/exclude. F2 never grants permissions.",
+  "known_f1_incompatibility": "Current F1 PerpetualResearchResult fixes allow_new_risk=False. No current canonical candidate can pass F2 strict permission. No schema change or bypass in F2.",
+  "collection": {
+    "delivery_grace_seconds_default": 90,
+    "scope": "Observation delivery label only, NOT TTL extension or strategy change",
+    "backfill": "Actual acquisition time retained; any backfilled prefix suppresses F3 export",
+    "gaps": "Pause without committing incomplete coverage; retry only missing uncommitted interval",
+    "expiry": "Irreversible calendar expiry; unresolved history tagged UNKNOWN_UNOBSERVED, never proof of untriggered plan"
+  },
+  "event_commit": "Per-registration nonblocking process lock; immutable old event objects in an atomic chain file; only committed observations count as watermark",
+  "namespace": "Production and FIXTURE physically separated; fixture transitions cannot export F3 conditions",
+  "scan_limits_defaults": {
+    "max_requests": 8,
+    "max_candidates": 20,
+    "max_records": 200,
+    "max_pages": 3,
+    "max_seconds": 180,
+    "delivery_grace_seconds": 90,
+    "execution_enabled": false
+  },
+  "http_budget": "Each inherited public GET has at most 3 HTTP attempts; scan CLI supervisor enforces hard wall deadline; direct Python scan API is cooperative only",
+  "f3": "Condition confirmation only; no fills or settlement. Preserve original next_tradable_ms and actual decision_available_ms. Never backdate a fill to an already passed open.",
+  "scheduling": "Single scan + external Windows Task Scheduler or cron; no persistent service installed or started"
+}

@@ -1,0 +1,179 @@
+{
+  "stage": "F2.1 observation/risk separation",
+  "generated_at_utc": "2026-10-24T08:36:50.818468+00:00",
+  "branch": "codex/forward-validation-f2",
+  "git_baseline": "3bec3dfd0feebeafffd7f52a209c2f85d5c26a29",
+  "recommendation": "CONDITIONAL_PASS_CODE_AND_ISOLATED_END_TO_END_READY_REAL_VALID_CANDIDATE_NOT_OBSERVED",
+  "execution_enabled": false,
+  "policy_version": "forward-observation-v1",
+  "policy_hash": "775a67a2fefda66ebadf0f01d6bf88650c690959d0aefc678082c96431898749",
+  "tracking_version": "forward-f2.1-v1",
+  "root_cause": {
+    "final_research_allow_new_risk": "Literal False in PerpetualResearchResult, unconditionally False in finalize_result and final_gate plan mode",
+    "data_bundle_allow_new_risk": "Earlier data-usability gate; different semantic layer",
+    "plan_valid": "Original deterministic VALID_CANDIDATE status and Schema checks, independent of final risk permission",
+    "original_F2_block": "Required both final risk fields True; impossible for canonical perpetual research",
+    "fix": "Independent versioned observation qualification; preserve original risk fields and existing F1 quality/time restrictions"
+  },
+  "compatibility": {
+    "F1_records": "immutable, separate eligibility audit only",
+    "legacy_F2_chains": "read-only paused; no automatic migration",
+    "condition_version": "forward-observation-condition-v1",
+    "simulation_admitted": false,
+    "requires_separate_simulation_admission": true
+  },
+  "old_accepted_sources_and_archives": {
+    "F1_source_fingerprints_match": true,
+    "F1_registrations": {
+      "648e415e0cbb99ba30a21a25cc106268febbabb3a0f69240a665d791e5ea0605": {
+        "content_hash": "e2e4d222514468add114e064415bfbce775f8929dd6288c4534adfdae2c0e3fc",
+        "action": "WAIT",
+        "plan_valid": false,
+        "allow_new_risk": false,
+        "eligibility_event_count": 1
+      },
+      "8a2327573a1b6d0e12e5174b2066034283afbdd41d26a82aad00d9a76b1949fe": {
+        "content_hash": "4e8e1593a8a225f9626205deefed0d7c09dabd76acc244a3e7e5a60bea4317d1",
+        "action": "WAIT",
+        "plan_valid": false,
+        "allow_new_risk": false,
+        "eligibility_event_count": 1
+      }
+    },
+    "old_F2_documents_unchanged": true,
+    "original_146_experiments_hash_match": true,
+    "strategy_fingerprint": "b61aa92741f23a9db0120211654ab56317490b22878622adeb77fe538eca79cf"
+  },
+  "source_sha256": {
+    "tradingagents/observation_eligibility.py": "693285c4a9f47d6eb741f5428f186d98911ae6f436990a3a6d5a42b5ef9318c4",
+    "tradingagents/forward_tracking.py": "bb215ee60000d30ad1bf32b3d7cf9b6de1768331daae9d5d01e4c39ec0b8f66e",
+    "tests/test_observation_eligibility.py": "df299c7352cc7419754bdd049efca867edaf4eb0ed03275697842d8b7a5095c2",
+    "tests/test_forward_tracking.py": "a408e863b99823038112847cb9856709f715a4a2e937c442e42fcf35371271a7",
+    "docs/forward_observation_v1.json": "4b82200b3417cb3dd91ddd4c846b08dfc28e4f0723c9197f468a820f534d8b80",
+    "docs/forward_f21.schema.json": "097a86e56fcea839ad2e66b63b5957de8a62be707cbe23721be4fc63be83bce3",
+    "docs/forward_f21.md": "531c57e348ff300d7a4e2539a0f1e9873a3a53cb1898217ad3df6dfde8ef24eb"
+  },
+  "credential_pattern_findings": [],
+  "final_specific_and_compatibility_tests": {
+    "passed": 90,
+    "seconds": 52.59,
+    "xml": "C:\\Users\\jerry_su\\.tradingagents\\logs\\forward_f21_final_checks.xml",
+    "scope": "18 F2.1 cases, 40 F2 cases and 32 F1 cases; includes canonical mock F1 -> qualification -> breakout -> retest -> condition -> expiry"
+  },
+  "full_regression": {
+    "passed": 1962,
+    "failed": 5,
+    "skipped": 4,
+    "deselected": 13,
+    "subtests_passed": 100,
+    "seconds": 191.67,
+    "xml": "C:\\Users\\jerry_su\\.tradingagents\\logs\\forward_f21_full_regression.xml",
+    "note": "Full run before final two null-cutoff/forged-assessment defensive tests; final 90-case checks cover those refinements",
+    "known_failures": [
+      "test_chatgpt_auth::test_a_token_near_expiry_is_renewed_with_the_stored_refresh_token",
+      "test_chatgpt_auth::test_signing_in_by_pasting_the_redirect_saves_a_private_sign_in",
+      "test_cli_updates::test_the_upgrade_command_follows_the_install",
+      "test_cli_updates::test_a_uv_git_install_is_upgraded_with_uv",
+      "test_suite_isolation::test_yfinance_keeps_its_cache_out_of_the_users_home"
+    ]
+  },
+  "production_scan": {
+    "version": "forward-f2.1-v1",
+    "started_ms": 1792830791684,
+    "completed_ms": 1792830793157,
+    "market_cutoff_ms": 1792830793086,
+    "excluded": [
+      {
+        "registration_id": "648e415e0cbb99ba30a21a25cc106268febbabb3a0f69240a665d791e5ea0605",
+        "category": "RESEARCH_FAILED",
+        "reasons": [
+          "F1_POOL_NOT_ELIGIBLE",
+          "FROZEN_CLOCK_MISMATCH",
+          "MISSING_FORWARD_CLOCK",
+          "NOT_OPEN_CANDIDATE",
+          "ORIGINAL_PLAN_INVALID",
+          "PLAN_INVALID",
+          "RESEARCH_NOT_COMPLETED"
+        ]
+      },
+      {
+        "registration_id": "8a2327573a1b6d0e12e5174b2066034283afbdd41d26a82aad00d9a76b1949fe",
+        "category": "WAIT",
+        "reasons": [
+          "F1_POOL_NOT_ELIGIBLE",
+          "FROZEN_EVIDENCE_INVALID_OR_STALE",
+          "NOT_OPEN_CANDIDATE",
+          "ORIGINAL_PLAN_INVALID",
+          "PLAN_INVALID"
+        ]
+      }
+    ],
+    "errors": [],
+    "eligible_candidates": 0,
+    "tracking_jobs": 0,
+    "results": [],
+    "observation_assessments": [
+      {
+        "registration_id": "648e415e0cbb99ba30a21a25cc106268febbabb3a0f69240a665d791e5ea0605",
+        "event_id": "427c09eff6cf0726d8cfaff7b63ce47671006d57a676cf1034aeb0ba01c79642",
+        "research_completed": false,
+        "plan_valid": false,
+        "observation_eligible": false,
+        "allow_new_risk": false,
+        "simulation_admitted": false,
+        "execution_enabled": false
+      },
+      {
+        "registration_id": "8a2327573a1b6d0e12e5174b2066034283afbdd41d26a82aad00d9a76b1949fe",
+        "event_id": "a60499e51f78ae6b248dcd9e48e6bb272a3c612d94a7b8d74290ec27e73def6e",
+        "research_completed": true,
+        "plan_valid": false,
+        "observation_eligible": false,
+        "allow_new_risk": false,
+        "simulation_admitted": false,
+        "execution_enabled": false
+      }
+    ],
+    "observation_eligible_count": 0,
+    "observation_policy_version": "forward-observation-v1",
+    "observation_policy_hash": "775a67a2fefda66ebadf0f01d6bf88650c690959d0aefc678082c96431898749",
+    "simulation_admitted": false,
+    "simulated_trade_candidates": 0,
+    "allow_new_risk": false,
+    "deferred_by_candidate_budget": 0,
+    "deferred_by_record_budget": 0,
+    "deferred_candidates": 0,
+    "records_checked": 2,
+    "code_sha256": "07b495f152a4fbb5f498d50d6058da36d92142ae490eeb0c702da40204a17a09",
+    "logical_get_calls": 1,
+    "max_http_attempts_per_get": 3,
+    "limits": {
+      "max_requests": 4,
+      "max_candidates": 20,
+      "max_records": 200,
+      "max_pages": 3,
+      "max_seconds": 120,
+      "delivery_grace_seconds": 90,
+      "execution_enabled": false
+    },
+    "probe": null,
+    "execution_enabled": false,
+    "risk_permission_scope": "Observation only; original risk fields unchanged; no simulation admission or execution authorization"
+  },
+  "production_candidate_ingress": {
+    "code_and_mock_workflow_ready": true,
+    "real_observation_eligible_candidates": 0,
+    "real_positive_end_to_end_verified": false,
+    "real_condition_events": 0,
+    "simulated_fills": 0,
+    "llm_calls_this_stage": 0
+  },
+  "limitations": [
+    "No real valid candidate exists in current formal registry; only WAIT and RESEARCH_FAILED, no fake positive registered",
+    "F1 quality/pool/clock constraints retained; valid plans with failed original registration quality are not rescued",
+    "Historical research evidence is never relabelled as current entry evidence; fresh entry revalidation remains required",
+    "Legacy F2 chains cannot resume without separate explicit migration approval",
+    "Local hashes/locks are not externally signed/WORM or distributed cross-host guarantees",
+    "Five prior Windows full-suite failures remain; no F3, scheduler installation, commit or push"
+  ]
+}

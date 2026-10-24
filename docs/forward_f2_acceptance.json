@@ -1,0 +1,156 @@
+{
+  "stage": "F2",
+  "version": "forward-f2-v1",
+  "branch": "codex/forward-validation-f2",
+  "baseline_commit": "3bec3dfd0feebeafffd7f52a209c2f85d5c26a29",
+  "generated_at_utc": "2026-10-24T07:01:09.182694+00:00",
+  "execution_enabled": false,
+  "recommendation": "CONDITIONAL_ENGINEERING_PASS_PRODUCTION_CANDIDATE_INGRESS_BLOCKED",
+  "permission_blocker": "F1 PerpetualResearchResult.allow_new_risk is Literal[False]; user F2 rules exclude False. No bypass, permission upgrade, F1 protocol or archived record modification.",
+  "implemented": [
+    "Bounded single scan and supervised hard CLI timeout",
+    "F1 read-only gate and strict state/permission exclusion",
+    "C.1 prefix replay with contiguous confirmed 1h candles",
+    "Separate acquisition and decision timestamps; explicit backfill and no F3 export from backfill/fixtures",
+    "Atomic append-style audit chain; per-candidate and scan process locks; recovery and deduplication",
+    "Round-robin bounded record/candidate scheduling; shared scan cache and committed-bar durable cache",
+    "Condition-only F3 schemas/reader, never fills or PnL"
+  ],
+  "unchanged": {
+    "F1_accepted_source_hashes_match": true,
+    "F1_registration_content_hashes": {
+      "648e415e0cbb99ba30a21a25cc106268febbabb3a0f69240a665d791e5ea0605": "e2e4d222514468add114e064415bfbce775f8929dd6288c4534adfdae2c0e3fc",
+      "8a2327573a1b6d0e12e5174b2066034283afbdd41d26a82aad00d9a76b1949fe": "4e8e1593a8a225f9626205deefed0d7c09dabd76acc244a3e7e5a60bea4317d1"
+    },
+    "original_146_experiment_hashes_match": true,
+    "strategy_fingerprint": "b61aa92741f23a9db0120211654ab56317490b22878622adeb77fe538eca79cf",
+    "tracked_git_diff_empty": true
+  },
+  "source_sha256": {
+    "tradingagents/forward_tracking.py": "f1ac51a0a93dddedbe26eee39ba7f41f7dac3d4b3beebb2143e11de85dcfe537",
+    "tests/test_forward_tracking.py": "4d8dfd611fa34693155493f7edfbad15272ba1ae4e1d20f52fa6c6a7f826c0f9",
+    "docs/forward_f2.md": "2bae2e177143b74ce388238abb8a547be0e19c69f9ff0d5a677c1fb03826a003",
+    "docs/forward_f2.schema.json": "a9eefe14cd6833bb3df412e3388db20e99a2fb6e94dd349d7d8acd9834d8a0bc",
+    "docs/forward_f2_policy.json": "bd04704207fbd4582d82149203ee01fb37bc827e782bf59afa69175f6bdac531"
+  },
+  "secret_pattern_findings": [],
+  "specialized_tests": {
+    "passed": 40,
+    "seconds": 11.57,
+    "xml": "C:\\Users\\jerry_su\\.tradingagents\\logs\\forward_f2_specialized_final.xml"
+  },
+  "full_regression": {
+    "passed": 1946,
+    "failed": 5,
+    "skipped": 4,
+    "deselected": 13,
+    "subtests_passed": 100,
+    "seconds": 85.72,
+    "xml": "C:\\Users\\jerry_su\\.tradingagents\\logs\\forward_f2_final_regression.xml",
+    "known_failures": [
+      "test_chatgpt_auth::test_a_token_near_expiry_is_renewed_with_the_stored_refresh_token",
+      "test_chatgpt_auth::test_signing_in_by_pasting_the_redirect_saves_a_private_sign_in",
+      "test_cli_updates::test_the_upgrade_command_follows_the_install",
+      "test_cli_updates::test_a_uv_git_install_is_upgraded_with_uv",
+      "test_suite_isolation::test_yfinance_keeps_its_cache_out_of_the_users_home"
+    ]
+  },
+  "official_public_scan": {
+    "version": "forward-f2-v1",
+    "started_ms": 1792825095082,
+    "completed_ms": 1792825096692,
+    "market_cutoff_ms": 1792825095791,
+    "excluded": [
+      {
+        "registration_id": "648e415e0cbb99ba30a21a25cc106268febbabb3a0f69240a665d791e5ea0605",
+        "category": "RESEARCH_FAILED",
+        "reasons": [
+          "RESEARCH_NOT_COMPLETED",
+          "NOT_OPEN_CANDIDATE",
+          "PLAN_INVALID",
+          "ALLOW_NEW_RISK_FALSE",
+          "F1_POOL_NOT_ELIGIBLE",
+          "MISSING_FORWARD_CLOCK"
+        ]
+      },
+      {
+        "registration_id": "8a2327573a1b6d0e12e5174b2066034283afbdd41d26a82aad00d9a76b1949fe",
+        "category": "WAIT",
+        "reasons": [
+          "NOT_OPEN_CANDIDATE",
+          "PLAN_INVALID",
+          "ALLOW_NEW_RISK_FALSE",
+          "F1_POOL_NOT_ELIGIBLE"
+        ]
+      }
+    ],
+    "errors": [],
+    "eligible_candidates": 0,
+    "results": [],
+    "deferred_by_candidate_budget": 0,
+    "deferred_by_record_budget": 0,
+    "deferred_candidates": 0,
+    "records_checked": 2,
+    "code_sha256": "f1ac51a0a93dddedbe26eee39ba7f41f7dac3d4b3beebb2143e11de85dcfe537",
+    "logical_get_calls": 2,
+    "max_http_attempts_per_get": 3,
+    "limits": {
+      "max_requests": 6,
+      "max_candidates": 20,
+      "max_records": 200,
+      "max_pages": 3,
+      "max_seconds": 180,
+      "delivery_grace_seconds": 90,
+      "execution_enabled": false
+    },
+    "probe": {
+      "instrument": "BTC-USDT-SWAP",
+      "scope": "PUBLIC_CONNECTIVITY_ONLY_NOT_A_RESEARCH_SAMPLE",
+      "fetched_at_ms": 1792825096692,
+      "rows": [
+        {
+          "ts": 1792814400000,
+          "open": 80930.6,
+          "high": 81061.4,
+          "low": 80802.0,
+          "close": 80854.0,
+          "confirm": "1",
+          "volume_contracts": 104923.81,
+          "volume_base": 1049.2381,
+          "volume_quote": 84890852.1813
+        },
+        {
+          "ts": 1792818000000,
+          "open": 80853.9,
+          "high": 80854.0,
+          "low": 80672.7,
+          "close": 80734.0,
+          "confirm": "1",
+          "volume_contracts": 90867.83,
+          "volume_base": 908.6783,
+          "volume_quote": 73371079.20072
+        }
+      ],
+      "fingerprint": "5f0d0e9c67df64928d66042ecc4cccea1ef38d1449094a267cba2f5c5a594966"
+    },
+    "execution_enabled": false,
+    "known_f1_permission_limit": "F1 PerpetualResearchResult fixes allow_new_risk=False; F2 strictly excludes these records; no permission upgrade"
+  },
+  "production_event_count": 0,
+  "production_condition_count": 0,
+  "simulated_fills": 0,
+  "llm_calls": 0,
+  "official_source": "https://www.okx.com/docs-v5/en/#order-book-trading-market-data-get-candlesticks-history",
+  "limitations": [
+    "Canonical F1 candidates cannot currently pass the explicit F2 allow_new_risk gate; actual production transition/export path not demonstrated",
+    "Complete lifecycle validated only in separate FIXTURE namespace; no official positive trigger fabricated",
+    "Backfilled confirmation is not on-time observation and is not F3-exportable",
+    "Local file hashes/locks not WORM or distributed cross-host coordination",
+    "Linux deployment and scheduler installation not performed; same canonical output required",
+    "CLI has hard runtime supervision, direct Python API is cooperative only",
+    "Theoretical next-open boundary is not an actual fill; F3 must respect actual decision availability",
+    "Five previously disclosed Windows whole-suite failures remain"
+  ],
+  "auto_commit_push_or_scheduler_install": false,
+  "f3_implemented": false
+}

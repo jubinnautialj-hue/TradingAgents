@@ -1,0 +1,660 @@
+{
+  "$defs": {
+    "ConditionTrigger": {
+      "additionalProperties": false,
+      "description": "F3 input contract. This is NEVER a fill or a settlement result.",
+      "properties": {
+        "version": {
+          "const": "forward-observation-condition-v1",
+          "default": "forward-observation-condition-v1",
+          "title": "Version",
+          "type": "string"
+        },
+        "observation_policy_version": {
+          "const": "forward-observation-v1",
+          "default": "forward-observation-v1",
+          "title": "Observation Policy Version",
+          "type": "string"
+        },
+        "observation_policy_hash": {
+          "default": "775a67a2fefda66ebadf0f01d6bf88650c690959d0aefc678082c96431898749",
+          "title": "Observation Policy Hash",
+          "type": "string"
+        },
+        "observation_only": {
+          "const": true,
+          "default": true,
+          "title": "Observation Only",
+          "type": "boolean"
+        },
+        "simulation_admitted": {
+          "const": false,
+          "default": false,
+          "title": "Simulation Admitted",
+          "type": "boolean"
+        },
+        "requires_separate_simulation_admission": {
+          "const": true,
+          "default": true,
+          "title": "Requires Separate Simulation Admission",
+          "type": "boolean"
+        },
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "research_id": {
+          "title": "Research Id",
+          "type": "string"
+        },
+        "registration_id": {
+          "title": "Registration Id",
+          "type": "string"
+        },
+        "protocol_hash": {
+          "title": "Protocol Hash",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "title": "Snapshot Id",
+          "type": "string"
+        },
+        "result_hash": {
+          "title": "Result Hash",
+          "type": "string"
+        },
+        "direction": {
+          "enum": [
+            "LONG",
+            "SHORT"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "signal_confirmed_ms": {
+          "title": "Signal Confirmed Ms",
+          "type": "integer"
+        },
+        "observed_available_ms": {
+          "title": "Observed Available Ms",
+          "type": "integer"
+        },
+        "decision_available_ms": {
+          "title": "Decision Available Ms",
+          "type": "integer"
+        },
+        "next_tradable_ms": {
+          "title": "Next Tradable Ms",
+          "type": "integer"
+        },
+        "hypothesis_expires_ms": {
+          "title": "Hypothesis Expires Ms",
+          "type": "integer"
+        },
+        "original_conditions": {
+          "additionalProperties": true,
+          "title": "Original Conditions",
+          "type": "object"
+        },
+        "confirmation_bar": {
+          "additionalProperties": true,
+          "title": "Confirmation Bar",
+          "type": "object"
+        },
+        "evidence_fingerprint": {
+          "title": "Evidence Fingerprint",
+          "type": "string"
+        },
+        "previous_state": {
+          "title": "Previous State",
+          "type": "string"
+        },
+        "new_state": {
+          "const": "ENTRY_ELIGIBLE",
+          "default": "ENTRY_ELIGIBLE",
+          "title": "New State",
+          "type": "string"
+        },
+        "collection_mode": {
+          "enum": [
+            "CONTEMPORANEOUS",
+            "BACKFILL"
+          ],
+          "title": "Collection Mode",
+          "type": "string"
+        },
+        "data_quality": {
+          "const": "VALID",
+          "default": "VALID",
+          "title": "Data Quality",
+          "type": "string"
+        },
+        "continuity": {
+          "const": "COMPLETE",
+          "default": "COMPLETE",
+          "title": "Continuity",
+          "type": "string"
+        },
+        "requires_revalidation": {
+          "const": true,
+          "default": true,
+          "title": "Requires Revalidation",
+          "type": "boolean"
+        },
+        "is_simulated_fill": {
+          "const": false,
+          "default": false,
+          "title": "Is Simulated Fill",
+          "type": "boolean"
+        },
+        "allow_new_risk": {
+          "const": false,
+          "default": false,
+          "title": "Allow New Risk",
+          "type": "boolean"
+        },
+        "execution_enabled": {
+          "const": false,
+          "default": false,
+          "title": "Execution Enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "event_id",
+        "research_id",
+        "registration_id",
+        "protocol_hash",
+        "snapshot_id",
+        "result_hash",
+        "direction",
+        "signal_confirmed_ms",
+        "observed_available_ms",
+        "decision_available_ms",
+        "next_tradable_ms",
+        "hypothesis_expires_ms",
+        "original_conditions",
+        "confirmation_bar",
+        "evidence_fingerprint",
+        "previous_state",
+        "collection_mode"
+      ],
+      "title": "ConditionTrigger",
+      "type": "object"
+    },
+    "FrozenCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "registration_id": {
+          "title": "Registration Id",
+          "type": "string"
+        },
+        "research_id": {
+          "title": "Research Id",
+          "type": "string"
+        },
+        "registration_hash": {
+          "title": "Registration Hash",
+          "type": "string"
+        },
+        "protocol_hash": {
+          "title": "Protocol Hash",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "title": "Snapshot Id",
+          "type": "string"
+        },
+        "result_hash": {
+          "title": "Result Hash",
+          "type": "string"
+        },
+        "instrument": {
+          "title": "Instrument",
+          "type": "string"
+        },
+        "direction": {
+          "enum": [
+            "LONG",
+            "SHORT"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "plan": {
+          "additionalProperties": true,
+          "title": "Plan",
+          "type": "object"
+        },
+        "original_result": {
+          "additionalProperties": true,
+          "title": "Original Result",
+          "type": "object"
+        },
+        "clock": {
+          "$ref": "#/$defs/PlanTiming"
+        },
+        "first_bar_open_ms": {
+          "title": "First Bar Open Ms",
+          "type": "integer"
+        },
+        "first_check_ms": {
+          "title": "First Check Ms",
+          "type": "integer"
+        },
+        "registered_ms": {
+          "title": "Registered Ms",
+          "type": "integer"
+        },
+        "namespace": {
+          "default": "PRODUCTION",
+          "enum": [
+            "PRODUCTION",
+            "FIXTURE"
+          ],
+          "title": "Namespace",
+          "type": "string"
+        },
+        "observation_policy_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observation Policy Hash"
+        },
+        "original_allow_new_risk": {
+          "default": false,
+          "title": "Original Allow New Risk",
+          "type": "boolean"
+        },
+        "observation_only": {
+          "const": true,
+          "default": true,
+          "title": "Observation Only",
+          "type": "boolean"
+        },
+        "simulation_admitted": {
+          "const": false,
+          "default": false,
+          "title": "Simulation Admitted",
+          "type": "boolean"
+        },
+        "execution_enabled": {
+          "const": false,
+          "default": false,
+          "title": "Execution Enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "registration_id",
+        "research_id",
+        "registration_hash",
+        "protocol_hash",
+        "snapshot_id",
+        "result_hash",
+        "instrument",
+        "direction",
+        "plan",
+        "clock",
+        "first_bar_open_ms",
+        "first_check_ms",
+        "registered_ms"
+      ],
+      "title": "FrozenCandidate",
+      "type": "object"
+    },
+    "ObservationAssessment": {
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": "forward-observation-v1",
+          "default": "forward-observation-v1",
+          "title": "Version",
+          "type": "string"
+        },
+        "policy_hash": {
+          "default": "775a67a2fefda66ebadf0f01d6bf88650c690959d0aefc678082c96431898749",
+          "title": "Policy Hash",
+          "type": "string"
+        },
+        "registration_id": {
+          "title": "Registration Id",
+          "type": "string"
+        },
+        "research_id": {
+          "title": "Research Id",
+          "type": "string"
+        },
+        "registration_hash": {
+          "title": "Registration Hash",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Snapshot Id"
+        },
+        "assessed_at_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Assessed At Ms",
+          "type": "integer"
+        },
+        "research_completed": {
+          "title": "Research Completed",
+          "type": "boolean"
+        },
+        "plan_valid": {
+          "title": "Plan Valid",
+          "type": "boolean"
+        },
+        "allow_new_risk": {
+          "title": "Allow New Risk",
+          "type": "boolean"
+        },
+        "original_result_allow_new_risk": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Original Result Allow New Risk"
+        },
+        "f1_simulation_pool_eligible": {
+          "title": "F1 Simulation Pool Eligible",
+          "type": "boolean"
+        },
+        "research_observation_qualified": {
+          "title": "Research Observation Qualified",
+          "type": "boolean"
+        },
+        "observation_eligible": {
+          "title": "Observation Eligible",
+          "type": "boolean"
+        },
+        "window_status": {
+          "enum": [
+            "WAITING_FOR_FIRST_CLOSE",
+            "OPEN",
+            "EXPIRED",
+            "UNDEFINED"
+          ],
+          "title": "Window Status",
+          "type": "string"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        },
+        "observation_only": {
+          "const": true,
+          "default": true,
+          "title": "Observation Only",
+          "type": "boolean"
+        },
+        "simulation_admitted": {
+          "const": false,
+          "default": false,
+          "title": "Simulation Admitted",
+          "type": "boolean"
+        },
+        "requires_entry_revalidation": {
+          "const": true,
+          "default": true,
+          "title": "Requires Entry Revalidation",
+          "type": "boolean"
+        },
+        "execution_enabled": {
+          "const": false,
+          "default": false,
+          "title": "Execution Enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "registration_id",
+        "research_id",
+        "registration_hash",
+        "snapshot_id",
+        "assessed_at_ms",
+        "research_completed",
+        "plan_valid",
+        "allow_new_risk",
+        "original_result_allow_new_risk",
+        "f1_simulation_pool_eligible",
+        "research_observation_qualified",
+        "observation_eligible",
+        "window_status",
+        "reasons"
+      ],
+      "title": "ObservationAssessment",
+      "type": "object"
+    },
+    "PlanTiming": {
+      "additionalProperties": false,
+      "properties": {
+        "cutoff_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Cutoff Ms",
+          "type": "integer"
+        },
+        "hypothesis_expires_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Hypothesis Expires Ms",
+          "type": "integer"
+        },
+        "confirmation_bars": {
+          "maximum": 48,
+          "minimum": 2,
+          "title": "Confirmation Bars",
+          "type": "integer"
+        },
+        "market_data_ttl_seconds": {
+          "exclusiveMinimum": 0,
+          "maximum": 900,
+          "title": "Market Data Ttl Seconds",
+          "type": "integer"
+        },
+        "revalidation_ttl_seconds": {
+          "exclusiveMinimum": 0,
+          "maximum": 300,
+          "title": "Revalidation Ttl Seconds",
+          "type": "integer"
+        },
+        "bar_interval": {
+          "const": "1h",
+          "default": "1h",
+          "title": "Bar Interval",
+          "type": "string"
+        },
+        "rules_version": {
+          "const": "breakout-retest-v1",
+          "default": "breakout-retest-v1",
+          "title": "Rules Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "cutoff_ms",
+        "hypothesis_expires_ms",
+        "confirmation_bars",
+        "market_data_ttl_seconds",
+        "revalidation_ttl_seconds"
+      ],
+      "title": "PlanTiming",
+      "type": "object"
+    },
+    "TrackingEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": "forward-f2.1-v1",
+          "default": "forward-f2.1-v1",
+          "title": "Version",
+          "type": "string"
+        },
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "registration_id": {
+          "title": "Registration Id",
+          "type": "string"
+        },
+        "research_id": {
+          "title": "Research Id",
+          "type": "string"
+        },
+        "namespace": {
+          "enum": [
+            "PRODUCTION",
+            "FIXTURE"
+          ],
+          "title": "Namespace",
+          "type": "string"
+        },
+        "protocol_hash": {
+          "title": "Protocol Hash",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "title": "Snapshot Id",
+          "type": "string"
+        },
+        "result_hash": {
+          "title": "Result Hash",
+          "type": "string"
+        },
+        "registration_hash": {
+          "title": "Registration Hash",
+          "type": "string"
+        },
+        "direction": {
+          "enum": [
+            "LONG",
+            "SHORT"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "observation_only": {
+          "const": true,
+          "default": true,
+          "title": "Observation Only",
+          "type": "boolean"
+        },
+        "simulation_admitted": {
+          "const": false,
+          "default": false,
+          "title": "Simulation Admitted",
+          "type": "boolean"
+        },
+        "allow_new_risk": {
+          "const": false,
+          "default": false,
+          "title": "Allow New Risk",
+          "type": "boolean"
+        },
+        "observation_policy_hash": {
+          "default": "775a67a2fefda66ebadf0f01d6bf88650c690959d0aefc678082c96431898749",
+          "title": "Observation Policy Hash",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "BAR_OBSERVATION",
+            "STATE_TRANSITION",
+            "WAIT",
+            "PAUSED",
+            "CLOCK_EXPIRY"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "recorded_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Recorded Ms",
+          "type": "integer"
+        },
+        "market_cutoff_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Market Cutoff Ms",
+          "type": "integer"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "evidence_fingerprint": {
+          "title": "Evidence Fingerprint",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": true,
+          "title": "Payload",
+          "type": "object"
+        },
+        "previous_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Previous Hash"
+        },
+        "event_hash": {
+          "title": "Event Hash",
+          "type": "string"
+        },
+        "execution_enabled": {
+          "const": false,
+          "default": false,
+          "title": "Execution Enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "event_id",
+        "registration_id",
+        "research_id",
+        "namespace",
+        "protocol_hash",
+        "snapshot_id",
+        "result_hash",
+        "registration_hash",
+        "direction",
+        "kind",
+        "recorded_ms",
+        "market_cutoff_ms",
+        "source",
+        "evidence_fingerprint",
+        "payload",
+        "previous_hash",
+        "event_hash"
+      ],
+      "title": "TrackingEvent",
+      "type": "object"
+    }
+  },
+  "title": "F2.1 observation qualification and no-risk condition evidence"
+}
