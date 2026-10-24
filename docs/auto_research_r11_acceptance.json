@@ -1,0 +1,244 @@
+{
+  "stage": "R1.1",
+  "recommendation": "CONDITIONAL_ENGINEERING_PASS",
+  "branch": "codex/auto-research-r11",
+  "baseline_commit": "43e0248aaa8a08028375086c83c34591480d30a6",
+  "final_code_hash": "f2863ffe9448f23a6de0f436763a9f491134086a17caabd44a9c282c47cf6bd2",
+  "execution_enabled": false,
+  "source_sha256": {
+    "tradingagents/auto_research.py": "43ee3adcc826c626df12daa6844e44eb95e9d0b6618cb6a0a6e01567cee19e29",
+    "tradingagents/research_budget.py": "198cf310ba13e42f05a880553c7f0eb5492f9df85d8a41966e2b9c69cc3861f7",
+    "tests/test_auto_research.py": "af3ddf9649b4034e6adc0485af96e41805536721b1a42d36dd94d0ddb5b24569",
+    "docs/auto_research_r11.json": "cbe7f95cac00e57043cd8d123005ba3224c4a979a249efd5b8438d45264b5552",
+    "docs/auto_research_r11.schema.json": "494d817c6ff56c31baa9062c2bff38ea3833436f354505d4ea1144b91a97e0b6",
+    "docs/auto_research_r11.md": "0679173217ba6b886220f5ee477f62442016b6437391d35dfad1daaefdc19482"
+  },
+  "tracked_baseline_files_modified": 0,
+  "frozen_experiment_files_unchanged": 146,
+  "credential_pattern_findings": 0,
+  "tests": {
+    "specialized": {
+      "passed": 33,
+      "seconds": 7.61
+    },
+    "earlier_compatibility": {
+      "passed": 171,
+      "seconds": 55.16
+    },
+    "final_full": {
+      "passed": 2048,
+      "failed": 5,
+      "skipped": 4,
+      "deselected": 13,
+      "subtests_passed": 100,
+      "seconds": 114.29,
+      "failure_ids": [
+        "tests.test_chatgpt_auth::test_a_token_near_expiry_is_renewed_with_the_stored_refresh_token",
+        "tests.test_chatgpt_auth::test_signing_in_by_pasting_the_redirect_saves_a_private_sign_in",
+        "tests.test_cli_updates::test_the_upgrade_command_follows_the_install",
+        "tests.test_cli_updates::test_a_uv_git_install_is_upgraded_with_uv",
+        "tests.test_suite_isolation::test_yfinance_keeps_its_cache_out_of_the_users_home"
+      ]
+    }
+  },
+  "public_probe": {
+    "instruments": [
+      {
+        "instrument": "BTC-USDT-SWAP",
+        "status": "VALID",
+        "fetched_at_ms": 1792840600470,
+        "specification": {
+          "instId": "BTC-USDT-SWAP",
+          "instType": "SWAP",
+          "settleCcy": "USDT",
+          "ctType": "linear",
+          "ctVal": "0.01",
+          "ctMult": "1",
+          "tickSz": "0.1",
+          "lotSz": "0.01",
+          "minSz": "0.01",
+          "state": "live"
+        },
+        "data_quality": "VALID",
+        "cutoff_ms": 1792840600962,
+        "timeframes": {
+          "1h": {
+            "status": "VALID",
+            "bars": 400,
+            "latest_close_ms": 1792839600000
+          },
+          "4h": {
+            "status": "VALID",
+            "bars": 400,
+            "latest_close_ms": 1792828800000
+          },
+          "1d": {
+            "status": "VALID",
+            "bars": 400,
+            "latest_close_ms": 1792800000000
+          }
+        },
+        "snapshot_id": "fc86245aab109c5ca54b07b952beeb5c3cd586afe3c7e8563eb4f18a803c5cd8"
+      },
+      {
+        "instrument": "ETH-USDT-SWAP",
+        "status": "VALID",
+        "fetched_at_ms": 1792840619885,
+        "specification": {
+          "instId": "ETH-USDT-SWAP",
+          "instType": "SWAP",
+          "settleCcy": "USDT",
+          "ctType": "linear",
+          "ctVal": "0.1",
+          "ctMult": "1",
+          "tickSz": "0.01",
+          "lotSz": "0.01",
+          "minSz": "0.01",
+          "state": "live"
+        },
+        "data_quality": "VALID",
+        "cutoff_ms": 1792840620413,
+        "timeframes": {
+          "1h": {
+            "status": "VALID",
+            "bars": 400,
+            "latest_close_ms": 1792839600000
+          },
+          "4h": {
+            "status": "VALID",
+            "bars": 400,
+            "latest_close_ms": 1792828800000
+          },
+          "1d": {
+            "status": "VALID",
+            "bars": 400,
+            "latest_close_ms": 1792800000000
+          }
+        },
+        "snapshot_id": "d5a0fe73a37785341267c007efd9943e1f39f336326a7b2660763bda4f39dc60"
+      },
+      {
+        "instrument": "SOL-USDT-SWAP",
+        "status": "VALID",
+        "fetched_at_ms": 1792840639351,
+        "specification": {
+          "instId": "SOL-USDT-SWAP",
+          "instType": "SWAP",
+          "settleCcy": "USDT",
+          "ctType": "linear",
+          "ctVal": "1",
+          "ctMult": "1",
+          "tickSz": "0.01",
+          "lotSz": "0.01",
+          "minSz": "0.01",
+          "state": "live"
+        },
+        "data_quality": "VALID",
+        "cutoff_ms": 1792840639844,
+        "timeframes": {
+          "1h": {
+            "status": "VALID",
+            "bars": 400,
+            "latest_close_ms": 1792839600000
+          },
+          "4h": {
+            "status": "VALID",
+            "bars": 400,
+            "latest_close_ms": 1792828800000
+          },
+          "1d": {
+            "status": "VALID",
+            "bars": 400,
+            "latest_close_ms": 1792800000000
+          }
+        },
+        "snapshot_id": "073b51fec6248b7e1c4c633969586d6414b831e09a9870f842a10a142c838ede"
+      }
+    ],
+    "meter": {
+      "llm_calls": 0,
+      "http_dispatches": 54,
+      "reported_total_tokens": 0,
+      "usage_available": false,
+      "budget_error": null,
+      "execution_enabled": false
+    },
+    "coverage_probe_only": true,
+    "execution_enabled": false
+  },
+  "live_research": {
+    "worker_code_hash": "29b7516749c42cb7c38a858408c46125305e18d6f1b1baef8a3f979143e05553",
+    "same_as_final_controller_build": false,
+    "post_start_changes": [
+      "QUEUED-only safe dispatch recovery",
+      "Public validation pre-reservation",
+      "Known quota/permission restriction persistence"
+    ],
+    "original_cli_and_worker_research_semantics_unchanged": true,
+    "registration": {
+      "registration_id": "80453e38893be05f1a530b03f5c118d2bfe472106f2b89ee212ed48f3d9ae8a4",
+      "research_id": "703f45dccba445618ed4123aa3496bff",
+      "instrument": "BTC-USDT-SWAP",
+      "origin": "PROSPECTIVE",
+      "cutoff_ms": 1792840766462,
+      "completed_ms": 1792841266031,
+      "registered_ms": 1792841266048,
+      "workflow_status": "COMPLETED",
+      "llm_status": "AVAILABLE",
+      "action": "WAIT",
+      "data_quality": "VALID",
+      "plan_valid": false,
+      "allow_new_risk": false,
+      "execution_enabled": false,
+      "failure_kind": null,
+      "snapshot_id": "8cd4eba340706337b8dbddaccc89c9e1d5dcecacbafbb9482d5ff6f697e3857a",
+      "protocol_hash": "7a1676999fd95a0173576403a6c2ef7a119d8b7d1d768ccdbdfeef8b2720a76e",
+      "report_html": "C:\\Users\\jerry_su\\.tradingagents\\logs\\r11_live_20261024\\production\\research\\reports\\okx_BTC-USDT-SWAP_multi_e147011e0df6\\complete_report.html",
+      "report_json": "C:\\Users\\jerry_su\\.tradingagents\\logs\\r11_live_20261024\\production\\research\\reports\\okx_BTC-USDT-SWAP_multi_e147011e0df6\\research_result.json",
+      "models": {
+        "llm_provider": "chatgpt",
+        "quick_think_llm": "gpt-6.1-sol",
+        "deep_think_llm": "gpt-6.1-sol"
+      }
+    },
+    "meter": {
+      "llm_calls": 14,
+      "http_dispatches": 54,
+      "reported_total_tokens": 494554,
+      "usage_available": true,
+      "budget_error": null,
+      "execution_enabled": false
+    },
+    "budget": {
+      "llm_used_or_reserved": 14,
+      "http_used_or_reserved": 55,
+      "elapsed_seconds": 523.4941228000098
+    },
+    "summary_json": "C:\\Users\\jerry_su\\.tradingagents\\logs\\r11_live_20261024\\production\\runs\\2da11c7e0014a661d554cf1c706648f3ec96b0780b2860ec91e37a3a4ad0da25.json",
+    "f1_archive_verified": true,
+    "formal_registry_record_count": 1
+  },
+  "final_same_slot_check": {
+    "notes": [
+      {
+        "instrument": "BTC-USDT-SWAP",
+        "reason": "FROZEN_SLOT_CONFIG_CONFLICT"
+      }
+    ],
+    "llm_calls_retained": 14,
+    "registrations": 1,
+    "new_model_attempt": false
+  },
+  "limitations": [
+    "ETH/SOL complete model workflows not live-verified",
+    "Final controller recovery changes tested offline, not a second costly live full run",
+    "Five pre-existing Windows regression failures remain",
+    "No monetary billing cap; tokens are provider-reported counts",
+    "Unknown interrupted research never silently rerun; late F1 recovery remains late",
+    "Same-root serial locking only; no cross-host/external manual CLI exclusion",
+    "5000-task local archive cap and native Windows path length constraints",
+    "SOL project-specific official news coverage remains limited",
+    "No 1-3 day strategy change; frozen C.1/F3 holding rules unchanged",
+    "No scheduler, F2/F3 invocation, account access or live trading"
+  ]
+}

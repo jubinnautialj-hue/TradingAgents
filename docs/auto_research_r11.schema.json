@@ -1,0 +1,176 @@
+{
+  "$defs": {
+    "Enhancements": {
+      "additionalProperties": false,
+      "properties": {
+        "orderflow": {
+          "default": false,
+          "title": "Orderflow",
+          "type": "boolean"
+        },
+        "market_checks": {
+          "default": false,
+          "title": "Market Checks",
+          "type": "boolean"
+        },
+        "price_depth": {
+          "default": false,
+          "title": "Price Depth",
+          "type": "boolean"
+        },
+        "events": {
+          "default": true,
+          "title": "Events",
+          "type": "boolean"
+        },
+        "flow_minutes": {
+          "default": 1,
+          "maximum": 60,
+          "minimum": 1,
+          "title": "Flow Minutes",
+          "type": "integer"
+        },
+        "flow_max_pages": {
+          "default": 10,
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Flow Max Pages",
+          "type": "integer"
+        },
+        "depth_seconds": {
+          "default": 0,
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Depth Seconds",
+          "type": "integer"
+        },
+        "liquidation_seconds": {
+          "default": 0,
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Liquidation Seconds",
+          "type": "integer"
+        }
+      },
+      "title": "Enhancements",
+      "type": "object"
+    },
+    "Instrument": {
+      "additionalProperties": false,
+      "properties": {
+        "instrument": {
+          "title": "Instrument",
+          "type": "string"
+        },
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "instrument"
+      ],
+      "title": "Instrument",
+      "type": "object"
+    },
+    "Limits": {
+      "additionalProperties": false,
+      "properties": {
+        "min_interval_seconds": {
+          "default": 14400,
+          "maximum": 604800,
+          "minimum": 3600,
+          "title": "Min Interval Seconds",
+          "type": "integer"
+        },
+        "max_symbols": {
+          "default": 3,
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Max Symbols",
+          "type": "integer"
+        },
+        "task_seconds": {
+          "default": 900,
+          "maximum": 1800,
+          "minimum": 10,
+          "title": "Task Seconds",
+          "type": "integer"
+        },
+        "batch_seconds": {
+          "default": 2700,
+          "maximum": 7200,
+          "minimum": 10,
+          "title": "Batch Seconds",
+          "type": "integer"
+        },
+        "llm_per_task": {
+          "default": 24,
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Llm Per Task",
+          "type": "integer"
+        },
+        "llm_total": {
+          "default": 72,
+          "maximum": 500,
+          "minimum": 1,
+          "title": "Llm Total",
+          "type": "integer"
+        },
+        "http_per_task": {
+          "default": 240,
+          "maximum": 1000,
+          "minimum": 5,
+          "title": "Http Per Task",
+          "type": "integer"
+        },
+        "http_total": {
+          "default": 720,
+          "maximum": 5000,
+          "minimum": 5,
+          "title": "Http Total",
+          "type": "integer"
+        }
+      },
+      "title": "Limits",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "auto-research-r11-v1",
+      "default": "auto-research-r11-v1",
+      "title": "Version",
+      "type": "string"
+    },
+    "instruments": {
+      "items": {
+        "$ref": "#/$defs/Instrument"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Instruments",
+      "type": "array"
+    },
+    "enhancements": {
+      "$ref": "#/$defs/Enhancements"
+    },
+    "limits": {
+      "$ref": "#/$defs/Limits"
+    },
+    "execution_enabled": {
+      "const": false,
+      "default": false,
+      "title": "Execution Enabled",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "instruments"
+  ],
+  "title": "Watchlist",
+  "type": "object"
+}

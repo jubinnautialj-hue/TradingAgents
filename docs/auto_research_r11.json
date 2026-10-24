@@ -1,0 +1,38 @@
+{
+  "version": "auto-research-r11-v1",
+  "instruments": [
+    {
+      "instrument": "BTC-USDT-SWAP",
+      "enabled": true
+    },
+    {
+      "instrument": "ETH-USDT-SWAP",
+      "enabled": true
+    },
+    {
+      "instrument": "SOL-USDT-SWAP",
+      "enabled": true
+    }
+  ],
+  "enhancements": {
+    "orderflow": false,
+    "market_checks": false,
+    "price_depth": false,
+    "events": true,
+    "flow_minutes": 1,
+    "flow_max_pages": 10,
+    "depth_seconds": 0,
+    "liquidation_seconds": 0
+  },
+  "limits": {
+    "min_interval_seconds": 14400,
+    "max_symbols": 3,
+    "task_seconds": 900,
+    "batch_seconds": 2700,
+    "llm_per_task": 24,
+    "llm_total": 72,
+    "http_per_task": 240,
+    "http_total": 720
+  },
+  "execution_enabled": false
+}
