@@ -1,0 +1,271 @@
+{
+  "stage": "R1.2",
+  "recommendation": "CONDITIONAL_ENGINEERING_PASS",
+  "branch": "codex/auto-research-r12",
+  "baseline_commit": "99ca5509b1dba2f71098fdad6a548940726668b6",
+  "version": "automation-r12-v1",
+  "config_hash": "a57d410c6cb28f9f53338c3ad0ed7f26097046f83b692b4b9faddb9ce3d4dc9b",
+  "execution_enabled": false,
+  "simulation_admitted": false,
+  "allow_new_risk": false,
+  "tracked_baseline_files_modified": 0,
+  "frozen_experiment_files_unchanged": 146,
+  "source_sha256": {
+    "tradingagents/automation.py": "f48e71a2c8b11e076aa9a3df109a19510374cd40ef9f0e1a67c0cb09faaed002",
+    "tradingagents/paper_timing.py": "0dda5fa74ca35a442162e472761813553bfed322c0492a2c923efac2ea954785",
+    "tradingagents/automation_schedule.py": "b990416a932899159d472bc6af735b2a4bcaab8ee51c1e90c15e24adc0b1e153",
+    "tests/test_automation.py": "d421c53a56931b0738469f347e90f3cda95f20ba75c0667f24fd0e73baea9957",
+    "docs/automation_r12.json": "e3e62b9678878e0e575709edfad3b6333df7c378c9587ec4c66ecef907d63c56",
+    "docs/automation_r12.schema.json": "b0837bf0efbf672a8488ed1dd24f61cca2364322742e53ff776d994c3d60705f",
+    "docs/automation_r12.md": "5d19d577bffb879b53ba3a27c2c1f6485a49cf435831e3f70f11e9138fcf010c"
+  },
+  "credential_pattern_findings": 0,
+  "tests": {
+    "final_full": {
+      "passed": 2087,
+      "failed": 5,
+      "skipped": 4,
+      "deselected": 13,
+      "subtests_passed": 100,
+      "seconds": 237.09,
+      "failure_ids": [
+        "tests.test_chatgpt_auth::test_a_token_near_expiry_is_renewed_with_the_stored_refresh_token",
+        "tests.test_chatgpt_auth::test_signing_in_by_pasting_the_redirect_saves_a_private_sign_in",
+        "tests.test_cli_updates::test_the_upgrade_command_follows_the_install",
+        "tests.test_cli_updates::test_a_uv_git_install_is_upgraded_with_uv",
+        "tests.test_suite_isolation::test_yfinance_keeps_its_cache_out_of_the_users_home"
+      ],
+      "r12_cases": 39,
+      "r12_cases_passed": 39
+    },
+    "earlier_native_compatibility": {
+      "passed": 205,
+      "seconds": 78.78
+    },
+    "standalone_final_specialized": {
+      "passed": 39,
+      "seconds": 62.68
+    }
+  },
+  "native_protocols": {
+    "paper_version": "forward-paper-v1",
+    "paper_policy_hash": "e29998a373c1295791116b026a04f18c4067f5c14a1352cfad2a4b93066dbd64",
+    "paper_code_hash": "9a052606a2f18d032d2e9dec90371ab5c14c07a9b64600f5d89ae92d848ecc22",
+    "tracking_version": "forward-f2.1-v1",
+    "tracking_code_hash": "07b495f152a4fbb5f498d50d6058da36d92142ae490eeb0c702da40204a17a09",
+    "r11_code_hash": "f2863ffe9448f23a6de0f436763a9f491134086a17caabd44a9c282c47cf6bd2"
+  },
+  "public_probe": {
+    "status": "PUBLIC_PROBE_COMPLETE",
+    "scope": "UNBOUND_LATENCY_ONLY_NOT_A_TIMELY_FILL",
+    "server_ms": 1792844503781,
+    "instruments": [
+      {
+        "instrument": "BTC-USDT-SWAP",
+        "state": "live",
+        "settlement": "USDT"
+      },
+      {
+        "instrument": "ETH-USDT-SWAP",
+        "state": "live",
+        "settlement": "USDT"
+      },
+      {
+        "instrument": "SOL-USDT-SWAP",
+        "state": "live",
+        "settlement": "USDT"
+      }
+    ],
+    "confirmed_bars": 2,
+    "current_open_ms": 1792843200000,
+    "current_confirm": "0",
+    "warm_closed_plus_open_fetch_ms": 588.3143999963067,
+    "observed_fetch_under_15s": true,
+    "logical_get_calls": 6,
+    "fills": 0,
+    "llm_calls": 0,
+    "execution_enabled": false,
+    "limitations": [
+      "Not an eligible candidate or actual scheduled-boundary fill",
+      "Latency sample does not guarantee OS dispatch, disk verification or future network performance"
+    ]
+  },
+  "actual_no_model_cycle": {
+    "status": "CYCLE_COMPLETE",
+    "jobs": [
+      {
+        "status": "COMPLETED",
+        "job_id": "b6450f08607a4b0990f19ba681435d81",
+        "phase": "observe",
+        "returncode": 0,
+        "result": {
+          "status": "COMPLETED",
+          "phase": "observe",
+          "results": [
+            {
+              "source": "r11-accepted",
+              "status": "COMPLETED",
+              "errors": 0,
+              "logical_get_calls": 1,
+              "research": null,
+              "paper": null,
+              "eligible_candidates": 0
+            }
+          ],
+          "index_errors": [],
+          "execution_enabled": false
+        },
+        "execution_enabled": false
+      },
+      {
+        "status": "COMPLETED",
+        "job_id": "48305a766e2f4db9bdbd7b601ea8b9c5",
+        "phase": "paper",
+        "returncode": 0,
+        "result": {
+          "status": "COMPLETED",
+          "phase": "paper",
+          "results": [
+            {
+              "source": "r11-accepted",
+              "status": "COMPLETED",
+              "errors": 0,
+              "logical_get_calls": null,
+              "research": {
+                "total": 1,
+                "prospective": 1,
+                "completed_wait": 1,
+                "failed": 0,
+                "valid_candidates": 0,
+                "observation_qualified": 0,
+                "observation_rate": null,
+                "paper_scheduled": 0,
+                "condition_triggered": 0,
+                "condition_trigger_denominator": 0,
+                "condition_trigger_rate": null,
+                "observed_expired": 0,
+                "observed_invalidated": 0,
+                "f2_reviewed": 0,
+                "f2_paused": 0
+              },
+              "paper": {
+                "trades": 0,
+                "settled": 0,
+                "unsettled": 0,
+                "wins": 0,
+                "losses": 0,
+                "win_rate": null,
+                "average_win": null,
+                "average_loss": null,
+                "net_pnl": null,
+                "gross_pnl_after_slippage": null,
+                "gross_pnl_before_costs": null,
+                "profit_factor": null,
+                "payoff_ratio": null,
+                "fees_usdt": 0,
+                "slippage_usdt": 0,
+                "funding_cashflow_usdt": 0,
+                "realized_only_drawdown_by_group": {},
+                "equity_curves": {},
+                "settled_history_closed_candle_drawdown_by_group": {},
+                "settled_history_closed_candle_equity": {},
+                "complete_net_equity_available": true
+              },
+              "eligible_candidates": null
+            }
+          ],
+          "index_errors": [],
+          "execution_enabled": false
+        },
+        "execution_enabled": false
+      },
+      {
+        "status": "COMPLETED",
+        "job_id": "234606d58ca946e49032b398b534cb20",
+        "phase": "timely",
+        "returncode": 0,
+        "result": {
+          "status": "NO_PENDING_OPEN_IN_WINDOW",
+          "execution_enabled": false,
+          "due_count": 0
+        },
+        "execution_enabled": false
+      }
+    ],
+    "execution_enabled": false
+  },
+  "monitor": {
+    "json": "C:\\Users\\jerry_su\\.tradingagents\\logs\\automation\\r12\\reports\\b1749db8c4ad0e919ec3d11aff11d973aacb83cdd0d0ff7650ed5dccba71f3fe.json",
+    "html": "C:\\Users\\jerry_su\\.tradingagents\\logs\\automation\\r12\\reports\\b1749db8c4ad0e919ec3d11aff11d973aacb83cdd0d0ff7650ed5dccba71f3fe.html",
+    "counts": {
+      "f1_completed": 1,
+      "f1_research_failed": 0,
+      "f1_wait": 1,
+      "f1_candidate": 0,
+      "excluded_origins": 0,
+      "f2_pending": 0,
+      "f2_triggered": 0,
+      "f2_expired": 0,
+      "f2_invalidated": 0,
+      "f2_paused": 0,
+      "f3_scheduled": 0,
+      "f3_open": 0,
+      "f3_settled": 0,
+      "f3_missed": 0,
+      "data_quality_issues": 0,
+      "f3_exit_pending": 0,
+      "f3_unresolved": 0,
+      "f3_cancelled": 0,
+      "f3_conditions_awaiting_review": 0,
+      "f3_unsupported_instrument": 0,
+      "f2_unobserved_expired": 0,
+      "f2_admin_excluded": 0,
+      "model_failures": 0
+    },
+    "statistics_complete": true,
+    "r11_prior_recorded_llm_calls": 14,
+    "new_r12_model_calls": 0
+  },
+  "windows_schedule_validation": {
+    "validated_xml": [
+      "r12-observe.xml",
+      "r12-paper.xml",
+      "r12-research.xml",
+      "r12-timely.xml"
+    ],
+    "registered": false,
+    "execution_enabled": false,
+    "validation_method": "Windows Task Scheduler COM in-memory task definition"
+  },
+  "owned_timeout_test": {
+    "scope": "BENIGN_OWNED_PYTHON_PROCESS_ONLY",
+    "status": "TIMEOUT",
+    "process_exited": true,
+    "elapsed_seconds": 0.5542438999982551,
+    "execution_enabled": false,
+    "model_calls": 0
+  },
+  "f1_status_read_only_verified": true,
+  "timely_feasibility": {
+    "deterministic_warm_fill": true,
+    "late_invalid_stale_and_clock_drift_blocked": true,
+    "native_15s_rule_unchanged": true,
+    "actual_pending_candidate": false,
+    "actual_scheduled_boundary_fill_verified": false,
+    "network_probe_is_not_sla": true
+  },
+  "limits": [
+    "No real valid paper candidate; production scheduled entry/settlement remains unverified",
+    "No OS tasks installed or long-run timing test",
+    "Ubuntu templates not deployed/verified with systemd",
+    "Warm API probe is one unbound sample, not an actual eligible fill",
+    "Default primary future R11 registry not yet created; existing accepted registry linked read-only",
+    "Research delegation uses native R11; no new full-model research in this stage",
+    "Five pre-existing Windows failures remain",
+    "Same-host local locks only; no distributed coordination",
+    "Whole source quarantined on duplicates/integrity failures; stats completeness explicit",
+    "Late/missing data still blocked; no TTL extension",
+    "BTC-only F3; ETH/SOL research and F2 only",
+    "No new 1-3 day holding strategy or profitability claim"
+  ]
+}

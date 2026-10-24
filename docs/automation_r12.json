@@ -1,0 +1,37 @@
+{
+  "version": "automation-r12-v1",
+  "watchlist": "docs/auto_research_r11.json",
+  "batch_root": "~/.tradingagents/logs/auto_research/r11",
+  "state_root": "~/.tradingagents/logs/automation/r12",
+  "sources": [
+    {
+      "name": "r11-current",
+      "registry": null,
+      "optional": true
+    },
+    {
+      "name": "r11-accepted",
+      "registry": "~/.tradingagents/logs/r11_live_20261024/production/research/forward_validation/f1",
+      "optional": true
+    }
+  ],
+  "schedule": {
+    "research_seconds": 14400,
+    "observe_seconds": 60,
+    "paper_seconds": 300,
+    "observe_timeout": 50,
+    "paper_timeout": 50,
+    "timely_timeout": 120,
+    "refresh_lead_ms": 40000,
+    "warm_lead_ms": 80000,
+    "paper_reserved_lead_ms": 120000,
+    "paper_reserved_tail_ms": 20000,
+    "logical_gets_per_source": 12,
+    "timely_http_cap": 60,
+    "max_records_per_source": 1000,
+    "max_due": 3
+  },
+  "execution_enabled": false,
+  "simulation_admitted": false,
+  "allow_new_risk": false
+}

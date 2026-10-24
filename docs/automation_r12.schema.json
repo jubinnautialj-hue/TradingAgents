@@ -1,0 +1,213 @@
+{
+  "$defs": {
+    "ArchiveSource": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "pattern": "^[a-z0-9-]{1,32}$",
+          "title": "Name",
+          "type": "string"
+        },
+        "registry": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Registry"
+        },
+        "optional": {
+          "default": true,
+          "title": "Optional",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ArchiveSource",
+      "type": "object"
+    },
+    "Schedule": {
+      "additionalProperties": false,
+      "properties": {
+        "research_seconds": {
+          "default": 14400,
+          "enum": [
+            3600,
+            7200,
+            10800,
+            14400,
+            21600,
+            28800,
+            43200,
+            86400
+          ],
+          "title": "Research Seconds",
+          "type": "integer"
+        },
+        "observe_seconds": {
+          "default": 60,
+          "enum": [
+            60,
+            120,
+            180,
+            300
+          ],
+          "title": "Observe Seconds",
+          "type": "integer"
+        },
+        "paper_seconds": {
+          "default": 300,
+          "enum": [
+            60,
+            300,
+            600,
+            900,
+            1800
+          ],
+          "title": "Paper Seconds",
+          "type": "integer"
+        },
+        "observe_timeout": {
+          "default": 50,
+          "maximum": 55,
+          "minimum": 10,
+          "title": "Observe Timeout",
+          "type": "integer"
+        },
+        "paper_timeout": {
+          "default": 50,
+          "maximum": 55,
+          "minimum": 10,
+          "title": "Paper Timeout",
+          "type": "integer"
+        },
+        "timely_timeout": {
+          "default": 120,
+          "maximum": 180,
+          "minimum": 90,
+          "title": "Timely Timeout",
+          "type": "integer"
+        },
+        "refresh_lead_ms": {
+          "const": 40000,
+          "default": 40000,
+          "title": "Refresh Lead Ms",
+          "type": "integer"
+        },
+        "warm_lead_ms": {
+          "const": 80000,
+          "default": 80000,
+          "title": "Warm Lead Ms",
+          "type": "integer"
+        },
+        "paper_reserved_lead_ms": {
+          "const": 120000,
+          "default": 120000,
+          "title": "Paper Reserved Lead Ms",
+          "type": "integer"
+        },
+        "paper_reserved_tail_ms": {
+          "const": 20000,
+          "default": 20000,
+          "title": "Paper Reserved Tail Ms",
+          "type": "integer"
+        },
+        "logical_gets_per_source": {
+          "default": 12,
+          "maximum": 40,
+          "minimum": 2,
+          "title": "Logical Gets Per Source",
+          "type": "integer"
+        },
+        "timely_http_cap": {
+          "default": 60,
+          "maximum": 100,
+          "minimum": 12,
+          "title": "Timely Http Cap",
+          "type": "integer"
+        },
+        "max_records_per_source": {
+          "default": 1000,
+          "maximum": 2000,
+          "minimum": 1,
+          "title": "Max Records Per Source",
+          "type": "integer"
+        },
+        "max_due": {
+          "default": 3,
+          "maximum": 5,
+          "minimum": 1,
+          "title": "Max Due",
+          "type": "integer"
+        }
+      },
+      "title": "Schedule",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "automation-r12-v1",
+      "default": "automation-r12-v1",
+      "title": "Version",
+      "type": "string"
+    },
+    "watchlist": {
+      "default": "docs/auto_research_r11.json",
+      "title": "Watchlist",
+      "type": "string"
+    },
+    "batch_root": {
+      "default": "~/.tradingagents/logs/auto_research/r11",
+      "title": "Batch Root",
+      "type": "string"
+    },
+    "state_root": {
+      "default": "~/.tradingagents/logs/automation/r12",
+      "title": "State Root",
+      "type": "string"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/ArchiveSource"
+      },
+      "maxItems": 4,
+      "minItems": 1,
+      "title": "Sources",
+      "type": "array"
+    },
+    "schedule": {
+      "$ref": "#/$defs/Schedule"
+    },
+    "execution_enabled": {
+      "const": false,
+      "default": false,
+      "title": "Execution Enabled",
+      "type": "boolean"
+    },
+    "simulation_admitted": {
+      "const": false,
+      "default": false,
+      "title": "Simulation Admitted",
+      "type": "boolean"
+    },
+    "allow_new_risk": {
+      "const": false,
+      "default": false,
+      "title": "Allow New Risk",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "sources"
+  ],
+  "title": "AutomationConfig",
+  "type": "object"
+}
