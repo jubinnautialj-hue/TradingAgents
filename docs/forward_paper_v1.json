@@ -1,0 +1,18 @@
+{
+  "version": "forward-paper-v1",
+  "initial_equity": 10000,
+  "notional_usdt": 1000,
+  "taker_fee_bps": 5,
+  "maker_fee_bps": null,
+  "slippage_bps": 2,
+  "max_holding_bars": 12,
+  "opening_delivery_ms": 15000,
+  "revalidation_ttl_ms": 60000,
+  "fill_rule": "PRECOMMITTED_FUTURE_HOUR_OPEN_OBSERVED_ON_TIME",
+  "first_bar_target_rule": "CLOSE_CONFIRMED_OR_UNRESOLVED",
+  "same_bar_rule": "STOP_FIRST",
+  "funding_rule": "REALIZED_PAGINATED_BRACKETS_TRADE_OPEN_PROXY",
+  "simulation_admitted": false,
+  "allow_new_risk": false,
+  "execution_enabled": false
+}

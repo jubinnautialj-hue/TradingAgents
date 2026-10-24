@@ -1,0 +1,90 @@
+{
+  "audit_version": "forward-f3-preflight-v1",
+  "status": "BLOCKED_NOT_IMPLEMENTED",
+  "branch": "codex/forward-validation-f3",
+  "baseline_commit": "872a8c8ffdc40a01e3ad712fd3ead32cd7e7c0cd",
+  "reserved_paper_protocol": "forward-paper-v1",
+  "paper_protocol_active": false,
+  "blockers": [
+    "DELAYED_CONDITION_CANNOT_FILL_AT_FROZEN_PAST_OPEN",
+    "ENTRY_REVALIDATION_CONTRACT_NOT_IMPLEMENTED_FOR_FORWARD_PAPER"
+  ],
+  "execution_enabled": false,
+  "simulation_admitted": false,
+  "counterexample": {
+    "namespace": "ISOLATED_INLINE_FIXTURE_NOT_REGISTERED",
+    "signal_state": "ENTRY_ELIGIBLE",
+    "next_tradable_ms": 1792681200000,
+    "signal_confirmed_ms": 1792681200000,
+    "observed_available_ms": 1792681201000,
+    "decision_available_ms": 1792681201100,
+    "backdating_ms_if_D_open_used": 1100,
+    "simulation_admitted": false,
+    "requires_revalidation": true
+  },
+  "public_probe": {
+    "status": "VALID",
+    "server_ms": 1792831919288,
+    "closed_bars": 2,
+    "source": "OKX_PUBLIC_GET_ONLY",
+    "fingerprint": "e2428ae0c2ac30d76900309428e3140fcab668c3b16d3d53d78aa70bbf2b8965",
+    "logical_requests": 2,
+    "not_a_paper_trade": true
+  },
+  "formal_records_checked": 2,
+  "formal_valid_candidates": 0,
+  "tests": {
+    "command": ".\\.venv\\Scripts\\python.exe -m pytest tests/test_forward_validation.py tests/test_forward_tracking.py tests/test_observation_eligibility.py tests/test_plan_lifecycle.py tests/test_okx_backtest.py -q --tb=short",
+    "passed": 144,
+    "elapsed_seconds": 96.22,
+    "scope": "Existing compatibility, NOT F3 matching acceptance",
+    "full_regression_run": false
+  },
+  "protected_files": {
+    "tradingagents/forward_validation.py": {
+      "sha256": "27f3bbe578a6d4f8d9ff210df44efb5985c6a3114f92524eb79092c66b694d43",
+      "unchanged_from_baseline_ignoring_git_eol": true
+    },
+    "tradingagents/forward_tracking.py": {
+      "sha256": "bb215ee60000d30ad1bf32b3d7cf9b6de1768331daae9d5d01e4c39ec0b8f66e",
+      "unchanged_from_baseline_ignoring_git_eol": true
+    },
+    "tradingagents/observation_eligibility.py": {
+      "sha256": "693285c4a9f47d6eb741f5428f186d98911ae6f436990a3a6d5a42b5ef9318c4",
+      "unchanged_from_baseline_ignoring_git_eol": true
+    },
+    "tradingagents/dataflows/plan_lifecycle.py": {
+      "sha256": "fb5db1bdd1690573786cc3e9c42bcbbbf1520ac97b60a72f1bd11c4f9739f3f5",
+      "unchanged_from_baseline_ignoring_git_eol": true
+    },
+    "tradingagents/okx_backtest.py": {
+      "sha256": "f5c6aaf33e4f193b346a909adf110652d248bc97c45d6dc04a2032d70f0c975e",
+      "unchanged_from_baseline_ignoring_git_eol": true
+    },
+    "tradingagents/memory/okx_simulation.py": {
+      "sha256": "1086c3950cd9ec832615d0567117978ce0d2df1b8b66caae02046c4f5efa7548",
+      "unchanged_from_baseline_ignoring_git_eol": true
+    },
+    "docs/forward_f1_protocol.json": {
+      "sha256": "f9d7cfb291be37129bc6b2a6dd20d1baaabdaf975544814b932354f6d41e824a",
+      "unchanged_from_baseline_ignoring_git_eol": true
+    },
+    "docs/forward_observation_v1.json": {
+      "sha256": "4b82200b3417cb3dd91ddd4c846b08dfc28e4f0723c9197f468a820f534d8b80",
+      "unchanged_from_baseline_ignoring_git_eol": true
+    },
+    "docs/okx_d3_strategy_freeze.json": {
+      "sha256": "547265addcea233d026058ffd6e78a34b3fe31450419372e3a1df6396eb62908",
+      "unchanged_from_baseline_ignoring_git_eol": true
+    }
+  },
+  "real_forward_fills": 0,
+  "real_forward_settlements": 0,
+  "f3_performance_metrics": null,
+  "limitations": [
+    "No F3 engine, ledger, CLI or active Schema implemented",
+    "No actual forward entry/settlement end-to-end proof",
+    "No risk permission granted",
+    "No leverage or liquidation proof"
+  ]
+}

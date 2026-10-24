@@ -1,0 +1,180 @@
+{
+  "stage": "F3",
+  "recommendation": "CONDITIONAL_ENGINEERING_PASS",
+  "baseline_commit": "872a8c8ffdc40a01e3ad712fd3ead32cd7e7c0cd",
+  "branch": "codex/forward-validation-f3",
+  "protocol_version": "forward-paper-v1",
+  "protocol_hash": "e29998a373c1295791116b026a04f18c4067f5c14a1352cfad2a4b93066dbd64",
+  "paper_code_hash": "9a052606a2f18d032d2e9dec90371ab5c14c07a9b64600f5d89ae92d848ecc22",
+  "execution_enabled": false,
+  "simulation_admitted": false,
+  "allow_new_risk": false,
+  "source_sha256": {
+    "tradingagents/forward_paper.py": "9a052606a2f18d032d2e9dec90371ab5c14c07a9b64600f5d89ae92d848ecc22",
+    "tradingagents/dataflows/vendors/okx.py": "fce9a2ef55d79bf33320880c3ab2671aacbe11f7a54299147d07e6cc38fa032c",
+    "tests/test_forward_paper.py": "ec39f8ef8f19f34ada3994ec3ad6440c2757f0a830a6a235c26ea8d415793497",
+    "docs/forward_paper_v1.json": "538f226f6c15ef5df956c8c52aaa492d96cffb070aa9494c1b0d9ffe49be81a2",
+    "docs/forward_f3.schema.json": "ae53dc69b9005aeebe7d51367baabb31e2b8e3cbec4af8e9f9c8c0fbdba74c54",
+    "docs/forward_f3.md": "ec63b34759fa49a725e9246c8315935239c89ee9fc0c062ecf911d78710e34f9",
+    "docs/forward_f3_preflight.md": "b8ef4ebd3abff86f7b96279d472c8f15ceff37bb98f317e2ad85464ce767d7e2",
+    "docs/forward_f3_preflight.json": "de63f6e52f90bf04fd6ecaf8a9df8c554f54bee77603606ea2f43341b6524ec9"
+  },
+  "credential_pattern_findings": 0,
+  "tests": {
+    "final_specialized": {
+      "passed": 51,
+      "seconds": 23.86
+    },
+    "earlier_compatibility_batch": {
+      "passed": 192,
+      "seconds": 126.55,
+      "note": "Three tests subsequently added and covered by final specialized and full run"
+    },
+    "final_full": {
+      "passed": 2015,
+      "failed": 5,
+      "skipped": 4,
+      "deselected": 13,
+      "subtests_passed": 100,
+      "seconds": 133.28,
+      "failure_ids": [
+        "tests.test_chatgpt_auth::test_a_token_near_expiry_is_renewed_with_the_stored_refresh_token",
+        "tests.test_chatgpt_auth::test_signing_in_by_pasting_the_redirect_saves_a_private_sign_in",
+        "tests.test_cli_updates::test_the_upgrade_command_follows_the_install",
+        "tests.test_cli_updates::test_a_uv_git_install_is_upgraded_with_uv",
+        "tests.test_suite_isolation::test_yfinance_keeps_its_cache_out_of_the_users_home"
+      ],
+      "scope": "Default non-integration suite; explicit public probes separate"
+    }
+  },
+  "protected_modules_protocols_unchanged": 9,
+  "frozen_experiment_files_unchanged": 146,
+  "real_scan": {
+    "report_json": "C:\\Users\\jerry_su\\.tradingagents\\logs\\forward_validation\\f3_v1\\runs\\dbeb63696cf389d7658da2b722737ab2f62208a88572f2fe977a04390c6227bc.json",
+    "report_html": "C:\\Users\\jerry_su\\.tradingagents\\logs\\forward_validation\\f3_v1\\runs\\dbeb63696cf389d7658da2b722737ab2f62208a88572f2fe977a04390c6227bc.html",
+    "research": {
+      "total": 2,
+      "prospective": 2,
+      "completed_wait": 1,
+      "failed": 1,
+      "valid_candidates": 0,
+      "observation_qualified": 0,
+      "observation_rate": null,
+      "paper_scheduled": 0,
+      "condition_triggered": 0,
+      "condition_trigger_denominator": 0,
+      "condition_trigger_rate": null,
+      "observed_expired": 0,
+      "observed_invalidated": 0,
+      "f2_reviewed": 0,
+      "f2_paused": 0
+    },
+    "paper": {
+      "trades": 0,
+      "settled": 0,
+      "unsettled": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": null,
+      "average_win": null,
+      "average_loss": null,
+      "net_pnl": null,
+      "gross_pnl_after_slippage": null,
+      "gross_pnl_before_costs": null,
+      "profit_factor": null,
+      "payoff_ratio": null,
+      "fees_usdt": 0,
+      "slippage_usdt": 0,
+      "funding_cashflow_usdt": 0,
+      "realized_only_drawdown_by_group": {},
+      "equity_curves": {},
+      "settled_history_closed_candle_drawdown_by_group": {},
+      "settled_history_closed_candle_equity": {},
+      "complete_net_equity_available": true
+    },
+    "llm_calls": 0,
+    "real_forward_fill_and_settlement_verified": false
+  },
+  "public_probe": {
+    "scope": "PUBLIC_CONNECTIVITY_ONLY_NOT_PAPER_ENTRY",
+    "execution_enabled": false,
+    "protocol_hash": "e29998a373c1295791116b026a04f18c4067f5c14a1352cfad2a4b93066dbd64",
+    "code_hash": "9a052606a2f18d032d2e9dec90371ab5c14c07a9b64600f5d89ae92d848ecc22",
+    "server_ms": 1792834045460,
+    "instrument": {
+      "instId": "BTC-USDT-SWAP",
+      "ctVal": "0.01",
+      "tickSz": "0.1",
+      "lotSz": "0.01",
+      "minSz": "0.01"
+    },
+    "opening_endpoint": {
+      "status": "AVAILABLE",
+      "returned_rows": 2,
+      "latest_open_ms": 1792832400000,
+      "latest_confirm": "0",
+      "used_as_entry": false
+    },
+    "closed_candles": {
+      "count": 2,
+      "fingerprint": "4a4d42ef1d946267857677189bdebc5e44eacf43a1d96c0213045909161d5641",
+      "quality": {
+        "duplicate_rows": 0,
+        "excluded_rows": 98,
+        "notes": []
+      }
+    },
+    "realized_funding": {
+      "count": 10,
+      "times_ms": [
+        1792569600000,
+        1792598400000,
+        1792627200000,
+        1792656000000,
+        1792684800000,
+        1792713600000,
+        1792742400000,
+        1792771200000,
+        1792800000000,
+        1792828800000
+      ],
+      "intervals_hours": [
+        8.0,
+        8.0,
+        8.0,
+        8.0,
+        8.0,
+        8.0,
+        8.0,
+        8.0,
+        8.0
+      ],
+      "scope": "Observed returned events; not a proof of entire archive completeness"
+    },
+    "status": "VALID",
+    "logical_requests": 5
+  },
+  "remaining_limits": [
+    "BTC-USDT-SWAP only",
+    "No genuine prospective eligible candidate, fill or settlement yet",
+    "15s timely opening reference; actual receipt is fill timestamp; no backdating",
+    "Hourly entry-bar target uncertainty can make outcome UNRESOLVED",
+    "Funding settlement trade-open proxy, not exact historical mark; wait for actual brackets",
+    "Open/unresolved exposure prevents comprehensive net equity and drawdown",
+    "Only pairing structure and read-only settled feedback; no automatic Memory/Reflection integration",
+    "Default scan up to 200 selected records; aggregate may be truncated",
+    "Local Windows single-filesystem locking; no Linux deployment or scheduler installed",
+    "Five pre-existing Windows test failures remain"
+  ],
+  "implementation_scope": {
+    "paper_admission": true,
+    "precommitted_scheduling": true,
+    "price_exit_and_funding_settlement": true,
+    "audited_idempotent_ledger": true,
+    "zero_sample_reporting": true,
+    "version_pairing_structure": true,
+    "read_only_feedback": true,
+    "automatic_learning": false,
+    "real_execution": false
+  }
+}
