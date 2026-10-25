@@ -1,0 +1,19 @@
+{
+  "version": "forward-paper-opening-observation-v1",
+  "enabled": false,
+  "window_ms": 15000,
+  "round_offsets_ms": [
+    1000,
+    5000,
+    9000
+  ],
+  "per_candidate_attempts": 3,
+  "total_http_budget": 60,
+  "quote_http_budget": 9,
+  "max_due": 3,
+  "request_timeout_ms": 1000,
+  "min_request_interval_ms": 250,
+  "allow_new_risk": false,
+  "simulation_admitted": false,
+  "execution_enabled": false
+}

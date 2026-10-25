@@ -1,0 +1,103 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "forward-paper-opening-observation-v1",
+      "default": "forward-paper-opening-observation-v1",
+      "title": "Version",
+      "type": "string"
+    },
+    "enabled": {
+      "default": false,
+      "title": "Enabled",
+      "type": "boolean"
+    },
+    "window_ms": {
+      "const": 15000,
+      "default": 15000,
+      "title": "Window Ms",
+      "type": "integer"
+    },
+    "round_offsets_ms": {
+      "default": [
+        1000,
+        5000,
+        9000
+      ],
+      "maxItems": 3,
+      "minItems": 3,
+      "prefixItems": [
+        {
+          "const": 1000,
+          "type": "integer"
+        },
+        {
+          "const": 5000,
+          "type": "integer"
+        },
+        {
+          "const": 9000,
+          "type": "integer"
+        }
+      ],
+      "title": "Round Offsets Ms",
+      "type": "array"
+    },
+    "per_candidate_attempts": {
+      "const": 3,
+      "default": 3,
+      "title": "Per Candidate Attempts",
+      "type": "integer"
+    },
+    "total_http_budget": {
+      "const": 60,
+      "default": 60,
+      "title": "Total Http Budget",
+      "type": "integer"
+    },
+    "quote_http_budget": {
+      "const": 9,
+      "default": 9,
+      "title": "Quote Http Budget",
+      "type": "integer"
+    },
+    "max_due": {
+      "const": 3,
+      "default": 3,
+      "title": "Max Due",
+      "type": "integer"
+    },
+    "request_timeout_ms": {
+      "const": 1000,
+      "default": 1000,
+      "title": "Request Timeout Ms",
+      "type": "integer"
+    },
+    "min_request_interval_ms": {
+      "const": 250,
+      "default": 250,
+      "title": "Min Request Interval Ms",
+      "type": "integer"
+    },
+    "allow_new_risk": {
+      "const": false,
+      "default": false,
+      "title": "Allow New Risk",
+      "type": "boolean"
+    },
+    "simulation_admitted": {
+      "const": false,
+      "default": false,
+      "title": "Simulation Admitted",
+      "type": "boolean"
+    },
+    "execution_enabled": {
+      "const": false,
+      "default": false,
+      "title": "Execution Enabled",
+      "type": "boolean"
+    }
+  },
+  "title": "Config",
+  "type": "object"
+}

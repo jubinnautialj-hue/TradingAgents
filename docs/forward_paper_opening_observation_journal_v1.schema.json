@@ -1,0 +1,347 @@
+{
+  "$defs": {
+    "Config": {
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": "forward-paper-opening-observation-v1",
+          "default": "forward-paper-opening-observation-v1",
+          "title": "Version",
+          "type": "string"
+        },
+        "enabled": {
+          "default": false,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "window_ms": {
+          "const": 15000,
+          "default": 15000,
+          "title": "Window Ms",
+          "type": "integer"
+        },
+        "round_offsets_ms": {
+          "default": [
+            1000,
+            5000,
+            9000
+          ],
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "const": 1000,
+              "type": "integer"
+            },
+            {
+              "const": 5000,
+              "type": "integer"
+            },
+            {
+              "const": 9000,
+              "type": "integer"
+            }
+          ],
+          "title": "Round Offsets Ms",
+          "type": "array"
+        },
+        "per_candidate_attempts": {
+          "const": 3,
+          "default": 3,
+          "title": "Per Candidate Attempts",
+          "type": "integer"
+        },
+        "total_http_budget": {
+          "const": 60,
+          "default": 60,
+          "title": "Total Http Budget",
+          "type": "integer"
+        },
+        "quote_http_budget": {
+          "const": 9,
+          "default": 9,
+          "title": "Quote Http Budget",
+          "type": "integer"
+        },
+        "max_due": {
+          "const": 3,
+          "default": 3,
+          "title": "Max Due",
+          "type": "integer"
+        },
+        "request_timeout_ms": {
+          "const": 1000,
+          "default": 1000,
+          "title": "Request Timeout Ms",
+          "type": "integer"
+        },
+        "min_request_interval_ms": {
+          "const": 250,
+          "default": 250,
+          "title": "Min Request Interval Ms",
+          "type": "integer"
+        },
+        "allow_new_risk": {
+          "const": false,
+          "default": false,
+          "title": "Allow New Risk",
+          "type": "boolean"
+        },
+        "simulation_admitted": {
+          "const": false,
+          "default": false,
+          "title": "Simulation Admitted",
+          "type": "boolean"
+        },
+        "execution_enabled": {
+          "const": false,
+          "default": false,
+          "title": "Execution Enabled",
+          "type": "boolean"
+        }
+      },
+      "title": "Config",
+      "type": "object"
+    },
+    "Event": {
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": "forward-paper-opening-observation-v1",
+          "default": "forward-paper-opening-observation-v1",
+          "title": "Version",
+          "type": "string"
+        },
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "recorded_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Recorded Ms",
+          "type": "integer"
+        },
+        "registration_id": {
+          "title": "Registration Id",
+          "type": "string"
+        },
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "policy_hash": {
+          "title": "Policy Hash",
+          "type": "string"
+        },
+        "previous_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Previous Hash"
+        },
+        "payload": {
+          "additionalProperties": true,
+          "title": "Payload",
+          "type": "object"
+        },
+        "event_hash": {
+          "title": "Event Hash",
+          "type": "string"
+        },
+        "simulation_admitted": {
+          "const": false,
+          "default": false,
+          "title": "Simulation Admitted",
+          "type": "boolean"
+        },
+        "allow_new_risk": {
+          "const": false,
+          "default": false,
+          "title": "Allow New Risk",
+          "type": "boolean"
+        },
+        "execution_enabled": {
+          "const": false,
+          "default": false,
+          "title": "Execution Enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "event_id",
+        "recorded_ms",
+        "registration_id",
+        "kind",
+        "policy_hash",
+        "previous_hash",
+        "payload",
+        "event_hash"
+      ],
+      "title": "Event",
+      "type": "object"
+    },
+    "Protocol": {
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": "forward-paper-opening-observation-v1",
+          "default": "forward-paper-opening-observation-v1",
+          "title": "Version",
+          "type": "string"
+        },
+        "initial_equity": {
+          "const": 10000,
+          "default": 10000,
+          "title": "Initial Equity",
+          "type": "integer"
+        },
+        "notional_usdt": {
+          "const": 1000,
+          "default": 1000,
+          "title": "Notional Usdt",
+          "type": "integer"
+        },
+        "taker_fee_bps": {
+          "const": 5,
+          "default": 5,
+          "title": "Taker Fee Bps",
+          "type": "integer"
+        },
+        "maker_fee_bps": {
+          "default": null,
+          "title": "Maker Fee Bps",
+          "type": "null"
+        },
+        "slippage_bps": {
+          "const": 2,
+          "default": 2,
+          "title": "Slippage Bps",
+          "type": "integer"
+        },
+        "max_holding_bars": {
+          "const": 12,
+          "default": 12,
+          "title": "Max Holding Bars",
+          "type": "integer"
+        },
+        "opening_delivery_ms": {
+          "const": 15000,
+          "default": 15000,
+          "title": "Opening Delivery Ms",
+          "type": "integer"
+        },
+        "revalidation_ttl_ms": {
+          "const": 60000,
+          "default": 60000,
+          "title": "Revalidation Ttl Ms",
+          "type": "integer"
+        },
+        "fill_rule": {
+          "const": "PRECOMMITTED_FUTURE_HOUR_OPEN_OBSERVED_ON_TIME",
+          "default": "PRECOMMITTED_FUTURE_HOUR_OPEN_OBSERVED_ON_TIME",
+          "title": "Fill Rule",
+          "type": "string"
+        },
+        "first_bar_target_rule": {
+          "const": "CLOSE_CONFIRMED_OR_UNRESOLVED",
+          "default": "CLOSE_CONFIRMED_OR_UNRESOLVED",
+          "title": "First Bar Target Rule",
+          "type": "string"
+        },
+        "same_bar_rule": {
+          "const": "STOP_FIRST",
+          "default": "STOP_FIRST",
+          "title": "Same Bar Rule",
+          "type": "string"
+        },
+        "funding_rule": {
+          "const": "REALIZED_PAGINATED_BRACKETS_TRADE_OPEN_PROXY",
+          "default": "REALIZED_PAGINATED_BRACKETS_TRADE_OPEN_PROXY",
+          "title": "Funding Rule",
+          "type": "string"
+        },
+        "simulation_admitted": {
+          "const": false,
+          "default": false,
+          "title": "Simulation Admitted",
+          "type": "boolean"
+        },
+        "allow_new_risk": {
+          "const": false,
+          "default": false,
+          "title": "Allow New Risk",
+          "type": "boolean"
+        },
+        "execution_enabled": {
+          "const": false,
+          "default": false,
+          "title": "Execution Enabled",
+          "type": "boolean"
+        },
+        "parent_policy_hash": {
+          "title": "Parent Policy Hash",
+          "type": "string"
+        },
+        "registry_binding_hash": {
+          "title": "Registry Binding Hash",
+          "type": "string"
+        },
+        "instrument_admission": {
+          "additionalProperties": true,
+          "title": "Instrument Admission",
+          "type": "object"
+        },
+        "opening_observation": {
+          "$ref": "#/$defs/Config"
+        }
+      },
+      "required": [
+        "parent_policy_hash",
+        "registry_binding_hash",
+        "instrument_admission",
+        "opening_observation"
+      ],
+      "title": "Protocol",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "policy": {
+      "$ref": "#/$defs/Protocol"
+    },
+    "code_hash": {
+      "title": "Code Hash",
+      "type": "string"
+    },
+    "namespace": {
+      "enum": [
+        "PRODUCTION",
+        "FIXTURE"
+      ],
+      "title": "Namespace",
+      "type": "string"
+    },
+    "events": {
+      "items": {
+        "$ref": "#/$defs/Event"
+      },
+      "maxItems": 20000,
+      "title": "Events",
+      "type": "array"
+    }
+  },
+  "required": [
+    "policy",
+    "code_hash",
+    "namespace",
+    "events"
+  ],
+  "title": "Journal",
+  "type": "object"
+}
