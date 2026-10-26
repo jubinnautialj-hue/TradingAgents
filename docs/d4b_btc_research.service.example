@@ -1,0 +1,46 @@
+# EXPORT ONLY. Not installed or enabled. No timer is provided by D4-B.0.
+# Requires a separately reviewed release, explicit budget approval, and an
+# independently authorized writable ChatGPT authentication HOME. Never copy
+# credentials into Git, this unit, the budget journal, or a command line.
+[Unit]
+Description=TradingAgents D4-B opt-in one BTC guarded research
+After=network-online.target time-sync.target
+Wants=network-online.target
+ConditionPathExists=/var/lib/tradingagents/d4b-budget/journal.json
+
+[Service]
+Type=exec
+User=ta-research
+Group=ta-research
+WorkingDirectory=/opt/tradingagents/d4b-reviewed
+Environment=HOME=/var/lib/tradingagents/d4b-authorized-home
+Environment=TZ=UTC
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=TRADINGAGENTS_CACHE_DIR=/var/lib/tradingagents/d4b-budget/cache
+Environment=TRADINGAGENTS_MEMORY_LOG_PATH=/var/lib/tradingagents/d4b-budget/memory/trading_memory.md
+ExecStart=/opt/tradingagents/d4b-reviewed/.venv/bin/python -B -m tradingagents.guarded_research run --ledger /var/lib/tradingagents/d4b-budget
+RuntimeMaxSec=900
+TimeoutStopSec=20
+KillMode=control-group
+Restart=no
+MemoryHigh=1280M
+MemoryMax=1536M
+MemorySwapMax=256M
+CPUQuota=100%
+CPUWeight=10
+Nice=10
+TasksMax=64
+OOMPolicy=stop
+UMask=0077
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/tradingagents/d4b-budget /var/lib/tradingagents/d4b-authorized-home
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectClock=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+CapabilityBoundingSet=
+StandardOutput=journal
+StandardError=null

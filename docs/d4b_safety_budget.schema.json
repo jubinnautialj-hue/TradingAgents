@@ -1,0 +1,168 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "d4b-safety-budget-v1",
+      "default": "d4b-safety-budget-v1",
+      "title": "Version",
+      "type": "string"
+    },
+    "enabled": {
+      "default": false,
+      "title": "Enabled",
+      "type": "boolean"
+    },
+    "accepted_post_response_exposure": {
+      "default": false,
+      "title": "Accepted Post Response Exposure",
+      "type": "boolean"
+    },
+    "instrument": {
+      "const": "BTC-USDT-SWAP",
+      "default": "BTC-USDT-SWAP",
+      "title": "Instrument",
+      "type": "string"
+    },
+    "model": {
+      "const": "gpt-6.1-sol",
+      "default": "gpt-6.1-sol",
+      "title": "Model",
+      "type": "string"
+    },
+    "hours": {
+      "const": 72,
+      "default": 72,
+      "title": "Hours",
+      "type": "integer"
+    },
+    "interval_seconds": {
+      "const": 86400,
+      "default": 86400,
+      "title": "Interval Seconds",
+      "type": "integer"
+    },
+    "max_researches": {
+      "const": 3,
+      "default": 3,
+      "title": "Max Researches",
+      "type": "integer"
+    },
+    "task_seconds": {
+      "default": 900,
+      "maximum": 900,
+      "minimum": 10,
+      "title": "Task Seconds",
+      "type": "integer"
+    },
+    "research_tokens": {
+      "default": 600000,
+      "maximum": 600000,
+      "minimum": 1,
+      "title": "Research Tokens",
+      "type": "integer"
+    },
+    "daily_tokens": {
+      "default": 600000,
+      "maximum": 600000,
+      "minimum": 1,
+      "title": "Daily Tokens",
+      "type": "integer"
+    },
+    "campaign_tokens": {
+      "default": 1800000,
+      "maximum": 1800000,
+      "minimum": 1,
+      "title": "Campaign Tokens",
+      "type": "integer"
+    },
+    "headroom_tokens": {
+      "default": 100000,
+      "maximum": 600000,
+      "minimum": 1,
+      "title": "Headroom Tokens",
+      "type": "integer"
+    },
+    "warning_fraction": {
+      "default": 0.7,
+      "exclusiveMaximum": 1,
+      "exclusiveMinimum": 0,
+      "title": "Warning Fraction",
+      "type": "number"
+    },
+    "research_calls": {
+      "default": 24,
+      "maximum": 24,
+      "minimum": 1,
+      "title": "Research Calls",
+      "type": "integer"
+    },
+    "daily_calls": {
+      "default": 24,
+      "maximum": 24,
+      "minimum": 1,
+      "title": "Daily Calls",
+      "type": "integer"
+    },
+    "campaign_calls": {
+      "default": 72,
+      "maximum": 72,
+      "minimum": 1,
+      "title": "Campaign Calls",
+      "type": "integer"
+    },
+    "research_http": {
+      "default": 240,
+      "maximum": 240,
+      "minimum": 5,
+      "title": "Research Http",
+      "type": "integer"
+    },
+    "daily_http": {
+      "default": 240,
+      "maximum": 240,
+      "minimum": 1,
+      "title": "Daily Http",
+      "type": "integer"
+    },
+    "campaign_http": {
+      "default": 720,
+      "maximum": 720,
+      "minimum": 1,
+      "title": "Campaign Http",
+      "type": "integer"
+    },
+    "min_available_mib": {
+      "default": 1536,
+      "maximum": 2048,
+      "minimum": 1024,
+      "title": "Min Available Mib",
+      "type": "integer"
+    },
+    "min_free_gib": {
+      "default": 10,
+      "minimum": 10,
+      "title": "Min Free Gib",
+      "type": "integer"
+    },
+    "execution_enabled": {
+      "const": false,
+      "default": false,
+      "title": "Execution Enabled",
+      "type": "boolean"
+    },
+    "simulation_admitted": {
+      "const": false,
+      "default": false,
+      "title": "Simulation Admitted",
+      "type": "boolean"
+    },
+    "allow_new_risk": {
+      "const": false,
+      "default": false,
+      "title": "Allow New Risk",
+      "type": "boolean"
+    }
+  },
+  "title": "Policy",
+  "type": "object"
+}
