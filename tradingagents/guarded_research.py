@@ -31,6 +31,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CALL = ContextVar("d4b_call", default=None)
 WIRE = ContextVar("d4b_wire", default=None)
 OBS = ContextVar("d4b_observations", default=None)
+RENEWAL = ContextVar("d4b_native_renewal", default=False)
 
 
 def normalize_usage(raw, source="RAW_RESPONSES"):
@@ -64,12 +65,41 @@ def normalized_matches(result, raw):
     return True
 
 
+def secure_url(url):
+    """Inspect routing only, never headers, form data, tokens or bodies."""
+    raw = str(url)
+    try:
+        parts = urlsplit(raw)
+        valid = (parts.scheme == "https" and parts.hostname and parts.port in {None, 443}
+                 and parts.username is None and parts.password is None
+                 and not any(c in raw for c in "\\\r\n\t"))
+    except ValueError:
+        valid = False
+    if not valid: raise SafetyStop("INSECURE_TRANSPORT_URL")
+    return parts
+
+
 def endpoint(method, url):
-    parts = urlsplit(str(url)); host = parts.hostname or ""; path = parts.path.rstrip("/")
-    if method.upper() == "POST" and host in {"api.openai.com", "chatgpt.com"} and path.endswith("/responses"):
-        return "MODEL"
-    if method.upper() == "POST" and host == "auth.openai.com" and path == "/oauth/token": return "AUTH"
-    if method.upper() == "GET": return "PUBLIC_GET"
+    from tradingagents.llm_clients import chatgpt_auth as auth
+
+    parts = secure_url(url)
+    host, path = parts.hostname, parts.path
+    # The native client is the single source of endpoint paths. A source/path
+    # update cannot silently expand the trusted HTTPS authentication authority.
+    token, keys = secure_url(auth.TOKEN_URL), secure_url(auth.JWKS_URL)
+    if any(p.hostname != "auth.openai.com" or p.query or p.fragment for p in (token, keys)):
+        raise SafetyStop("UNTRUSTED_NATIVE_AUTH_ENDPOINT")
+    method = method.upper()
+    if host == token.hostname:
+        if not parts.query and not parts.fragment:
+            if method == "POST" and path == token.path: return "AUTH"
+            if method == "GET" and path == keys.path: return "PUBLIC_GET"
+        raise SafetyStop("NONPUBLIC_WRITE_DENIED")
+    # Retain the two model authorities, but never accept arbitrary suffixes.
+    if method == "POST" and not parts.query and not parts.fragment and (host, path) in {
+        ("api.openai.com", "/v1/responses"), ("chatgpt.com", "/backend-api/codex/responses")
+    }: return "MODEL"
+    if method == "GET" and not parts.fragment: return "PUBLIC_GET"
     raise SafetyStop("NONPUBLIC_WRITE_DENIED")
 
 
@@ -131,7 +161,22 @@ class Session:
         from langchain_core.language_models.chat_models import BaseChatModel
         import langchain_openai.chat_models.base as sdk
         import requests
+        from tradingagents.llm_clients import chatgpt_auth as auth
         with legacy.guards(meter), ExitStack() as stack:
+            original_refresh = auth._refresh
+
+            def native_refresh(*args, **kwargs):
+                # Opaque pass-through: do not inspect or retain credential data.
+                marker = RENEWAL.set(True)
+                try: return original_refresh(*args, **kwargs)
+                except BaseException:
+                    # The native client can fall back to a still-valid login.
+                    # That fallback must not hide a failed renewal from safety.
+                    with self.ledger.transaction() as (obj, _, __): self.ledger._pause(obj, "AUTH_RENEWAL_FAILED")
+                    raise
+                finally: RENEWAL.reset(marker)
+
+            stack.enter_context(patch.object(auth, "_refresh", native_refresh))
             for name, source in (("_create_usage_metadata_responses", "RAW_RESPONSES"), ("_create_usage_metadata", "RAW_CHAT")):
                 original = getattr(sdk, name)
 
@@ -202,7 +247,13 @@ class Session:
             def send(fn, client, request, *args, **kwargs):
                 self.check()
                 kind = endpoint(request.method, request.url)
+                if kind == "AUTH" and not RENEWAL.get(): raise SafetyStop("AUTH_RENEWAL_CONTEXT_REQUIRED")
                 legacy.public_exchange_only(request.method, request.url)
+                protected = kind in {"AUTH", "MODEL"} or secure_url(request.url).hostname == "auth.openai.com"
+                if protected and isinstance(client, requests.Session):
+                    # Requests follows redirects inside Session.send; disable
+                    # that BEFORE dispatch, not after credentials were replayed.
+                    kwargs["allow_redirects"] = False
                 wid = self.ledger.begin_http(self.run_id, CALL.get(), kind)
                 marker = WIRE.set(wid)
                 try:
@@ -215,6 +266,12 @@ class Session:
                     request_id = response.headers.get("x-request-id")
                     self.ledger.finish_http(wid, status=status,
                         request_hash=hashlib.sha256(request_id.encode()).hexdigest() if isinstance(request_id, str) else None)
+                    reason = ("PROTECTED_REDIRECT_DENIED" if protected and isinstance(status, int) and 300 <= status < 400
+                              else "AUTH_RESPONSE_REJECTED" if kind == "AUTH" and status != 200 else None)
+                    if reason:
+                        with self.ledger.transaction() as (obj, _, __): self.ledger._pause(obj, reason)
+                        try: response.close()
+                        finally: raise SafetyStop(reason)
                     return response
                 finally: WIRE.reset(marker)
 
