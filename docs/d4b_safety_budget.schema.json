@@ -21,7 +21,8 @@
       "default": "strict-v1",
       "enum": [
         "strict-v1",
-        "bls-cpi-403-v1"
+        "bls-cpi-403-v1",
+        "official-macro-403-v1"
       ],
       "title": "Optional Source Policy",
       "type": "string"

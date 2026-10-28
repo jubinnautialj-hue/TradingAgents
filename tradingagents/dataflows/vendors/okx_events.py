@@ -74,7 +74,7 @@ class OfficialFeeds:
                         if status==429 or status>=500:
                             if attempt==0:time.sleep(1);continue
                             raise ValueError(f'Official feed HTTP_{status}; retry budget exhausted')
-                        if status==403 and url==FEEDS['cpi'][0]:raise CPIUnavailable(okx.utc_ms())
+                        if status==403:raise (CPIUnavailable(okx.utc_ms()) if url==FEEDS['cpi'][0] else OfficialFeedUnavailable(okx.utc_ms()))
                         if status!=200:raise ValueError(f'Official feed HTTP_{status}; no bypass attempted')
                         chunks=[];size=0
                         for chunk in response.iter_content(16384):
@@ -91,11 +91,15 @@ class OfficialFeeds:
         raise ValueError('Official feed unavailable')
 
 
-class CPIUnavailable(ValueError):
+class OfficialFeedUnavailable(ValueError):
     """Public status metadata only; response body/headers are deliberately discarded."""
     def __init__(self,observed_ms):
         super().__init__('Official feed HTTP_403; no bypass attempted')
         self.observed_ms=observed_ms
+
+
+class CPIUnavailable(OfficialFeedUnavailable):
+    """Backward-compatible CPI exception identity."""
 
 
 def relevant(title,base,scope):
@@ -173,9 +177,9 @@ def prepare_events(symbol,day,config,*,feeds=None,client=None):
             root['events'].extend(rows);source.update(status='VALID',fetched_at_ms=seen,body_sha256=hashlib.sha256(body).hexdigest(),rejected_entries=bad,matched_entries=len(rows))
         except Exception as exc:
             source['issues']=[str(exc)[:140] if isinstance(exc,ValueError) else type(exc).__name__]
-            if isinstance(exc,CPIUnavailable):
+            if isinstance(exc,OfficialFeedUnavailable):
                 source.update(http_status=403,failed_at_ms=exc.observed_ms,
-                              failure_category='HTTP_APPLICATION_ERROR',unavailable_reason='HTTP_403')
+                              failure_category='HTTP_APPLICATION_ERROR',unavailable_reason='HTTP_403',failure_stage='PUBLIC_HTTP_RESPONSE')
     source={'source':'/api/v5/support/announcements','status':'DATA_UNAVAILABLE','issues':[],'coverage':'First page only, 20 announcements; regional response may differ'}
     root['sources']['okx_announcements']=source
     try:

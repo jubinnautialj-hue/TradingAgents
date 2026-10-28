@@ -39,7 +39,7 @@ class Policy(ResearchModel):
     version: Literal["d4b-safety-budget-v1"] = VERSION
     enabled: bool = False
     accepted_post_response_exposure: bool = False
-    optional_source_policy: Literal["strict-v1", "bls-cpi-403-v1"] = "strict-v1"
+    optional_source_policy: Literal["strict-v1", "bls-cpi-403-v1", "official-macro-403-v1"] = "strict-v1"
     instrument: Literal["BTC-USDT-SWAP"] = "BTC-USDT-SWAP"
     model: Literal["gpt-6.1-sol"] = "gpt-6.1-sol"
     hours: Literal[72] = 72
@@ -74,21 +74,39 @@ def now_ms():
     return time.time_ns() // 1_000_000
 
 
-def optional_cpi_request(method, url):
-    """Exact native source only. No caller-supplied 'optional' label is trusted."""
+# Fixed reviewed routing only; native FEEDS must agree before a source is admitted.
+MACRO_SOURCES = {
+    "fed_policy": "https://www.federalreserve.gov/feeds/press_monetary.xml",
+    "fed_speeches": "https://www.federalreserve.gov/feeds/speeches.xml",
+    "cpi": "https://www.bls.gov/feed/cpi.rss",
+    "ppi": "https://www.bls.gov/feed/ppi.rss",
+    "employment": "https://www.bls.gov/feed/empsit.rss",
+}
+
+
+def optional_macro_source(method, url, policy="strict-v1"):
+    """Return a reviewed ID, never trust caller-supplied optional labels."""
     from tradingagents.dataflows.vendors.okx_events import FEEDS
-    expected = "https://www.bls.gov/feed/cpi.rss"
-    if FEEDS["cpi"][0] != expected:
-        raise SafetyStop("OPTIONAL_SOURCE_DEFINITION_CHANGED")
+    names = ("cpi",) if policy == "bls-cpi-403-v1" else tuple(MACRO_SOURCES) if policy == "official-macro-403-v1" else ()
+    for name in names:
+        if FEEDS.get(name) != (MACRO_SOURCES[name], "MACRO", None):
+            raise SafetyStop("OPTIONAL_SOURCE_DEFINITION_CHANGED")
     raw = str(url)
     try:
         p = urlsplit(raw)
-        return (method == "GET" and p.scheme == "https" and p.hostname == "www.bls.gov"
-                and p.port in {None, 443} and p.path == "/feed/cpi.rss"
-                and not p.query and not p.fragment and p.username is None and p.password is None
-                and not any(c in raw for c in "\\\r\n\t"))
+        if (method != "GET" or p.scheme != "https" or p.port not in {None, 443}
+                or p.query or p.fragment or p.username is not None or p.password is not None
+                or any(c in raw for c in "\\\r\n\t")):
+            return None
+        return next((name for name in names if
+            (p.hostname, p.path) == (urlsplit(MACRO_SOURCES[name]).hostname, urlsplit(MACRO_SOURCES[name]).path)), None)
     except ValueError:
-        return False
+        return None
+
+
+def optional_cpi_request(method, url):
+    """Compatibility API: remains CPI-only."""
+    return optional_macro_source(method, url, "bls-cpi-403-v1") == "cpi"
 
 
 def day_of(ms):
@@ -309,9 +327,8 @@ class Ledger:
         if endpoint_kind not in {"MODEL", "AUTH", "PUBLIC_GET"}: raise SafetyStop("TRANSPORT_DENIED")
         with self.transaction() as (obj, s, p):
             self.check(s, p, run_id)
-            if source_url is not None and not (p.optional_source_policy == "bls-cpi-403-v1"
-                    and endpoint_kind == "PUBLIC_GET" and call_id is None
-                    and optional_cpi_request("GET", source_url)):
+            source_id = optional_macro_source("GET", source_url, p.optional_source_policy) if source_url is not None else None
+            if source_url is not None and not (source_id and endpoint_kind == "PUBLIC_GET" and call_id is None):
                 raise SafetyStop("OPTIONAL_SOURCE_SCOPE_DENIED")
             if endpoint_kind == "MODEL" and (call_id not in s["calls"] or s["calls"][call_id]["status"] != "PENDING"):
                 raise SafetyStop("UNSCOPED_MODEL_HTTP")
@@ -324,7 +341,8 @@ class Ledger:
             wid = uuid4().hex
             payload = {"wire_id": wid, "run_id": run_id, "call_id": call_id, "endpoint_kind": endpoint_kind}
             if source_url is not None:
-                payload["optional_source"] = "bls-cpi-403-v1"
+                payload["optional_source"] = p.optional_source_policy
+                payload["source_id"] = source_id
             self._append(obj, "HTTP_STARTED", payload)
             return wid
 
@@ -334,15 +352,20 @@ class Ledger:
             self._append(obj, "HTTP_FINISHED", {"wire_id": wire_id, "status": "FAILED" if failed else "RECEIVED",
                                                 "http_status": status, "request_id_sha256": request_hash})
             wire = s["wires"][wire_id]
-            unavailable = (not failed and status == 403 and policy.optional_source_policy == "bls-cpi-403-v1"
-                           and wire.get("optional_source") == "bls-cpi-403-v1"
+            unavailable = (not failed and status == 403 and policy.optional_source_policy in {"bls-cpi-403-v1", "official-macro-403-v1"}
+                           and wire.get("optional_source") == policy.optional_source_policy
+                           and wire.get("source_id") in MACRO_SOURCES
                            and wire["endpoint_kind"] == "PUBLIC_GET" and wire["call_id"] is None)
             if unavailable:
                 self._append(obj, "OPTIONAL_SOURCE_UNAVAILABLE", {"wire_id": wire_id,
-                    "source": "https://www.bls.gov/feed/cpi.rss", "source_policy": "bls-cpi-403-v1",
+                    "source": MACRO_SOURCES[wire.get("source_id")], "source_id": wire.get("source_id"),
+                    "stage": "PUBLIC_HTTP_RESPONSE", "source_policy": policy.optional_source_policy,
                     "http_status": 403, "category": "HTTP_APPLICATION_ERROR", "reason": "HTTP_403",
                     "available": False})
             elif failed or status in {401, 403, 408, 409, 429, 500, 502, 503, 504}:
+                self._append(obj, "HTTP_SAFETY_FAILURE", {"wire_id": wire_id, "stage": "HTTP_TRANSPORT" if failed else "HTTP_RESPONSE",
+                    "http_status": status, "endpoint_kind": wire["endpoint_kind"],
+                    "reason": "TRANSPORT_OR_SERVICE_FAILURE"})
                 self._pause(obj, "TRANSPORT_OR_SERVICE_FAILURE")
 
     def finish_call(self, call_id, usage, *, status="COMPLETE", response_hash=None, reconciliation=True,

@@ -25,7 +25,7 @@ from tradingagents import auto_research as native
 from tradingagents import research_budget as legacy
 from tradingagents.dataflows.files import locked
 from tradingagents.forward_validation import atomic, digest, read
-from tradingagents.safety_budget import Ledger, Policy, SafetyStop, Usage, now_ms, optional_cpi_request
+from tradingagents.safety_budget import Ledger, Policy, SafetyStop, Usage, now_ms, optional_macro_source, MACRO_SOURCES
 
 ROOT = Path(__file__).resolve().parents[1]
 CALL = ContextVar("d4b_call", default=None)
@@ -250,8 +250,8 @@ class Session:
                 if kind == "AUTH" and not RENEWAL.get(): raise SafetyStop("AUTH_RENEWAL_CONTEXT_REQUIRED")
                 legacy.public_exchange_only(request.method, request.url)
                 protected = kind in {"AUTH", "MODEL"} or secure_url(request.url).hostname == "auth.openai.com"
-                optional = (self.policy.optional_source_policy == "bls-cpi-403-v1" and CALL.get() is None
-                            and kind == "PUBLIC_GET" and optional_cpi_request(request.method, request.url))
+                optional = (CALL.get() is None and kind == "PUBLIC_GET"
+                            and optional_macro_source(request.method, request.url, self.policy.optional_source_policy) is not None)
                 if (protected or optional) and isinstance(client, requests.Session):
                     # Requests follows redirects inside Session.send; disable
                     # that BEFORE dispatch, not after credentials were replayed.
@@ -334,11 +334,18 @@ def worker_diagnostic(ledger, run_id, *, registration=None, exception=None):
             report.relative_to((ledger.root / "batch").resolve())
             if report.name != "research_result.json": raise ValueError("Unexpected report")
             if report.stat().st_size <= 4 * 1024**2:
-                cpi = read(report).get("evidence", {}).get("events", {}).get("sources", {}).get("cpi", {})
-                if cpi.get("http_status") == 403 and cpi.get("source") == "https://www.bls.gov/feed/cpi.rss":
-                    value["optional_source_failure"] = {"source": cpi["source"], "http_status": 403,
-                        "category": "HTTP_APPLICATION_ERROR", "reason": "HTTP_403",
-                        "observed_ms": cpi.get("failed_at_ms") if type(cpi.get("failed_at_ms")) is int else None}
+                sources = read(report).get("evidence", {}).get("events", {}).get("sources", {})
+                failures = []
+                for source_id, url in MACRO_SOURCES.items():
+                    item = sources.get(source_id, {})
+                    if item.get("http_status") == 403 and item.get("source") == url:
+                        failures.append({"source_id": source_id, "source": url, "http_status": 403,
+                            "stage": "PUBLIC_HTTP_RESPONSE", "category": "HTTP_APPLICATION_ERROR", "reason": "HTTP_403",
+                            "observed_ms": item.get("failed_at_ms") if type(item.get("failed_at_ms")) is int else None})
+                if failures:
+                    value["source_failures"] = failures
+                    cpi = next((f for f in failures if f["source_id"] == "cpi"), None)
+                    if cpi: value["optional_source_failure"] = cpi  # legacy diagnostic key, not the global cause
             snapshot = report.with_name("multitimeframe_snapshot.json").resolve()
             snapshot.relative_to((ledger.root / "batch").resolve())
             if snapshot.is_file() and snapshot.stat().st_size <= 4 * 1024**2:
@@ -348,6 +355,12 @@ def worker_diagnostic(ledger, run_id, *, registration=None, exception=None):
                 value["market_errors"] = [{k: c[k] for k in ("stage", "exception_type", "error_code")
                                            if k in c and isinstance(c[k], str) and c[k].replace("_", "").isalnum() and len(c[k]) <= 80}
                                           for c in contexts[:4] if isinstance(c, dict)]
+        journal = ledger.load()
+        first = next((e for e in journal["events"] if e["kind"] == "PAUSED"), None)
+        if first:
+            value["first_global_pause"] = {"reason": first["payload"]["reason"], "at_ms": first["at_ms"], "seq": first["seq"]}
+            cause = next((e for e in reversed(journal["events"][:first["seq"]]) if e["kind"] == "HTTP_SAFETY_FAILURE"), None)
+            if cause: value["first_global_pause"]["http_failure"] = cause["payload"]
         folder = ledger.root / "diagnostics"
         folder.resolve().relative_to(ledger.root.resolve())
         folder.mkdir(exist_ok=True)
