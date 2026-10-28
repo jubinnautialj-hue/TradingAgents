@@ -1,13 +1,14 @@
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 from tradingagents.agents.analysts.turn import take_turn
+from tradingagents.agents.analysts.market_display import market_tool, project_history
 from tradingagents.agents.context import get_instrument_context_from_state, get_language_instruction
 from tradingagents.agents.tools import get_indicators, get_stock_data, get_verified_market_snapshot
 
 # The tools this analyst is offered; its tool node is built from the same tuple.
 TOOLS = (
-    get_stock_data,
-    get_indicators,
+    market_tool(get_stock_data),
+    market_tool(get_indicators),
     get_verified_market_snapshot,
 )
 
@@ -101,7 +102,9 @@ Write a very detailed and nuanced report of the trends you observe. Provide spec
         prompt = prompt.partial(current_date=current_date)
         prompt = prompt.partial(instrument_context=instrument_context)
 
-        result, report = take_turn(prompt, llm, TOOLS, state["messages"])
+        messages = (project_history(state["messages"])
+                    if state.get("market_snapshot", {}).get("exchange") == "OKX" else state["messages"])
+        result, report = take_turn(prompt, llm, TOOLS, messages)
 
         return {
             "messages": [result],

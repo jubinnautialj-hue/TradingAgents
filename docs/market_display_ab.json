@@ -1,0 +1,464 @@
+{
+  "scope": "FROZEN_REPLAY_SYNTHETIC_TOOL_SCHEDULE_NOT_REAL_MODEL_USAGE",
+  "snapshot_id": "79e1d0c247dc13deddeae224ca4ccc9aabfe5d8cea598874d0478370edb9b477",
+  "snapshot_content_sha256": "d3cd3d88930fcdb6ec506b4f980ec53bb38fafcacc47f91aa2b7e8bafecc7507",
+  "data_and_indicator_values_unchanged": true,
+  "verified_snapshot_output_byte_identical": true,
+  "network_calls": 0,
+  "model_calls": 0,
+  "formal_registrations": 0,
+  "token_estimator": "ceil(UTF8 bytes / 4); heuristic only, NOT real tokenizer or SDK usage; numeric CSV may differ substantially",
+  "rounds": [
+    {
+      "round": 1,
+      "tool": "get_stock_data",
+      "A": {
+        "tool_output": {
+          "characters": 138302,
+          "utf8_bytes": 138306,
+          "sha256": "fc09fcfc9930ceba09562e85825972c08c1b26727d412b73933ed5d804bcd5cb",
+          "estimated_tokens_utf8_bytes_div4": 34577,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 138303,
+          "utf8_bytes": 138307,
+          "sha256": "578976fc625f754163ce1c66760a02a714c24c3b15b0608be063ff12006d6e56",
+          "estimated_tokens_utf8_bytes_div4": 34577,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1"
+        ]
+      },
+      "B": {
+        "tool_output": {
+          "characters": 23251,
+          "utf8_bytes": 23255,
+          "sha256": "8d642ddb1ff46b257bc3a79e32fffda1727661acd05d2d9e6a055f3610f5296d",
+          "estimated_tokens_utf8_bytes_div4": 5814,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 23252,
+          "utf8_bytes": 23256,
+          "sha256": "fe983211251a24110918e0cdea55dfcabae54eb1f0344669e30bab9975d5a382",
+          "estimated_tokens_utf8_bytes_div4": 5814,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1"
+        ]
+      }
+    },
+    {
+      "round": 2,
+      "tool": "get_verified_market_snapshot",
+      "A": {
+        "tool_output": {
+          "characters": 35719,
+          "utf8_bytes": 35723,
+          "sha256": "9571ecba295b1325e139d05574677374f64e90918d76a980ae7507215fc17c5a",
+          "estimated_tokens_utf8_bytes_div4": 8931,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 174024,
+          "utf8_bytes": 174032,
+          "sha256": "d5d542e6bdd5305d9b5fbdc927f888070df34dfb39fdb042f7bb0450b04f7abb",
+          "estimated_tokens_utf8_bytes_div4": 43508,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1",
+          "ab-2"
+        ]
+      },
+      "B": {
+        "tool_output": {
+          "characters": 35719,
+          "utf8_bytes": 35723,
+          "sha256": "9571ecba295b1325e139d05574677374f64e90918d76a980ae7507215fc17c5a",
+          "estimated_tokens_utf8_bytes_div4": 8931,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 58973,
+          "utf8_bytes": 58981,
+          "sha256": "45000bb5ae60ab9f7a674f3861ee8fdcc6c1643eacad2bdf6182914296fc7a2c",
+          "estimated_tokens_utf8_bytes_div4": 14746,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1",
+          "ab-2"
+        ]
+      }
+    },
+    {
+      "round": 3,
+      "tool": "get_indicators",
+      "A": {
+        "tool_output": {
+          "characters": 138140,
+          "utf8_bytes": 138140,
+          "sha256": "cfd16789a89ddaf747050594b5a7f6573d216ccc1459807d6024fb4f6880c02f",
+          "estimated_tokens_utf8_bytes_div4": 34535,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 312166,
+          "utf8_bytes": 312174,
+          "sha256": "40b1c5f24f61873900c8845259230d504d934f840bfe65996d7a9ac714dd0965",
+          "estimated_tokens_utf8_bytes_div4": 78044,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1",
+          "ab-2",
+          "ab-3"
+        ]
+      },
+      "B": {
+        "tool_output": {
+          "characters": 64172,
+          "utf8_bytes": 64172,
+          "sha256": "5cb4ee52d6958466ee90afaaa8b9239e609b20e4dbfe58b3e89768e22674b6df",
+          "estimated_tokens_utf8_bytes_div4": 16043,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 123147,
+          "utf8_bytes": 123155,
+          "sha256": "dbdcc5799c48b01be8c6c85d937c3366301eec8466139605555ea82169c60a83",
+          "estimated_tokens_utf8_bytes_div4": 30789,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1",
+          "ab-2",
+          "ab-3"
+        ]
+      }
+    },
+    {
+      "round": 4,
+      "tool": "get_stock_data",
+      "A": {
+        "tool_output": {
+          "characters": 138302,
+          "utf8_bytes": 138306,
+          "sha256": "fc09fcfc9930ceba09562e85825972c08c1b26727d412b73933ed5d804bcd5cb",
+          "estimated_tokens_utf8_bytes_div4": 34577,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 450470,
+          "utf8_bytes": 450482,
+          "sha256": "5c9af9cc423facf3bf93b4bf6c49261901752391d455e765c8b8ac36220658e8",
+          "estimated_tokens_utf8_bytes_div4": 112621,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1",
+          "ab-2",
+          "ab-3",
+          "ab-4"
+        ]
+      },
+      "B": {
+        "tool_output": {
+          "characters": 23251,
+          "utf8_bytes": 23255,
+          "sha256": "8d642ddb1ff46b257bc3a79e32fffda1727661acd05d2d9e6a055f3610f5296d",
+          "estimated_tokens_utf8_bytes_div4": 5814,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 123400,
+          "utf8_bytes": 123408,
+          "sha256": "6b65a5f6a7f35ff4df4442bef7c23246da874afbc69d6f91f308d82b2df4d7ab",
+          "estimated_tokens_utf8_bytes_div4": 30852,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1",
+          "ab-2",
+          "ab-3",
+          "ab-4"
+        ]
+      }
+    },
+    {
+      "round": 5,
+      "tool": "get_indicators",
+      "A": {
+        "tool_output": {
+          "characters": 17688,
+          "utf8_bytes": 17688,
+          "sha256": "4344072b92801dd6da806de1de514c169d2f97fe3c3199a18f071ea0db4aea31",
+          "estimated_tokens_utf8_bytes_div4": 4422,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 468160,
+          "utf8_bytes": 468172,
+          "sha256": "41c10143f945d0099506c86243d99c38956c78310b5a3676d50a7a85c0f6e602",
+          "estimated_tokens_utf8_bytes_div4": 117043,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1",
+          "ab-2",
+          "ab-3",
+          "ab-4",
+          "ab-5"
+        ]
+      },
+      "B": {
+        "tool_output": {
+          "characters": 8121,
+          "utf8_bytes": 8121,
+          "sha256": "5cf62c3c03f613c2fa6e4145843e59b14082dc9032d8684d024d09382d09b38d",
+          "estimated_tokens_utf8_bytes_div4": 2031,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 131523,
+          "utf8_bytes": 131531,
+          "sha256": "5eeb89f8d11d790b24d8bcdcef263c3d0a04f42955a4476abe4c0cd739038e61",
+          "estimated_tokens_utf8_bytes_div4": 32883,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1",
+          "ab-2",
+          "ab-3",
+          "ab-4",
+          "ab-5"
+        ]
+      }
+    },
+    {
+      "round": 6,
+      "tool": "get_verified_market_snapshot",
+      "A": {
+        "tool_output": {
+          "characters": 35719,
+          "utf8_bytes": 35723,
+          "sha256": "9571ecba295b1325e139d05574677374f64e90918d76a980ae7507215fc17c5a",
+          "estimated_tokens_utf8_bytes_div4": 8931,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 503881,
+          "utf8_bytes": 503897,
+          "sha256": "7ba1c358d279af77f8ab8815ca3c9a3342efb885b97b123b4f57166852e4aabb",
+          "estimated_tokens_utf8_bytes_div4": 125975,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1",
+          "ab-2",
+          "ab-3",
+          "ab-4",
+          "ab-5",
+          "ab-6"
+        ]
+      },
+      "B": {
+        "tool_output": {
+          "characters": 35719,
+          "utf8_bytes": 35723,
+          "sha256": "9571ecba295b1325e139d05574677374f64e90918d76a980ae7507215fc17c5a",
+          "estimated_tokens_utf8_bytes_div4": 8931,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 131790,
+          "utf8_bytes": 131798,
+          "sha256": "3a6b8fc3838bbdcb1cf812f00d1b4f36e05d9a69200f5c80653374b311b2d74e",
+          "estimated_tokens_utf8_bytes_div4": 32950,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1",
+          "ab-2",
+          "ab-3",
+          "ab-4",
+          "ab-5",
+          "ab-6"
+        ]
+      }
+    },
+    {
+      "round": 7,
+      "tool": "get_stock_data",
+      "A": {
+        "tool_output": {
+          "characters": 138302,
+          "utf8_bytes": 138306,
+          "sha256": "fc09fcfc9930ceba09562e85825972c08c1b26727d412b73933ed5d804bcd5cb",
+          "estimated_tokens_utf8_bytes_div4": 34577,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 642185,
+          "utf8_bytes": 642205,
+          "sha256": "fe552d51caba041c56312ac11cb59d7b371d243280f3e1da6a5ba1e90f24adcb",
+          "estimated_tokens_utf8_bytes_div4": 160552,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1",
+          "ab-2",
+          "ab-3",
+          "ab-4",
+          "ab-5",
+          "ab-6",
+          "ab-7"
+        ]
+      },
+      "B": {
+        "tool_output": {
+          "characters": 23251,
+          "utf8_bytes": 23255,
+          "sha256": "8d642ddb1ff46b257bc3a79e32fffda1727661acd05d2d9e6a055f3610f5296d",
+          "estimated_tokens_utf8_bytes_div4": 5814,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 132043,
+          "utf8_bytes": 132051,
+          "sha256": "ef29ae033d3f06164124a00fb84f91b10d4d24338e690b05c82529b57bf440ac",
+          "estimated_tokens_utf8_bytes_div4": 33013,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1",
+          "ab-2",
+          "ab-3",
+          "ab-4",
+          "ab-5",
+          "ab-6",
+          "ab-7"
+        ]
+      }
+    },
+    {
+      "round": 8,
+      "tool": "get_indicators",
+      "A": {
+        "tool_output": {
+          "characters": 17993,
+          "utf8_bytes": 17993,
+          "sha256": "fb5cab568718466134fb3d5684b7fa3fe906a417e6f66567b2e5578e9a9ef834",
+          "estimated_tokens_utf8_bytes_div4": 4499,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 660180,
+          "utf8_bytes": 660200,
+          "sha256": "d7415a62cb9fd7ff33d7908af79a0b5d4a374374bd98f6b1ae9d0530c1c8f881",
+          "estimated_tokens_utf8_bytes_div4": 165050,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1",
+          "ab-2",
+          "ab-3",
+          "ab-4",
+          "ab-5",
+          "ab-6",
+          "ab-7",
+          "ab-8"
+        ]
+      },
+      "B": {
+        "tool_output": {
+          "characters": 8203,
+          "utf8_bytes": 8203,
+          "sha256": "24e9ead02fc040a3986e0e3c449c53c2609b9c9c85bbbdb2f045c3e2855def51",
+          "estimated_tokens_utf8_bytes_div4": 2051,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 140248,
+          "utf8_bytes": 140256,
+          "sha256": "9b633518d5598fc22d305910be2cc65acd3b589585357c6112f9a08386647706",
+          "estimated_tokens_utf8_bytes_div4": 35064,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1",
+          "ab-2",
+          "ab-3",
+          "ab-4",
+          "ab-5",
+          "ab-6",
+          "ab-7",
+          "ab-8"
+        ]
+      }
+    },
+    {
+      "round": 9,
+      "tool": "get_verified_market_snapshot",
+      "A": {
+        "tool_output": {
+          "characters": 35719,
+          "utf8_bytes": 35723,
+          "sha256": "9571ecba295b1325e139d05574677374f64e90918d76a980ae7507215fc17c5a",
+          "estimated_tokens_utf8_bytes_div4": 8931,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 695901,
+          "utf8_bytes": 695925,
+          "sha256": "86e23c97e8807fffd24337e2cf7054762bdb0068a0d51a579094bb317ca36378",
+          "estimated_tokens_utf8_bytes_div4": 173982,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1",
+          "ab-2",
+          "ab-3",
+          "ab-4",
+          "ab-5",
+          "ab-6",
+          "ab-7",
+          "ab-8",
+          "ab-9"
+        ]
+      },
+      "B": {
+        "tool_output": {
+          "characters": 35719,
+          "utf8_bytes": 35723,
+          "sha256": "9571ecba295b1325e139d05574677374f64e90918d76a980ae7507215fc17c5a",
+          "estimated_tokens_utf8_bytes_div4": 8931,
+          "actual_model_tokens": null
+        },
+        "cumulative_tool_context": {
+          "characters": 140515,
+          "utf8_bytes": 140523,
+          "sha256": "12521d2f51038d08d06df6b718e8a4d974b60c0fd26ca48c29d91bfe88164535",
+          "estimated_tokens_utf8_bytes_div4": 35131,
+          "actual_model_tokens": null
+        },
+        "native_tool_call_ids": [
+          "ab-1",
+          "ab-2",
+          "ab-3",
+          "ab-4",
+          "ab-5",
+          "ab-6",
+          "ab-7",
+          "ab-8",
+          "ab-9"
+        ]
+      }
+    }
+  ],
+  "snapshot_file_sha256": "bdd2b2074ca8b980eaf69be753b4efd6941cdc6f6e14960bbab723080dab7890"
+}
