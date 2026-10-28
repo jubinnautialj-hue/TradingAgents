@@ -17,6 +17,15 @@
       "title": "Accepted Post Response Exposure",
       "type": "boolean"
     },
+    "optional_source_policy": {
+      "default": "strict-v1",
+      "enum": [
+        "strict-v1",
+        "bls-cpi-403-v1"
+      ],
+      "title": "Optional Source Policy",
+      "type": "string"
+    },
     "instrument": {
       "const": "BTC-USDT-SWAP",
       "default": "BTC-USDT-SWAP",

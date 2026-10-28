@@ -2,6 +2,7 @@
   "version": "d4b-safety-budget-v1",
   "enabled": false,
   "accepted_post_response_exposure": false,
+  "optional_source_policy": "strict-v1",
   "instrument": "BTC-USDT-SWAP",
   "model": "gpt-6.1-sol",
   "hours": 72,

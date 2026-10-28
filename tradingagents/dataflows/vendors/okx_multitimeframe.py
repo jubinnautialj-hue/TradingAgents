@@ -193,6 +193,16 @@ class _PinnedClient:
         return self.client.candles(symbol, interval, cutoff, count)
 
 
+def _error_context(exc, stage):
+    # Never archive arbitrary exception text, request data or credentials.
+    reason = getattr(exc, "reason", None)
+    codes = {"PAUSED", "HTTP_BUDGET", "TOKEN_HEADROOM", "CLOCK_DRIFT", "AUTH_RESPONSE_REJECTED"}
+    return {"stage": stage, "exception_type": type(exc).__name__[:80],
+            "error_code": reason if reason in codes else "REQUIRED_PERIODS_MISSING"
+            if isinstance(exc, ValueError) and str(exc) == "All three required periods must be present"
+            else "DETAILS_WITHHELD"}
+
+
 def build_multitimeframe(symbol, trade_date, config, client=None):
     root = {
         "multi_timeframe": True,
@@ -206,19 +216,23 @@ def build_multitimeframe(symbol, trade_date, config, client=None):
         "issues": [],
         "timeframes": {},
     }
+    stage = "CONFIGURATION"
     try:
         okx.validate_symbol(symbol)
         if root["interval"] not in PERIODS:
             raise ValueError("Invalid anchor interval")
         rules = structure_rules(config)
         client = client or okx.OKXPublicClient()
+        stage = "SERVER_TIME"
         server_ms = int(client.get("/api/v5/public/time")[0]["ts"])
         if abs(server_ms - okx.utc_ms()) > 60000:
             raise ValueError("Local/OKX clock skew")
         initial_cutoff = okx.research_cutoff(trade_date, server_ms)
+        stage = "CONTRACT_SPECIFICATION"
         info = client.instrument(symbol)
         extra = None
         if config.get("okx_derivatives_enabled", False):
+            stage = "DERIVATIVES"
             from tradingagents.dataflows.vendors.okx_derivatives import collect_derivatives
 
             extra = collect_derivatives(
@@ -230,6 +244,7 @@ def build_multitimeframe(symbol, trade_date, config, client=None):
         root.update(cutoff_ms=cutoff, server_ms=server_ms, structure_rules=rules)
         pinned = _PinnedClient(client, server_ms, info)
         for period in PERIODS:
+            stage = "CANDLES_" + period.upper()
             child_config = {
                 **config,
                 "okx_multi_timeframe": False,
@@ -254,6 +269,7 @@ def build_multitimeframe(symbol, trade_date, config, client=None):
                 if k != "snapshot_id"
             }
         )
+        stage = "TIMEFRAME_ANALYSIS"
         analyses = {p: analyze_timeframe(b, rules) for p, b in children.items()}
         root.update(
             timeframe_analysis=analyses,
@@ -262,6 +278,7 @@ def build_multitimeframe(symbol, trade_date, config, client=None):
             allow_new_risk=True,
         )
         if extra is not None:
+            stage = "DERIVATIVE_JOIN"
             from tradingagents.dataflows.vendors.okx_derivatives import price_oi_evidence
 
             extra["research_cutoff_ms"] = cutoff
@@ -276,6 +293,7 @@ def build_multitimeframe(symbol, trade_date, config, client=None):
             "allow_new_risk": False,
             "execution_enabled": False,
             "issues": [f"Multi-timeframe snapshot unavailable: {type(exc).__name__}"],
+            "error_context": root.get("error_context", []) + [_error_context(exc, stage)],
         }
 
 
@@ -285,11 +303,12 @@ def check_multitimeframe(bundle, config, symbol=None, trade_date=None):
         if (
             not config.get("okx_multi_timeframe", False)
             or not bundle.get("multi_timeframe")
-            or set(bundle.get("timeframes", {})) != set(PERIODS)
         ):
-            raise ValueError("All three required periods must be present")
+            raise ValueError("Invalid multi-timeframe identity")
         if bundle.get("status") != "VALID":
             return {**result, "allow_new_risk": False, "execution_enabled": False}
+        if set(bundle.get("timeframes", {})) != set(PERIODS):
+            raise ValueError("All three required periods must be present")
         if bundle["interval"] != config.get("okx_interval", "1h") or bundle[
             "snapshot_id"
         ] != okx.fingerprint(bundle):
@@ -325,6 +344,8 @@ def check_multitimeframe(bundle, config, symbol=None, trade_date=None):
             "allow_new_risk": False,
             "execution_enabled": False,
             "issues": [f"Multi-timeframe integrity failure: {type(exc).__name__}"],
+            "error_context": (result["error_context"] if isinstance(result.get("error_context"), list) else [])
+                             + [_error_context(exc, "BUNDLE_VALIDATION")],
         }
 
 

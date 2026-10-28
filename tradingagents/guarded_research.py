@@ -25,7 +25,7 @@ from tradingagents import auto_research as native
 from tradingagents import research_budget as legacy
 from tradingagents.dataflows.files import locked
 from tradingagents.forward_validation import atomic, digest, read
-from tradingagents.safety_budget import Ledger, Policy, SafetyStop, Usage, now_ms
+from tradingagents.safety_budget import Ledger, Policy, SafetyStop, Usage, now_ms, optional_cpi_request
 
 ROOT = Path(__file__).resolve().parents[1]
 CALL = ContextVar("d4b_call", default=None)
@@ -250,11 +250,14 @@ class Session:
                 if kind == "AUTH" and not RENEWAL.get(): raise SafetyStop("AUTH_RENEWAL_CONTEXT_REQUIRED")
                 legacy.public_exchange_only(request.method, request.url)
                 protected = kind in {"AUTH", "MODEL"} or secure_url(request.url).hostname == "auth.openai.com"
-                if protected and isinstance(client, requests.Session):
+                optional = (self.policy.optional_source_policy == "bls-cpi-403-v1" and CALL.get() is None
+                            and kind == "PUBLIC_GET" and optional_cpi_request(request.method, request.url))
+                if (protected or optional) and isinstance(client, requests.Session):
                     # Requests follows redirects inside Session.send; disable
                     # that BEFORE dispatch, not after credentials were replayed.
                     kwargs["allow_redirects"] = False
-                wid = self.ledger.begin_http(self.run_id, CALL.get(), kind)
+                wid = self.ledger.begin_http(self.run_id, CALL.get(), kind,
+                                            source_url=str(request.url) if optional else None)
                 marker = WIRE.set(wid)
                 try:
                     response = fn(client, request, *args, **kwargs)
@@ -266,12 +269,28 @@ class Session:
                     request_id = response.headers.get("x-request-id")
                     self.ledger.finish_http(wid, status=status,
                         request_hash=hashlib.sha256(request_id.encode()).hexdigest() if isinstance(request_id, str) else None)
-                    reason = ("PROTECTED_REDIRECT_DENIED" if protected and isinstance(status, int) and 300 <= status < 400
+                    reason = ("PROTECTED_REDIRECT_DENIED" if (protected or optional) and isinstance(status, int) and 300 <= status < 400
                               else "AUTH_RESPONSE_REJECTED" if kind == "AUTH" and status != 200 else None)
                     if reason:
                         with self.ledger.transaction() as (obj, _, __): self.ledger._pause(obj, reason)
                         try: response.close()
                         finally: raise SafetyStop(reason)
+                    if optional and status == 200:
+                        # A streamed body may fail AFTER send() returned 200. It is
+                        # a transport failure, never an optional application 403.
+                        errors = [requests.RequestException]
+                        for name in ("httpx", "httpx2"):
+                            try: errors.append(importlib.import_module(name).RequestError)
+                            except ImportError: pass
+                        attr = "iter_content" if isinstance(client, requests.Session) else "iter_raw"
+                        original_iter = getattr(response, attr)
+                        def checked_body(*a, **k):
+                            try: yield from original_iter(*a, **k)
+                            except tuple(errors):
+                                with self.ledger.transaction() as (obj, _, __):
+                                    self.ledger._pause(obj, "TRANSPORT_OR_SERVICE_FAILURE")
+                                raise
+                        setattr(response, attr, checked_body)
                     return response
                 finally: WIRE.reset(marker)
 
@@ -291,6 +310,53 @@ def watchlist(policy):
         min_interval_seconds=86400, max_symbols=1, task_seconds=policy.task_seconds, batch_seconds=policy.task_seconds,
         llm_per_task=policy.research_calls, llm_total=policy.research_calls,
         http_per_task=policy.research_http, http_total=policy.research_http))
+
+
+def worker_diagnostic(ledger, run_id, *, registration=None, exception=None):
+    """Bounded failure metadata only; no prompt/response, environment or raw exception text."""
+    import traceback
+    import re
+    if not isinstance(run_id, str) or not re.fullmatch(r"[0-9a-f]{32}", run_id): return False
+    value = {"version": "d4b-worker-diagnostic-v1", "run_id": run_id, "at_ms": now_ms(),
+             "execution_enabled": False, "stage": "WORKER_FAILURE"}
+    if exception is not None:
+        value["exception_type"] = type(exception).__name__[:80]
+        reason = getattr(exception, "reason", None)
+        value["error_code"] = reason if reason in {"PAUSED", "HTTP_BUDGET", "TOKEN_HEADROOM", "CALL_BUDGET",
+            "RESOURCE_FLOOR", "CLOCK_DRIFT", "AUTH_RESPONSE_REJECTED", "PROTECTED_REDIRECT_DENIED"} else "DETAILS_WITHHELD"
+        value["frames"] = [{"file": Path(f.filename).name, "line": f.lineno, "function": f.name[:80]}
+                           for f in traceback.extract_tb(exception.__traceback__)[-8:]]
+    try:
+        # Only the native receipt's report within this run's isolated batch tree is inspected.
+        name = (registration or {}).get("report_json")
+        if name:
+            report = Path(name).resolve()
+            report.relative_to((ledger.root / "batch").resolve())
+            if report.name != "research_result.json": raise ValueError("Unexpected report")
+            if report.stat().st_size <= 4 * 1024**2:
+                cpi = read(report).get("evidence", {}).get("events", {}).get("sources", {}).get("cpi", {})
+                if cpi.get("http_status") == 403 and cpi.get("source") == "https://www.bls.gov/feed/cpi.rss":
+                    value["optional_source_failure"] = {"source": cpi["source"], "http_status": 403,
+                        "category": "HTTP_APPLICATION_ERROR", "reason": "HTTP_403",
+                        "observed_ms": cpi.get("failed_at_ms") if type(cpi.get("failed_at_ms")) is int else None}
+            snapshot = report.with_name("multitimeframe_snapshot.json").resolve()
+            snapshot.relative_to((ledger.root / "batch").resolve())
+            if snapshot.is_file() and snapshot.stat().st_size <= 4 * 1024**2:
+                raw = read(snapshot)
+                value["market_status"] = raw.get("status") if raw.get("status") in {"VALID", "RESEARCH_INVALID", "DATA_UNAVAILABLE"} else "UNKNOWN"
+                contexts = raw.get("error_context", [])
+                value["market_errors"] = [{k: c[k] for k in ("stage", "exception_type", "error_code")
+                                           if k in c and isinstance(c[k], str) and c[k].replace("_", "").isalnum() and len(c[k]) <= 80}
+                                          for c in contexts[:4] if isinstance(c, dict)]
+        folder = ledger.root / "diagnostics"
+        folder.resolve().relative_to(ledger.root.resolve())
+        folder.mkdir(exist_ok=True)
+        path = folder / (run_id + ("-exception" if exception else "-result") + ".json")
+        if not path.exists(): atomic(path, value)
+    except (OSError, ValueError, TypeError, KeyError, AttributeError):
+        # Diagnostic failure does not suppress the original failure or alter budget state.
+        return False
+    return True
 
 
 def worker(ledger, run_id, *, invoker=None):
@@ -327,8 +393,10 @@ def worker(ledger, run_id, *, invoker=None):
         reg = next((v["registration"] for v in registered if v and v.get("registration")), None)
         link = {k: reg.get(k) for k in ("registration_id", "action", "plan_valid", "workflow_status")} if reg else None
         ledger.finish_research(run_id, aggregate, success=ok, registration=link)
+        if not ok: worker_diagnostic(ledger, run_id, registration=reg)
         return result
-    except BaseException:
+    except BaseException as exc:
+        worker_diagnostic(ledger, run_id, exception=exc)
         current = ledger.status()
         if current["runs"][run_id]["status"] == "RUNNING": ledger.finish_research(run_id, None, success=False)
         raise
