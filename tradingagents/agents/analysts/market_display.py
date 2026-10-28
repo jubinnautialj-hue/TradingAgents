@@ -11,10 +11,11 @@ import hashlib
 import inspect
 import io
 import json
+import math
 from decimal import Decimal, InvalidOperation
 from functools import wraps
 
-from langchain_core.messages import ToolMessage
+from langchain_core.messages import AIMessage, ToolMessage
 
 VERSION = "market-display-v1"
 TAIL_ROWS = 30
@@ -137,21 +138,82 @@ def market_tool(original):
     return original.model_copy(update={"func": display})
 
 
+def _argument_identity(args):
+    """Canonical JSON only; unsupported values mean identity is unconfirmed."""
+    def plain(value):
+        if type(value) in (str, int, bool, type(None)):
+            return True
+        if type(value) is float:
+            return math.isfinite(value)
+        if type(value) is list:
+            return all(plain(item) for item in value)
+        if type(value) is dict:
+            return all(type(key) is str and plain(item) for key, item in value.items())
+        return False
+
+    try:
+        if type(args) is dict and plain(args):
+            return json.dumps(args, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    except (ValueError, TypeError, RecursionError):
+        pass
+    return None
+
+
+def _visible_identity(text):
+    """Native pinned tools print this header; absence means unconfirmed evidence."""
+    fields = ("source", "exchange", "symbol", "interval", "snapshot_id",
+              "fetched_at_ms", "cutoff_ms", "latest_close_ms")
+    found = {}
+    for line in text.splitlines():
+        if line.startswith("- ") and ": " in line:
+            name, value = line[2:].split(": ", 1)
+            if name in fields and name not in found:
+                found[name] = value
+    if any(found.get(field) in (None, "", "None", "UNKNOWN") for field in fields):
+        return None
+    snapshot = found["snapshot_id"]
+    if len(snapshot) != 64 or any(c not in "0123456789abcdef" for c in snapshot):
+        return None
+    return tuple(found[field] for field in fields)
+
+
 def project_history(messages):
-    """Fold only byte-identical known tool results, within this SAME request.
+    """Fold only confirmed same-call-arguments and same-body evidence.
 
     The first full evidence stays in the prompt. Preserve native tool_call_id,
     message IDs and ordering; never mutate graph history or dedup across runs.
+    Any artifact or tool metadata is conservatively excluded, without comparing
+    or stringifying it. Missing/ambiguous call associations are never folded.
     """
+    calls, result_counts = {}, {}
+    for position, message in enumerate(messages):
+        if isinstance(message, AIMessage):
+            for call in message.tool_calls:
+                call_id = call.get("id")
+                if type(call_id) is str and call_id:
+                    identity = _argument_identity(call.get("args"))
+                    info = (position, call.get("name"), identity)
+                    calls[call_id] = None if call_id in calls else info
+        elif isinstance(message, ToolMessage):
+            result_counts[message.tool_call_id] = result_counts.get(message.tool_call_id, 0) + 1
+
     seen, projected = {}, []
     for position, message in enumerate(messages):
+        call = calls.get(message.tool_call_id) if isinstance(message, ToolMessage) else None
         if (isinstance(message, ToolMessage) and message.name in TOOLS
-                and isinstance(message.content, str) and len(message.content) > 2048):
-            key = (message.name, _hash(message.content))
+                and isinstance(message.content, str) and len(message.content) > 2048
+                and message.artifact is None
+                and not message.additional_kwargs and not message.response_metadata
+                and message.status == "success"
+                and result_counts[message.tool_call_id] == 1
+                and call is not None and call[0] < position and call[1] == message.name
+                and call[2] is not None and _visible_identity(message.content) is not None):
+            key = (message.name, call[2], _hash(message.content))
             if key in seen:
                 first_position, first_call = seen[key]
                 content = (f"[Identical evidence retained above at message {first_position}; "
-                           f"tool_call_id={first_call}; tool={message.name}; sha256={key[1]}] "
+                           f"tool_call_id={first_call}; tool={message.name}; sha256={key[2]}; "
+                           f"args_sha256={_hash(call[2])}; identity=market-tool-identity-v1] "
                            "No new observation or freshness extension. Use that original result, including all risks.")
                 message = message.model_copy(update={"content": content})
             else:

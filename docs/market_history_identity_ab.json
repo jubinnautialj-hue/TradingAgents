@@ -1,0 +1,188 @@
+{
+  "scope": "OFFLINE_SAME_FROZEN_SNAPSHOT_SAME_NINE_TOOL_CALL_SEQUENCE_NOT_REAL_MODEL_USAGE",
+  "before_commit": "56b94e6726baf6da25b859743ccd7b803c250cb6",
+  "before_module_sha256_git_blob_bytes": "36b46c9a7febdd0f816d961448a93a3520c9a61fe774e3ad232a2c7a89283d0b",
+  "snapshot_file_sha256": "bdd2b2074ca8b980eaf69be753b4efd6941cdc6f6e14960bbab723080dab7890",
+  "snapshot_id": "79e1d0c247dc13deddeae224ca4ccc9aabfe5d8cea598874d0478370edb9b477",
+  "native_call_arguments": "ACTUAL_EXPOSED_TOOL_ARGUMENTS_NOT_EMPTY_PLACEHOLDERS",
+  "raw_data_and_indicators_unchanged": true,
+  "table_presentation_functions_AST_unchanged": true,
+  "tool_outputs_before_after_identical": true,
+  "token_usage": "UNKNOWN_NOT_MEASURED",
+  "model_calls": 0,
+  "network_calls": 0,
+  "formal_ledger_writes": 0,
+  "rounds": [
+    {
+      "round": 1,
+      "tool": "get_stock_data",
+      "tool_output_before_and_after_identical": {
+        "characters": 23251,
+        "utf8_bytes": 23255,
+        "sha256": "8d642ddb1ff46b257bc3a79e32fffda1727661acd05d2d9e6a055f3610f5296d"
+      },
+      "before_history": {
+        "characters": 23252,
+        "utf8_bytes": 23256,
+        "sha256": "fe983211251a24110918e0cdea55dfcabae54eb1f0344669e30bab9975d5a382"
+      },
+      "after_history": {
+        "characters": 23252,
+        "utf8_bytes": 23256,
+        "sha256": "fe983211251a24110918e0cdea55dfcabae54eb1f0344669e30bab9975d5a382"
+      }
+    },
+    {
+      "round": 2,
+      "tool": "get_verified_market_snapshot",
+      "tool_output_before_and_after_identical": {
+        "characters": 35719,
+        "utf8_bytes": 35723,
+        "sha256": "9571ecba295b1325e139d05574677374f64e90918d76a980ae7507215fc17c5a"
+      },
+      "before_history": {
+        "characters": 58973,
+        "utf8_bytes": 58981,
+        "sha256": "45000bb5ae60ab9f7a674f3861ee8fdcc6c1643eacad2bdf6182914296fc7a2c"
+      },
+      "after_history": {
+        "characters": 58973,
+        "utf8_bytes": 58981,
+        "sha256": "45000bb5ae60ab9f7a674f3861ee8fdcc6c1643eacad2bdf6182914296fc7a2c"
+      }
+    },
+    {
+      "round": 3,
+      "tool": "get_indicators",
+      "tool_output_before_and_after_identical": {
+        "characters": 64172,
+        "utf8_bytes": 64172,
+        "sha256": "5cb4ee52d6958466ee90afaaa8b9239e609b20e4dbfe58b3e89768e22674b6df"
+      },
+      "before_history": {
+        "characters": 123147,
+        "utf8_bytes": 123155,
+        "sha256": "dbdcc5799c48b01be8c6c85d937c3366301eec8466139605555ea82169c60a83"
+      },
+      "after_history": {
+        "characters": 123147,
+        "utf8_bytes": 123155,
+        "sha256": "dbdcc5799c48b01be8c6c85d937c3366301eec8466139605555ea82169c60a83"
+      }
+    },
+    {
+      "round": 4,
+      "tool": "get_stock_data",
+      "tool_output_before_and_after_identical": {
+        "characters": 23251,
+        "utf8_bytes": 23255,
+        "sha256": "8d642ddb1ff46b257bc3a79e32fffda1727661acd05d2d9e6a055f3610f5296d"
+      },
+      "before_history": {
+        "characters": 123400,
+        "utf8_bytes": 123408,
+        "sha256": "6b65a5f6a7f35ff4df4442bef7c23246da874afbc69d6f91f308d82b2df4d7ab"
+      },
+      "after_history": {
+        "characters": 123512,
+        "utf8_bytes": 123520,
+        "sha256": "54573a4e6bf016ff30d4df5f3d593add67bee50823ea3dbef5e758a48e8663f6"
+      }
+    },
+    {
+      "round": 5,
+      "tool": "get_indicators",
+      "tool_output_before_and_after_identical": {
+        "characters": 8121,
+        "utf8_bytes": 8121,
+        "sha256": "5cf62c3c03f613c2fa6e4145843e59b14082dc9032d8684d024d09382d09b38d"
+      },
+      "before_history": {
+        "characters": 131523,
+        "utf8_bytes": 131531,
+        "sha256": "5eeb89f8d11d790b24d8bcdcef263c3d0a04f42955a4476abe4c0cd739038e61"
+      },
+      "after_history": {
+        "characters": 131635,
+        "utf8_bytes": 131643,
+        "sha256": "f3c4ae543368b9d167c7e491e42ce7252a2d5b4efe1df54547ff8407098d842d"
+      }
+    },
+    {
+      "round": 6,
+      "tool": "get_verified_market_snapshot",
+      "tool_output_before_and_after_identical": {
+        "characters": 35719,
+        "utf8_bytes": 35723,
+        "sha256": "9571ecba295b1325e139d05574677374f64e90918d76a980ae7507215fc17c5a"
+      },
+      "before_history": {
+        "characters": 131790,
+        "utf8_bytes": 131798,
+        "sha256": "3a6b8fc3838bbdcb1cf812f00d1b4f36e05d9a69200f5c80653374b311b2d74e"
+      },
+      "after_history": {
+        "characters": 132014,
+        "utf8_bytes": 132022,
+        "sha256": "cbb3b32a0e1ea5318fbbdc212d5c494dd759d0eb4702450599547f835681dab0"
+      }
+    },
+    {
+      "round": 7,
+      "tool": "get_stock_data",
+      "tool_output_before_and_after_identical": {
+        "characters": 23251,
+        "utf8_bytes": 23255,
+        "sha256": "8d642ddb1ff46b257bc3a79e32fffda1727661acd05d2d9e6a055f3610f5296d"
+      },
+      "before_history": {
+        "characters": 132043,
+        "utf8_bytes": 132051,
+        "sha256": "ef29ae033d3f06164124a00fb84f91b10d4d24338e690b05c82529b57bf440ac"
+      },
+      "after_history": {
+        "characters": 132379,
+        "utf8_bytes": 132387,
+        "sha256": "d92e4b0440dcc921d4695a19e25484d897b7f405afa4b788c2f4005be9806ab4"
+      }
+    },
+    {
+      "round": 8,
+      "tool": "get_indicators",
+      "tool_output_before_and_after_identical": {
+        "characters": 8203,
+        "utf8_bytes": 8203,
+        "sha256": "24e9ead02fc040a3986e0e3c449c53c2609b9c9c85bbbdb2f045c3e2855def51"
+      },
+      "before_history": {
+        "characters": 140248,
+        "utf8_bytes": 140256,
+        "sha256": "9b633518d5598fc22d305910be2cc65acd3b589585357c6112f9a08386647706"
+      },
+      "after_history": {
+        "characters": 140584,
+        "utf8_bytes": 140592,
+        "sha256": "0b9758f02b20e684f8d4ffd146a48f3851efd27c846e5921c30178de87119ea4"
+      }
+    },
+    {
+      "round": 9,
+      "tool": "get_verified_market_snapshot",
+      "tool_output_before_and_after_identical": {
+        "characters": 35719,
+        "utf8_bytes": 35723,
+        "sha256": "9571ecba295b1325e139d05574677374f64e90918d76a980ae7507215fc17c5a"
+      },
+      "before_history": {
+        "characters": 140515,
+        "utf8_bytes": 140523,
+        "sha256": "12521d2f51038d08d06df6b718e8a4d974b60c0fd26ca48c29d91bfe88164535"
+      },
+      "after_history": {
+        "characters": 140963,
+        "utf8_bytes": 140971,
+        "sha256": "c69b307c28b303883e8fba763777f71ed938d8f6bf4ba2eaa1972578608aded9"
+      }
+    }
+  ]
+}

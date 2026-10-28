@@ -38,7 +38,7 @@ def deny(*args, **kwargs):
     raise RuntimeError("Offline A/B prohibits all network/model connections")
 
 
-def evaluate(bundle):
+def evaluate(bundle, history_projector=project_history):
     original = json.dumps(bundle, sort_keys=True).encode()
     day = datetime.fromtimestamp(bundle["cutoff_ms"] / 1000, UTC).date().isoformat()
     # Frozen-time replay ONLY. This does not assert this old data is valid now.
@@ -67,9 +67,13 @@ def evaluate(bundle):
             entry = {"round": round_number, "tool": old_tools[index].name}
             for group in ("A", "B"):
                 call_id = f"ab-{round_number}"
-                histories[group] += [AIMessage(content="", tool_calls=[{"name": old_tools[index].name, "args": {}, "id": call_id}]),
+                # Match the actual exposed tool arguments, excluding injected state.
+                call_args = ({"start_date": args[1], "end_date": args[2]} if index == 0 else
+                             {"indicator": args[1], "curr_date": args[2], "look_back_days": args[3]} if index == 1 else
+                             {"curr_date": args[1], "look_back_days": args[2]})
+                histories[group] += [AIMessage(content="", tool_calls=[{"name": old_tools[index].name, "args": call_args, "id": call_id}]),
                                      ToolMessage(content=texts[group], name=old_tools[index].name, tool_call_id=call_id)]
-                projected = project_history(histories[group]) if group == "B" else histories[group]
+                projected = history_projector(histories[group]) if group == "B" else histories[group]
                 entry[group] = {"tool_output": measure(texts[group]),
                                 "cumulative_tool_context": measure("\n".join(m.content for m in projected)),
                                 "native_tool_call_ids": [m.tool_call_id for m in projected if isinstance(m, ToolMessage)]}

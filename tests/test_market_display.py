@@ -17,6 +17,8 @@ from tradingagents.agents.analysts.turn import _as_text
 from tradingagents.dataflows.config import run_config
 from tradingagents.dataflows.vendors import okx, okx_derivatives
 
+IDENTITY_HEADER = ("- source: OKX\n- exchange: OKX\n- symbol: BTC-USDT-SWAP\n- interval: 1h\n"
+                   "- snapshot_id: " + "a" * 64 + "\n- fetched_at_ms: 1\n- cutoff_ms: 1\n- latest_close_ms: 1\n")
 
 @pytest.fixture
 def pinned(monkeypatch):
@@ -133,7 +135,7 @@ def test_date_parse_error_cannot_gain_supplemental_valid_evidence(pinned):
 
 
 def test_duplicate_projection_preserves_native_pairs_and_originals():
-    text = "STALE_DATA / missing evidence / " * 200
+    text = IDENTITY_HEADER + "STALE_DATA / missing evidence / " * 200
     messages = [HumanMessage(content="research")]
     for i in range(3):
         messages += [AIMessage(content="", tool_calls=[{"name": "get_stock_data", "args": {}, "id": str(i)}]),
@@ -165,11 +167,13 @@ def test_changed_quality_not_folded_into_prior_valid_evidence(status):
 
 
 def test_dedup_preserves_evidence_order_and_all_distinct_results():
-    first = ToolMessage(content="a" * 3000, name="get_indicators", tool_call_id="1")
-    second = ToolMessage(content="b" * 3000, name="get_indicators", tool_call_id="2")
+    first = ToolMessage(content=IDENTITY_HEADER + "a" * 3000, name="get_indicators", tool_call_id="1")
+    second = ToolMessage(content=IDENTITY_HEADER + "b" * 3000, name="get_indicators", tool_call_id="2")
     repeated = ToolMessage(content=first.content, name="get_indicators", tool_call_id="3")
-    result = project_history([first, second, repeated])
-    assert result[:2] == [first, second]
+    calls = AIMessage(content="", tool_calls=[
+        {"name": "get_indicators", "args": {}, "id": str(i)} for i in range(1, 4)])
+    result = project_history([calls, first, second, repeated])
+    assert result[:3] == [calls, first, second]
     assert "tool_call_id=1" in result[-1].content
 
 
