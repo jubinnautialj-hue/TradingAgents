@@ -155,6 +155,15 @@
       "title": "Instruments",
       "type": "array"
     },
+    "forward_admission_policy": {
+      "default": "strict-v1",
+      "enum": [
+        "strict-v1",
+        "forward-registration-revalidation-v1"
+      ],
+      "title": "Forward Admission Policy",
+      "type": "string"
+    },
     "enhancements": {
       "$ref": "#/$defs/Enhancements"
     },

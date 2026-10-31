@@ -306,7 +306,8 @@ class Session:
 
 
 def watchlist(policy):
-    return native.Watchlist(instruments=[native.Instrument(instrument=policy.instrument)], limits=native.Limits(
+    return native.Watchlist(instruments=[native.Instrument(instrument=policy.instrument)],
+        forward_admission_policy=policy.forward_admission_policy, limits=native.Limits(
         min_interval_seconds=86400, max_symbols=1, task_seconds=policy.task_seconds, batch_seconds=policy.task_seconds,
         llm_per_task=policy.research_calls, llm_total=policy.research_calls,
         http_per_task=policy.research_http, http_total=policy.research_http))

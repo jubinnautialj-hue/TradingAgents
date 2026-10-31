@@ -40,6 +40,7 @@ class Policy(ResearchModel):
     enabled: bool = False
     accepted_post_response_exposure: bool = False
     optional_source_policy: Literal["strict-v1", "bls-cpi-403-v1", "official-macro-403-v1"] = "strict-v1"
+    forward_admission_policy: Literal["strict-v1", "forward-registration-revalidation-v1"] = "strict-v1"
     instrument: Literal["BTC-USDT-SWAP"] = "BTC-USDT-SWAP"
     model: Literal["gpt-6.1-sol"] = "gpt-6.1-sol"
     hours: Literal[72] = 72

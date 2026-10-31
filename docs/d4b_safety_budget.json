@@ -24,5 +24,6 @@
   "min_free_gib": 10,
   "execution_enabled": false,
   "simulation_admitted": false,
-  "allow_new_risk": false
+  "allow_new_risk": false,
+  "forward_admission_policy": "strict-v1"
 }

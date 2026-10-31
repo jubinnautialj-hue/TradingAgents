@@ -69,6 +69,7 @@ class Limits(ResearchModel):
 class Watchlist(ResearchModel):
     version: Literal['auto-research-r11-v1'] = VERSION
     instruments: list[Instrument] = Field(min_length=1,max_length=20)
+    forward_admission_policy: Literal["strict-v1", "forward-registration-revalidation-v1"] = "strict-v1"
     enhancements: Enhancements = Field(default_factory=Enhancements)
     limits: Limits = Field(default_factory=Limits)
     execution_enabled: Literal[False] = False
@@ -160,6 +161,7 @@ def command_for(header):
     cfg=Watchlist.model_validate(header['config']);e=cfg.enhancements
     args=['okx-research','--instrument',header['instrument'],'--interval','4h',
           '--multi-timeframe','--trade-plan','--taker-fee-bps','5','--forward-register',
+          '--forward-admission-policy',cfg.forward_admission_policy,
           '--flow-minutes',str(e.flow_minutes),'--flow-max-pages',str(e.flow_max_pages),
           '--depth-seconds',str(e.depth_seconds),'--liquidation-seconds',str(e.liquidation_seconds)]
     args.extend('--'+name.replace('_','-') for name in ('orderflow','market_checks','price_depth','events') if getattr(e,name))
@@ -173,6 +175,7 @@ def registration_summary(record,folder):
             'completed_ms':record.completed_ms,'registered_ms':record.registered_ms,
             'workflow_status':record.workflow_status,'llm_status':record.llm_status,
             'action':record.action,'data_quality':record.data_quality,'plan_valid':record.plan_valid,
+            'forward_admission_policy':record.config.get('forward_admission_policy','strict-v1'),
             'allow_new_risk':record.allow_new_risk,'execution_enabled':False,
             'failure_kind':record.failure.get('kind'),'snapshot_id':record.snapshot_id,
             'protocol_hash':record.protocol_hash,'report_html':str(Path(folder)/'complete_report.html'),
@@ -184,6 +187,7 @@ def worker(folder,*,invoker=None):
     """Real invocation is the ORIGINAL CLI, with only worker-local observation hooks."""
     folder=Path(folder);header=unseal(folder/'task.json')
     if header['code_hash']!=CODE_HASH or header['task_id']!=folder.name:raise ValueError('Worker version/task mismatch')
+    if header.get('config_hash')!=digest(header['config']):raise ValueError('Worker configuration fingerprint mismatch')
     cfg=Watchlist.model_validate(header['config'])
     if header['instrument'] not in cfg.enabled() or header['execution_enabled'] is not False:raise ValueError('Unconfigured instrument')
     grant=header['grants']
@@ -202,6 +206,8 @@ def worker(folder,*,invoker=None):
         begin=Registry.begin;register=Registry.register
         def begin_hook(registry,symbol,config):
             if symbol!=header['instrument']:raise ValueError('Worker instrument mismatch')
+            if config.get('forward_admission_policy','strict-v1')!=cfg.forward_admission_policy:
+                raise ValueError('Worker admission policy conflict')
             token=begin(registry,symbol,config)
             update(registry_root=str(registry.root.resolve()),intent_token=token,worker_status='RESEARCH_RUNNING')
             return token
@@ -211,7 +217,8 @@ def worker(folder,*,invoker=None):
             result=register(registry,directory,state,**kwargs)
             update(registration=registration_summary(result,directory),worker_status='REGISTERED')
             return result
-        update(worker_status='STARTED',started_ms=utc_ms())
+        update(worker_status='STARTED',started_ms=utc_ms(),config_hash=header['config_hash'],
+               forward_admission_policy=cfg.forward_admission_policy)
         exit_code=0
         with ExitStack() as stack:
             stack.enter_context(patch.dict(os.environ,{'TRADINGAGENTS_RESULTS_DIR':header['results_dir']}))

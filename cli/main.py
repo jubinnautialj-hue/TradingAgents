@@ -26,6 +26,11 @@ if sys.platform == "win32":  # pragma: no cover - platform dependent
 else:
     _NO_CONSOLE_ERRORS = ()
 
+class ForwardAdmissionPolicy(StrEnum):
+    STRICT = "strict-v1"
+    REVALIDATION = "forward-registration-revalidation-v1"
+
+
 app = typer.Typer(
     name="TradingAgents",
     help="TradingAgents CLI: Multi-Agents LLM Financial Trading Framework",
@@ -172,6 +177,7 @@ def okx_research(
     market_checks: bool = typer.Option(False, "--market-checks", help="Optional public crowding, Binance cross-check and sampled liquidations; never execution"),
     price_depth: bool = typer.Option(False, "--price-depth", help="Optional deterministic price action/volatility and continuous public book segments"),
     forward_register: bool = typer.Option(False, "--forward-register", help="Seal this new research in the F1 registry; never tracks or executes"),
+    forward_admission_policy: ForwardAdmissionPolicy = typer.Option(ForwardAdmissionPolicy.STRICT, "--forward-admission-policy", help="Explicit F1 qualification policy; never enables F2/F3 or execution"),
     events: bool = typer.Option(False, "--events", help="Official publication snapshot; reuse existing News/Sentiment Analysts without external tools"),
     depth_seconds: int = typer.Option(10, "--depth-seconds", min=0, max=30, help="On-demand book/trade sample before cutoff; 0 disables book sampling"),
     liquidation_seconds: int = typer.Option(10, "--liquidation-seconds", min=0, max=30, help="On-demand public WS sample before cutoff; 0 disables; no historical backfill"),
@@ -204,6 +210,12 @@ def okx_research(
             raise ValueError("interval must be 1h, 4h or 1d")
         day = _validate_trade_date(date or datetime.now(UTC).strftime("%Y-%m-%d"))
         config = deepcopy(DEFAULT_CONFIG)
+        policy = ForwardAdmissionPolicy(forward_admission_policy).value
+        if "forward_admission_policy" in config and config["forward_admission_policy"] != policy:
+            raise ValueError("Conflicting forward admission policy")
+        config["forward_admission_policy"] = policy
+        if policy != "strict-v1" and (not forward_register or not trade_plan or data_only):
+            raise ValueError("Registration revalidation policy requires --trade-plan and --forward-register research")
         if not data_only:
             import os
 
@@ -267,6 +279,9 @@ def okx_research(
             graph = TradingAgentsGraph(selected_analysts=["market", "news", "social"] if events else ["market"], config=config)
             state, _ = graph.propagate(instrument, day, asset_type="crypto", portfolio=portfolio)
             settings = graph.run_settings()
+        if config.get("forward_admission_policy") != policy:
+            raise ValueError("Forward admission policy changed during research")
+        settings["forward_admission_policy"] = config["forward_admission_policy"]
         mode_label = "multi" if multi_timeframe else interval
         folder = Path(config["results_dir"]) / "reports" / f"okx_{instrument}_{mode_label}_{uuid4().hex[:12]}"
         report = write_report_tree(state, instrument, folder, settings=settings)

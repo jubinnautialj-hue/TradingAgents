@@ -34,5 +34,6 @@
     "http_per_task": 240,
     "http_total": 720
   },
-  "execution_enabled": false
+  "execution_enabled": false,
+  "forward_admission_policy": "strict-v1"
 }
