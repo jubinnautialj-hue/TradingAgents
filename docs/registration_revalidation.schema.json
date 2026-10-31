@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Registration-time current-evidence attestation, not entry approval",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy_hash",
+    "snapshot_id",
+    "result_hash",
+    "conditions_hash",
+    "validation_hash",
+    "proof_hash",
+    "execution_enabled",
+    "allow_new_risk",
+    "simulation_admitted",
+    "registered_ms",
+    "checked_ms",
+    "expires_ms",
+    "version",
+    "research_id",
+    "instrument",
+    "candidate_id"
+  ],
+  "properties": {
+    "policy_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "snapshot_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "result_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "conditions_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "validation_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "proof_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "execution_enabled": {
+      "const": false
+    },
+    "allow_new_risk": {
+      "const": false
+    },
+    "simulation_admitted": {
+      "const": false
+    },
+    "registered_ms": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "checked_ms": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expires_ms": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "version": {
+      "const": "forward-registration-revalidation-v1"
+    },
+    "research_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "instrument": {
+      "type": "string",
+      "pattern": "^[A-Z0-9]+-USDT-SWAP$"
+    },
+    "candidate_id": {
+      "enum": [
+        "LONG_BREAKOUT_RETEST",
+        "SHORT_BREAKOUT_RETEST"
+      ]
+    }
+  }
+}

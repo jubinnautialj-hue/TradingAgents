@@ -20,7 +20,7 @@ ARTIFACTS = ('research_result.json','multitimeframe_snapshot.json','derivatives_
 SAFE_CONFIG = ('llm_provider','quick_think_llm','deep_think_llm','market_mode','okx_interval',
                'okx_multi_timeframe','okx_trade_plan_enabled','okx_derivatives_enabled',
                'okx_orderflow_enabled','okx_market_checks_enabled','okx_price_depth_enabled','okx_events_enabled',
-               'max_debate_rounds','max_risk_discuss_rounds')
+               'max_debate_rounds','max_risk_discuss_rounds','forward_admission_policy')
 
 def digest(value):
     return hashlib.sha256(json.dumps(value,sort_keys=True,allow_nan=False).encode()).hexdigest()
@@ -274,7 +274,15 @@ class Registry:
                 elif isinstance(value,list):
                     for v in value:yield from acquired(v)
             availability=max([availability,*acquired(evidence)])
+            from tradingagents import registration_revalidation as admission
+            if intent.get('config',{}).get('forward_admission_policy') not in (None,'strict-v1',admission.VERSION):
+                raise ValueError('Unknown registration admission policy')
+            current_proof=admission.build(snapshot,result,intent.get('config',{}),completed,now) if origin=='PROSPECTIVE' else None
+            if current_proof and admission.evidence_valid(evidence,snapshot,now):
+                evidence[admission.KEY]=current_proof
             stale=any(x in json.dumps(evidence) for x in ('STALE_DATA','RESEARCH_INVALID'))
+            if admission.KEY in evidence:stale=False
+            elif intent.get("config",{}).get("forward_admission_policy")==admission.VERSION:stale=True
             first=((max(cutoff or 0,completed,now,availability)+3599999)//3600000)*3600000
             clock=result.get('signal_timing') or {}
             expiry=clock.get('hypothesis_expires_ms')
@@ -316,6 +324,9 @@ class Registry:
         record=Registration.model_validate(raw)
         artifacts=read(self.root/(rid+'.artifacts.json'))
         if {k:hashlib.sha256(v.encode()).hexdigest() for k,v in artifacts.items()}!=record.artifact_hashes:raise ValueError('Archived artifacts changed')
+        from tradingagents import registration_revalidation as admission
+        if admission.KEY in record.quality_evidence and not admission.verify(record):
+            raise ValueError("Invalid registration revalidation proof")
         return record
 
     def registrations(self):

@@ -134,7 +134,11 @@ def assess(record, now_ms=None):
     except (ValueError,KeyError,TypeError,ArithmeticError):
         reasons.append("INVALID_ORIGINAL_PLAN_OR_CLOCK")
     evidence = record.quality_evidence
-    if _invalid_quality(evidence): reasons.append("FROZEN_EVIDENCE_INVALID_OR_STALE")
+    from tradingagents import registration_revalidation as admission
+    extended=admission.KEY in evidence
+    if extended and not admission.verify(record): reasons.append("INVALID_REGISTRATION_REVALIDATION_PROOF")
+    if _invalid_quality(evidence) and not (extended and admission.verify(record)):
+        reasons.append("FROZEN_EVIDENCE_INVALID_OR_STALE")
     core = evidence.get("market_snapshot") or evidence.get("multitimeframe_snapshot.json")
     try:
         validate_symbol(record.instrument)

@@ -68,7 +68,9 @@ def parse_oi(row, info, ceiling):
     }
 
 
-def parse_oi_history(rows, info, ceiling, interval):
+def parse_oi_history(rows, info, ceiling, interval, *, diagnostic=None):
+    if diagnostic is not None:
+        diagnostic.update(stage="PARSE_ROWS", records=len(rows), row_widths=sorted({len(r) for r in rows})[:8])
     step = BARS[interval][1]
     records, seen = [], set()
     for row in rows:
@@ -282,14 +284,17 @@ def parse_book(row, info, ceiling, notional, max_spread_bps=50):
     return result
 
 
-def history_pages(client, path, params, cursor, *, cursor_field, time_key, count=100, max_pages=4):
+def history_pages(client, path, params, cursor, *, cursor_field, time_key, count=100, max_pages=4, diagnostic=None):
     """Bounded backward pagination. Overlap is rejected rather than hidden."""
     records, seen = [], set()
     for _ in range(max_pages):
+        if diagnostic is not None:
+            diagnostic.update(stage="REQUEST", page=_, cursor_ms=int(cursor), records=len(records))
         page = client.get(
             path,
             {**params, cursor_field: str(cursor), "limit": str(min(100, count - len(records)))},
         )
+        if diagnostic is not None:diagnostic.update(stage="PAGINATION", page_records=len(page))
         if not page:
             break
         stamps = [int(time_key(row)) for row in page]
@@ -299,6 +304,7 @@ def history_pages(client, path, params, cursor, *, cursor_field, time_key, count
             or len(set(stamps)) != len(stamps)
         ):
             raise ValueError("History pagination did not progress or overlapped")
+        if diagnostic is not None:diagnostic.update(min_ts=min(stamps), max_ts=max(stamps))
         seen.update(stamps)
         records.extend(page)
         cursor = min(stamps)
@@ -343,6 +349,8 @@ def collect_derivatives(client, info, cutoff, interval, historical, config):
         "orderbook": "Current-only snapshot; no historical order book reconstruction",
     }
 
+    oi_diagnostic = {}
+
     def capture(name, path, loader, units, live=False):
         fetched = utc_ms()
         part = {
@@ -365,6 +373,7 @@ def collect_derivatives(client, info, cutoff, interval, historical, config):
             return
         try:
             data = loader()
+            if name=="oi_history":oi_diagnostic["stage"]="POST_VALIDATE"
             records = data.get("records")
             if records is not None and not records:
                 raise ValueError("No observations in requested historical range")
@@ -413,6 +422,23 @@ def collect_derivatives(client, info, cutoff, interval, historical, config):
                 status="DATA_UNAVAILABLE",
                 issues=[f"Public evidence unavailable: {type(exc).__name__}"],
             )
+            if name=="oi_history":
+                # Never persist arbitrary exception text or vendor payloads.
+                codes={"OI history requires ts/contracts/coin/USD":"ROW_WIDTH",
+                       "Duplicate or unaligned OI history timestamp":"TIMESTAMP_ALIGNMENT_OR_DUPLICATE",
+                       "History pagination did not progress or overlapped":"PAGINATION_NONPROGRESS",
+                       "OI contract/base units mismatch":"CONTRACT_UNITS",
+                       "Invalid numeric field":"NUMERIC_FIELD",
+                       "Timestamp beyond observation/research bound":"TIMESTAMP_BOUND",
+                       "No observations in requested historical range":"EMPTY_RANGE",
+                       "Observation is later than allowed research bound":"FUTURE_OBSERVATION"}
+                tb=exc.__traceback__
+                while tb and tb.tb_next:tb=tb.tb_next
+                part["diagnostic"]={"version":"oi-history-diagnostic-v1",**oi_diagnostic,
+                    "error_code":codes.get(str(exc),"UNCLASSIFIED") if type(exc) is ValueError else "UNCLASSIFIED",
+                    "exception_type":type(exc).__name__ if type(exc) in (ValueError,TypeError,KeyError,IndexError) else "OTHER",
+                    "location":{"function":tb.tb_frame.f_code.co_name if tb and tb.tb_frame.f_code.co_filename==__file__ else "EXTERNAL", "line":tb.tb_lineno if tb and tb.tb_frame.f_code.co_filename==__file__ else None}}
+
 
     def current(path, inst=symbol, extra=None):
         return single(
@@ -478,11 +504,11 @@ def collect_derivatives(client, info, cutoff, interval, historical, config):
                 cutoff + 1,
                 cursor_field="end",
                 time_key=lambda r: r[0],
-                count=count,
+                count=count, diagnostic=oi_diagnostic,
             ),
             info,
             cutoff,
-            interval,
+            interval, diagnostic=oi_diagnostic,
         ),
         {
             "contracts": "contracts",
