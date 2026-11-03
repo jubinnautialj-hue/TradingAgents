@@ -104,7 +104,12 @@ def _analyst_graph(spec, agent, max_tool_rounds: int):
                        spec.agent_node, max_tool_rounds, repeated)
         return agent({**state, "messages": [*state["messages"], HumanMessage(WRAP_UP)]})
 
-    graph.add_node("tools", ToolNode(list(spec.tools)))
+    if spec.key == "market":
+        from tradingagents.agents.analysts.market_contract import admit_market_tool
+        tool_node = ToolNode(list(spec.tools), wrap_tool_call=admit_market_tool)
+    else:
+        tool_node = ToolNode(list(spec.tools))
+    graph.add_node("tools", tool_node)
     graph.add_node("wrap_up", wrap_up)
     graph.add_conditional_edges("agent", _tools_or_done, ["tools", END])
     graph.add_conditional_edges("tools", more_or_wrap_up, ["agent", "wrap_up"])

@@ -60,8 +60,15 @@ def test_unrecognised_never_truncated(text):
     [tools.get_stock_data, tools.get_indicators, tools.get_verified_market_snapshot], TOOLS))
 def test_native_schema_and_injected_state_unchanged(original, wrapped):
     assert original.name == wrapped.name
-    assert original.args_schema is wrapped.args_schema
-    assert original.tool_call_schema.model_json_schema() == wrapped.tool_call_schema.model_json_schema()
+    if original.name == "get_indicators":
+        from tradingagents.agents.analysts.market_contract import MarketIndicatorArgs
+        assert wrapped.args_schema is MarketIndicatorArgs
+        assert set(original.args_schema.model_fields) == set(wrapped.args_schema.model_fields)
+        assert set(wrapped.tool_call_schema.model_fields) == {"indicator", "curr_date", "look_back_days"}
+        assert wrapped.args_schema.model_config["extra"] == "forbid"
+    else:
+        assert original.args_schema is wrapped.args_schema
+        assert original.tool_call_schema.model_json_schema() == wrapped.tool_call_schema.model_json_schema()
 
 
 def test_full_input_calculations_and_archive_unchanged(pinned):
