@@ -17,6 +17,7 @@ from .api_key_env import get_api_key_env
 from .base_client import BaseLLMClient, normalize_content
 from .capabilities import get_capabilities
 from .reliability import LLMUnavailable, classify_failure
+from .diagnostics import emit
 from .validators import validate_model
 
 logger = logging.getLogger(__name__)
@@ -217,6 +218,8 @@ class ChatGPTPlanChatOpenAI(NormalizedChatOpenAI):
             received, completed = False, False
             try:
                 for chunk in super()._stream(*args, **kwargs):
+                    if not received:
+                        emit("STREAM_FIRST_CHUNK", received=True, completed=False, attempt=attempt)
                     received = True
                     status = chunk.message.response_metadata.get("status")
                     if status == "incomplete":
@@ -227,8 +230,10 @@ class ChatGPTPlanChatOpenAI(NormalizedChatOpenAI):
                 # which can turn truncated text/tool arguments into a result.
                 if self.use_responses_api and not completed:
                     raise LLMUnavailable("STREAM_INCOMPLETE", partial=received)
+                emit("STREAM_END", received=received, completed=completed, attempt=attempt)
                 return
             except Exception as exc:
+                emit("STREAM_ERROR", received=received, completed=completed, attempt=attempt, failure=exc)
                 failure = classify_failure(exc, partial=received)
                 if failure is None:
                     raise

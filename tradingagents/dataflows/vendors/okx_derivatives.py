@@ -55,10 +55,20 @@ def multiplier(info):
     return number(info["ctVal"], positive=True) * number(info.get("ctMult") or 1, positive=True)
 
 
-def parse_oi(row, info, ceiling):
+def parse_oi(row, info, ceiling, *, diagnostic=None):
     contracts = number(row["oi"], nonnegative=True)
     base = number(row["oiCcy"], nonnegative=True)
     if not math.isclose(base, contracts * multiplier(info), rel_tol=1e-6, abs_tol=1e-8):
+        if diagnostic is not None:
+            def band(value):
+                return "ZERO" if value == 0 else "LT_ONE" if value < 1 else "ONE_TO_MILLION" if value <= 1e6 else "ABOVE_MILLION"
+            diagnostic["unit_check"] = {
+                "stage": "CONTRACT_BASE_COMPARISON",
+                "present": {k: k in row for k in ("oi", "oiCcy", "oiUsd", "ts")},
+                "contracts_unit": "CONTRACTS", "base_unit": info.get("ctValCcy") if info.get("ctValCcy") in {"BTC", "ETH", "SOL"} else "OTHER",
+                "contracts_range": band(contracts), "base_range": band(base),
+                "expected_base_range": band(contracts * multiplier(info)),
+                "multiplier_range": band(multiplier(info)), "matches": False}
         raise ValueError("OI contract/base units mismatch")
     return {
         "ts": timestamp(row["ts"], ceiling),
@@ -77,7 +87,7 @@ def parse_oi_history(rows, info, ceiling, interval, *, diagnostic=None):
         if len(row) != 4:
             raise ValueError("OI history requires ts/contracts/coin/USD")
         parsed = parse_oi(
-            dict(zip(("ts", "oi", "oiCcy", "oiUsd"), row, strict=True)), info, ceiling
+            dict(zip(("ts", "oi", "oiCcy", "oiUsd"), row, strict=True)), info, ceiling, diagnostic=diagnostic
         )
         if parsed["ts"] in seen or parsed["ts"] % step:
             raise ValueError("Duplicate or unaligned OI history timestamp")
@@ -438,6 +448,9 @@ def collect_derivatives(client, info, cutoff, interval, historical, config):
                     "error_code":codes.get(str(exc),"UNCLASSIFIED") if type(exc) is ValueError else "UNCLASSIFIED",
                     "exception_type":type(exc).__name__ if type(exc) in (ValueError,TypeError,KeyError,IndexError) else "OTHER",
                     "location":{"function":tb.tb_frame.f_code.co_name if tb and tb.tb_frame.f_code.co_filename==__file__ else "EXTERNAL", "line":tb.tb_lineno if tb and tb.tb_frame.f_code.co_filename==__file__ else None}}
+                if "unit_check" in oi_diagnostic:
+                    from tradingagents.llm_clients.diagnostics import emit
+                    emit("OI_UNIT_CHECK", unit_summary=oi_diagnostic["unit_check"])
 
 
     def current(path, inst=symbol, extra=None):

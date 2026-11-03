@@ -118,4 +118,8 @@ def classify_failure(error: Exception, *, partial=False) -> LLMUnavailable | Non
         kind = "MODEL_SERVICE_ERROR"
     else:
         return None  # Do not disguise programming/parsing bugs as network failures.
+    # Keep transport status separate: a 200 response is not SDK/stream success.
+    # Added metadata never participates in the classification decisions above.
+    from .diagnostics import context_metadata
+    diagnostics.update(context_metadata())
     return LLMUnavailable(kind, exception_types=names, partial=partial, diagnostics=diagnostics)

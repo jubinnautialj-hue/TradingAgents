@@ -26,6 +26,7 @@ from tradingagents import research_budget as legacy
 from tradingagents.dataflows.files import locked
 from tradingagents.forward_validation import atomic, digest, read
 from tradingagents.safety_budget import Ledger, Policy, SafetyStop, Usage, now_ms, optional_macro_source, MACRO_SOURCES
+from tradingagents.llm_clients.diagnostics import CONTEXT, emit, observe_response_event
 
 ROOT = Path(__file__).resolve().parents[1]
 CALL = ContextVar("d4b_call", default=None)
@@ -163,6 +164,17 @@ class Session:
         import requests
         from tradingagents.llm_clients import chatgpt_auth as auth
         with legacy.guards(meter), ExitStack() as stack:
+            convert = sdk._convert_responses_chunk_to_generation_chunk
+
+            def convert_observed(chunk, *args, **kwargs):
+                observe_response_event(chunk)
+                try:
+                    return convert(chunk, *args, **kwargs)
+                except Exception as exc:
+                    emit("SDK_PARSE_ERROR", failure=exc)
+                    raise
+
+            stack.enter_context(patch.object(sdk, "_convert_responses_chunk_to_generation_chunk", convert_observed))
             original_refresh = auth._refresh
 
             def native_refresh(*args, **kwargs):
@@ -198,10 +210,12 @@ class Session:
                     from tradingagents.llm_clients.openai_client import ChatGPTPlanChatOpenAI
                     if type(model) is not ChatGPTPlanChatOpenAI: raise SafetyStop("AUTH_ADAPTER_CHANGED")
                 cid = self.ledger.begin_call(self.run_id)
+                diagnostic_token = CONTEXT.set({"call_id": cid})
                 ctx = CALL.set(cid); observations = {"raw": []}; token = OBS.set(observations)
                 before = meter.value["reported_total_tokens"]
                 try:
                     result = generate(model, *args, **kwargs)
+                    emit("SDK_RESULT")
                     raw = observations["raw"][0] if len(observations["raw"]) == 1 else None
                     response_id = None
                     generations = getattr(result, "generations", [])
@@ -213,6 +227,7 @@ class Session:
                                  and meter.value["reported_total_tokens"] - before == raw["total_tokens"])
                     self.ledger.finish_call(cid, raw, response_hash=response_id, reconciliation=reconcile,
                                             normalized_total=meter.value["reported_total_tokens"] - before)
+                    emit("USAGE_CONFIRMED", confirmed=bool(reconcile))
                     if self.ledger.status()["paused"]: raise SafetyStop("USAGE_OR_BUDGET_STOP")
                     return result
                 except BaseException as exc:
@@ -220,8 +235,10 @@ class Session:
                     if state["calls"][cid]["status"] == "PENDING":
                         raw = observations["raw"][0] if len(observations["raw"]) == 1 else None
                         self.ledger.finish_call(cid, raw, status="PARTIAL" if getattr(exc, "partial", False) else "FAILED", reconciliation=False)
+                    emit("CALL_ERROR", failure=exc)
                     raise
                 finally:
+                    CONTEXT.reset(diagnostic_token)
                     OBS.reset(token); CALL.reset(ctx)
 
             def invoke(model, *args, **kwargs):
@@ -258,17 +275,25 @@ class Session:
                     kwargs["allow_redirects"] = False
                 wid = self.ledger.begin_http(self.run_id, CALL.get(), kind,
                                             source_url=str(request.url) if optional else None)
+                if kind == "MODEL" and CONTEXT.get() is not None:
+                    CONTEXT.get().update(wire_id=wid, transport_http_status=None, request_id_sha256=None)
                 marker = WIRE.set(wid)
                 try:
                     response = fn(client, request, *args, **kwargs)
-                except BaseException:
+                except BaseException as exc:
                     self.ledger.finish_http(wid, failed=True)
+                    if kind == "MODEL": emit("HTTP_ERROR", failure=exc)
                     raise
                 else:
                     status = getattr(response, "status_code", None)
                     request_id = response.headers.get("x-request-id")
+                    if kind == "MODEL" and CONTEXT.get() is not None:
+                        CONTEXT.get().update(wire_id=wid,
+                            transport_http_status=status if type(status) is int and 100 <= status <= 599 else None,
+                            request_id_sha256=hashlib.sha256(request_id.encode()).hexdigest() if isinstance(request_id, str) else None)
                     self.ledger.finish_http(wid, status=status,
                         request_hash=hashlib.sha256(request_id.encode()).hexdigest() if isinstance(request_id, str) else None)
+                    if kind == "MODEL": emit("HTTP_RESPONSE")
                     reason = ("PROTECTED_REDIRECT_DENIED" if (protected or optional) and isinstance(status, int) and 300 <= status < 400
                               else "AUTH_RESPONSE_REJECTED" if kind == "AUTH" and status != 200 else None)
                     if reason:
