@@ -4,7 +4,6 @@ import json
 import logging
 import os
 import re
-import threading
 from datetime import date
 
 from langchain_core.messages import ToolMessage
@@ -13,11 +12,11 @@ from pydantic_core import PydanticCustomError
 
 from tradingagents.agents.tools import get_indicators
 from tradingagents.dataflows.vendors.okx import INDICATORS
+from tradingagents.dataflows.audit_file import append_audit
 
 logger = logging.getLogger(__name__)
 VERSION = "market-tool-contract-v1"
 AUDIT_LIMIT = 4 * 1024**2
-_AUDIT_LOCK = threading.Lock()
 FIELDS = {
     "get_indicators": ("indicator", "curr_date", "look_back_days"),
     "get_stock_data": ("start_date", "end_date"),
@@ -91,16 +90,7 @@ def diagnose(call, stage, code="OBSERVED"):
     path = os.environ.get("TA_SINGLE_AUDIT_FILE")
     if path:
         row = (json.dumps({"kind": "MARKET_TOOL_DIAGNOSTIC", **event}, sort_keys=True) + "\n").encode()
-        with _AUDIT_LOCK:
-            fd = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0), 0o600)
-            try:
-                if os.fstat(fd).st_size + len(row) > AUDIT_LIMIT:
-                    raise RuntimeError("MARKET_DIAGNOSTIC_CAPACITY")
-                if os.write(fd, row) != len(row):
-                    raise RuntimeError("MARKET_DIAGNOSTIC_INCOMPLETE")
-                os.fsync(fd)
-            finally:
-                os.close(fd)
+        append_audit(path, row, AUDIT_LIMIT)
     logger.info("MARKET_TOOL_DIAGNOSTIC %s", json.dumps(event, sort_keys=True))
     return event
 
