@@ -107,3 +107,27 @@ market-tool-contract-v1事件结构、字段位图、结构指纹、调用ID关�
 没有读写trial-001、trial-002账本或报告，没有新研究窗口、模型/业务HTTP、timer、F2/F3或交易。
 AGENTS.md及原有未跟踪文件保持不变。execution_enabled=False、allow_new_risk=False、simulation_admitted=False。
 完成后停止，等待验收，不自动Commit/Push。
+
+
+## 714edbd后Linux容量Fixture兼容修正（仅测试）
+
+本轮基线714edbd6221a40c97348e2e7d959d9716b0d8d35，继续原分支。生产market_contract.py、audit_file.py、role_observer.py及所有预算/策略/TTL/F1—F3逻辑完全不改。
+
+原test_metadata_sink_capacity_stops_without_unbounded_output的目的为容量拒绝。旧fixture通过write_text创建未绑定文件，Linux默认0644导致权限检查先拒绝，与容量保护无冲突。
+
+最小修正仅在tests/test_market_tool_contract.py：使用原生append_audit创建合法JSONL、0600审计文件和永久身份绑定侧锁；填充至真实4194304上限前1字节，再经Market diagnose验证CAPACITY。删除把AUDIT_LIMIT改成1的测试替换；拒绝后核验内容、4194303字节、audit dev/ino及侧锁绑定字节均不变。
+
+新增独立POSIX用例创建明确0644的无效fixture，验证FILE_PERMISSIONS及原字节/权限保留。仅在创建该隔离测试文件时临时设置umask022并立即恢复；没有chmod，没有修复或接管正式/旧审计文件。Windows缺少同等权限语义，明确平台跳过该新增用例；原既有失败用例未改、未跳过。
+
+本地WSL Linux、非root UID65534验证：
+- 两个修正/新增测试函数体原样执行，0600/4194303字节返回CAPACITY，0644/23字节返回FILE_PERMISSIONS，全部通过。该标准库解释器没有LangChain/pytest，外部验证驱动仅提供pytest/import支架并编译实际diagnose/test函数体；原生append_audit及OS检查真实执行，不冒充完整Linux框架回归。
+- 19项审计锁测试全部通过、0跳过。双进程临界容量结果一个APPENDED、一个CAPACITY，文件4194303；旧竞态fixture4194339仍可复现，未隐藏。
+- 6项混合写入OS检查全部通过；未安装框架导致1项类级跳过，框架集成另由Windows完整依赖回归覆盖。
+
+本轮不连接或部署Vultr。新固定提交的完整Vultr Python3.13框架验收仍须后续独立授权，不将本地POSIX检查等同于已解除服务器验收阻塞。
+
+本地证据目录audit_fixture_fix_20261103保存regression.txt、linux-fixture.txt、linux-locks.txt及linux-mixed.txt；不纳入Git提交。未提交/推送、未修改旧资产、未调用模型或业务HTTP。三个安全字段均False。
+
+完整Windows Python3.13受影响回归：385通过、2项既有F3.1失败、6项POSIX平台跳过，另8个参数化子检查通过，无新增失败。包含Market参数、锁与观察器、展示/身份、Graph、CLI、预算、F1/F2.1及完整F3.1测试。两项失败仍为Reviewed DID NOT RAISE及旧b01436cc源码字节比较，测试未修改或跳过。
+
+本地状态：READY_FOR_COMMIT（仅测试fixture修正）；不代表已完成新提交的Vultr框架复验。最终修改范围仅本测试文件与本文，未暂存、Commit或Push。

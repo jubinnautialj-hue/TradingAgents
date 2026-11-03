@@ -3,6 +3,7 @@ import copy
 import hashlib
 import json
 import logging
+import os
 from types import SimpleNamespace
 
 import pytest
@@ -223,10 +224,46 @@ def test_existing_metadata_sink_records_both_boundaries(tmp_path, monkeypatch):
 
 def test_metadata_sink_capacity_stops_without_unbounded_output(tmp_path, monkeypatch):
     from tradingagents.agents.analysts import market_contract as contract
+    from tradingagents.dataflows.audit_file import append_audit
     path = tmp_path / "metadata.jsonl"
-    path.write_text("retained")
+    limit = contract.AUDIT_LIMIT
+    assert limit == 4194304
+    # Create a legitimate private, bound audit file using the real protocol.
+    prefix, suffix = b'{"fixture":"', b'"}\n'
+    retained = prefix + b"x" * (limit - 1 - len(prefix) - len(suffix)) + suffix
+    append_audit(path, retained, limit)
+    lockpath = path.with_name(path.name + ".lock")
+    binding = lockpath.read_bytes()
+    identity = (path.stat().st_dev, path.stat().st_ino)
+    if os.name != "nt":
+        assert path.stat().st_mode & 0o777 == 0o600
+        assert lockpath.stat().st_mode & 0o777 == 0o600
     monkeypatch.setenv("TA_SINGLE_AUDIT_FILE", str(path))
-    monkeypatch.setattr(contract, "AUDIT_LIMIT", 1)
     with pytest.raises(RuntimeError, match="MARKET_DIAGNOSTIC_CAPACITY"):
         diagnose({"name": "get_indicators", "id": "call_full", "args": {}}, "MODEL_PARSED")
-    assert path.read_text() == "retained"
+    assert path.read_bytes() == retained
+    assert path.stat().st_size == limit - 1
+    assert (path.stat().st_dev, path.stat().st_ino) == identity
+    assert lockpath.read_bytes() == binding
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX 0644 rejection tested on Linux")
+def test_metadata_sink_rejects_0644_before_capacity(tmp_path, monkeypatch):
+    path = tmp_path / "metadata.jsonl"
+    retained = b'{"fixture":"retained"}\n'
+    # Intentionally invalid fixture, not a permission repair of an audit file.
+    previous_umask = os.umask(0o022)
+    try:
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+        try:
+            assert os.write(fd, retained) == len(retained)
+        finally:
+            os.close(fd)
+    finally:
+        os.umask(previous_umask)
+    assert path.stat().st_mode & 0o777 == 0o644
+    monkeypatch.setenv("TA_SINGLE_AUDIT_FILE", str(path))
+    with pytest.raises(RuntimeError, match="MARKET_DIAGNOSTIC_FILE_PERMISSIONS"):
+        diagnose({"name": "get_indicators", "id": "call_private", "args": {}}, "MODEL_PARSED")
+    assert path.read_bytes() == retained
+    assert path.stat().st_mode & 0o777 == 0o644
