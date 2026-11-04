@@ -78,6 +78,13 @@ class Evidence:
         self.current_event = None
         self.admission_item = None
         self.sdk_terminal_structure = None
+        self.stream_exhausted = False
+        self.item_phases = {}
+        self.last_sequence = None
+        self.sequence_valid = True
+        self.event_response_ids = set()
+        self.reconciliation = None
+        self.first_event_type = None
 
     @staticmethod
     def identity(value):
@@ -133,7 +140,7 @@ class Evidence:
             "conditions": {"terminal_added_mismatch": terminal != added,
                            "terminal_done_mismatch": terminal != done,
                            "orphan_argument_events": bool((delta | final) - terminal)},
-            "unmatched_check_reached": code in {"UNMATCHED_EVENT", "TERMINAL_VERIFIED"},
+            "unmatched_check_reached": code in {"UNMATCHED_EVENT", "TERMINAL_VERIFIED", "EVENTS_RECONCILED"},
             "differences": {k: identities(v) for k, v in differences.items()},
             "terminal_identities": terminal_identities,
             "event_counts": self.event_counts, "event_identities": self.event_identities,
@@ -142,6 +149,7 @@ class Evidence:
             "admission_item": self.admission_item,
             "sdk_terminal_structure": self.sdk_terminal_structure,
             "admission_terminal_structure": terminal_structure(self.completed),
+            "reconciliation": self.reconciliation,
             "completed_event_observed": self.completed is not None}
         append_audit(path, (json.dumps(row, sort_keys=True, allow_nan=False) + "\n").encode(), 4 * 1024**2)
 
@@ -159,6 +167,8 @@ class Evidence:
                    "response.incomplete", "error", "response.output_item.added", "response.output_item.done",
                    "response.function_call_arguments.delta", "response.function_call_arguments.done"}
         kind = kind if type(kind) is str and kind in allowed else "OTHER"
+        if self.events == 0:
+            self.first_event_type = kind
         if kind == "response.completed" and self.sdk_terminal_structure is None:
             try:
                 self.sdk_terminal_structure = terminal_structure(getattr(event, "response", None))
@@ -177,6 +187,26 @@ class Evidence:
         if len(self.event_identities) < 64:
             self.event_identities.append(self.current_event)
         try:
+            # Additional proof for the empty-terminal path only. Do not infer
+            # missing sequence numbers or reinterpret unregistered events.
+            if self.events < 8192:
+                sequence = getattr(event, "sequence_number", None)
+                if (type(sequence) is not int or sequence < 0
+                        or self.last_sequence is not None and sequence <= self.last_sequence):
+                    self.sequence_valid = False
+                if type(sequence) is int:
+                    self.last_sequence = sequence
+                response_id = getattr(event, "response_id", None)
+                if response_id is not None:
+                    if self.identifier(response_id):
+                        self.event_response_ids.add(response_id)
+                    else:
+                        self.sequence_valid = False
+                if kind in {"response.output_item.added", "response.output_item.done",
+                            "response.function_call_arguments.delta", "response.function_call_arguments.done"}:
+                    ident = getattr(item, "id", None) if item is not None else getattr(event, "item_id", None)
+                    if self.identifier(ident):
+                        self.item_phases.setdefault(ident, []).append(kind)
             self._observe(event)
         except (ValueError, TypeError, AttributeError, RecursionError):
             self.fail("EVENT_STRUCTURE")
@@ -274,6 +304,48 @@ class Evidence:
     def same(left, right):
         return json.dumps(left, sort_keys=True, allow_nan=False) == json.dumps(right, sort_keys=True, allow_nan=False)
 
+    def verified_output(self, response):
+        """Never mutate the SDK response or use LangChain's partial arguments.
+
+        Nonempty snapshots keep their original checks. Explicit [] can use
+        fully finalized, ordered tool events; missing/None is never an alias.
+        """
+        output = getattr(response, "output", None)
+        if type(output) is not list:
+            reject("TERMINAL_STRUCTURE")
+        if output or not (self.added or self.done or self.deltas or self.arguments_done):
+            return list(enumerate(output))
+        ids = set(self.done)
+        if (not ids or ids != set(self.added) or ids != set(self.arguments_done)
+                or set(self.deltas) - ids or set(self.item_phases) != ids
+                or set(self.slots.values()) != ids):
+            reject("UNMATCHED_EVENT")
+        if (not self.stream_exhausted or not self.sequence_valid
+                or self.first_event_type != "response.created"
+                or self.event_counts.get("response.created") != 1
+                or self.event_counts.get("response.completed") != 1
+                or self.event_counts.get("OTHER", 0)
+                or self.event_response_ids - {self.response_id}):
+            reject("EVENT_COMPLETION_PROOF")
+        indices = sorted(value[0] for value in self.done.values())
+        if indices != list(range(len(ids))):
+            reject("COMPLETE_INDEX")
+        result = []
+        for ident, done in sorted(self.done.items(), key=lambda entry: entry[1][0]):
+            phases = self.item_phases[ident]
+            if (len(phases) < 3 or phases[0] != "response.output_item.added"
+                    or phases[-2:] != ["response.function_call_arguments.done", "response.output_item.done"]
+                    or any(p != "response.function_call_arguments.delta" for p in phases[1:-2])
+                    or done[4] != "completed"):
+                reject("EVENT_ORDER_OR_STATUS")
+            # Copy only already-final fields. The shared admission loop below
+            # still checks all identities, JSON equality and native Schema.
+            result.append((done[0], SimpleNamespace(type="function_call", id=ident,
+                call_id=done[1], name=done[2], arguments=done[3], status=done[4])))
+        self.reconciliation = {"version": "market-stream-reconciliation-v1",
+                               "source": "COMPLETED_EVENTS", "tool_count": len(result), "status": "CANDIDATE"}
+        return result
+
     def admit(self, message):
         if self.error:
             reject(self.error)
@@ -292,7 +364,7 @@ class Evidence:
         if not raw or not raw.get("valid") or not normalized_matches(result, raw):
             reject("USAGE_UNCONFIRMED")
         calls, seen_items, seen_calls = [], set(), set()
-        for output_index, item in enumerate(getattr(response, "output", ())):
+        for output_index, item in self.verified_output(response):
             if getattr(item, "type", None) in {"message", "reasoning"}:
                 continue
             if getattr(item, "type", None) != "function_call":
@@ -341,11 +413,13 @@ class Evidence:
         if (seen_items != set(self.added) or seen_items != set(self.done)
                 or (set(self.deltas) | set(self.arguments_done)) - seen_items):
             reject("UNMATCHED_EVENT")
+        if self.reconciliation:
+            self.reconciliation["status"] = "VERIFIED"
         # Native Market diagnostics use the existing private bounded side-lock
         # sink. Audit failure propagates before any tools can be dispatched.
         for call in calls:
             diagnose(call, "MARKET_SAFE_ADMISSION", "TERMINAL_VERIFIED")
-        self.diagnostic("TERMINAL_VERIFIED")
+        self.diagnostic("EVENTS_RECONCILED" if self.reconciliation else "TERMINAL_VERIFIED")
         message.tool_calls = calls
         message.invalid_tool_calls = []
         return message
@@ -382,6 +456,7 @@ class ObservedResponse:
         except BaseException:
             self.evidence.diagnostic("STREAM_INTERRUPTED")
             raise
+        self.evidence.stream_exhausted = True
         if self.evidence.completed is None:
             self.evidence.diagnostic("STREAM_WITHOUT_COMPLETED")
 
