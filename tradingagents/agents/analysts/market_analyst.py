@@ -105,7 +105,15 @@ Write a very detailed and nuanced report of the trends you observe. Provide spec
 
         messages = (project_history(state["messages"])
                     if state.get("market_snapshot", {}).get("exchange") == "OKX" else state["messages"])
-        result, report = take_turn(prompt, llm, TOOLS, messages)
+        from tradingagents.llm_clients.openai_client import ChatGPTPlanChatOpenAI
+        if isinstance(llm, ChatGPTPlanChatOpenAI):
+            from tradingagents.agents.analysts.market_safe_adapter import scope
+            with scope(TOOLS) as evidence:
+                result, report = take_turn(prompt, llm, TOOLS, messages)
+                result = evidence.admit(result)
+                report = "" if result.tool_calls else result.content
+        else:
+            result, report = take_turn(prompt, llm, TOOLS, messages)
         observe_model_result(result)
 
         return {

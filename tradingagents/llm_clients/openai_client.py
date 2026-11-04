@@ -213,11 +213,20 @@ class ChatGPTPlanChatOpenAI(NormalizedChatOpenAI):
     def _stream(self, *args, **kwargs):
         # Both invoke() and stream() pass here, including bind_tools and typed
         # output. Never retry an accepted response or execute a partial tool call.
+        from tradingagents.agents.analysts.market_safe_adapter import ACTIVE, ObservedRoot, reject
+        evidence = ACTIVE.get()
+        stream = super()._stream
+        if evidence is not None:
+            if not self.use_responses_api or self.include_response_headers or self._uses_gateway:
+                reject("UNSUPPORTED_RESPONSE_MODE")
+            # Per-call copy; never mutate a shared client or third-party code.
+            observed = self.model_copy(update={"root_client": ObservedRoot(self.root_client, evidence)})
+            stream = super(ChatGPTPlanChatOpenAI, observed)._stream
         budget = self._connection_retries
         for attempt in range(budget + 1):
             received, completed = False, False
             try:
-                for chunk in super()._stream(*args, **kwargs):
+                for chunk in stream(*args, **kwargs):
                     if not received:
                         emit("STREAM_FIRST_CHUNK", received=True, completed=False, attempt=attempt)
                     received = True
