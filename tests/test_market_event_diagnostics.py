@@ -14,6 +14,7 @@ from langchain_core.messages import AIMessage
 
 from tradingagents.agents.analysts.market_analyst import TOOLS
 from tradingagents.agents.analysts.market_safe_adapter import scope, ObservedResponse
+from tradingagents.agents.analysts.market_safe_adapter import terminal_structure
 from tradingagents.dataflows.audit_file import append_audit
 from tradingagents.llm_clients.diagnostics import CONTEXT
 from tradingagents.llm_clients.reliability import LLMUnavailable
@@ -241,3 +242,133 @@ def test_original_matching_and_admission_body_are_unchanged():
         if name == 'admit':
             after[name] = StripDiagnostics().visit(after[name])
         assert ast.dump(before[name], include_attributes=False) == ast.dump(after[name], include_attributes=False)
+
+
+@pytest.mark.parametrize('response,classification,container,length,counts', [
+    (NS(), 'OUTPUT_MISSING', 'MISSING', None, {}),
+    (NS(output=None), 'OUTPUT_NONE', 'NONE', None, {}),
+    (NS(output=[]), 'EMPTY_ARRAY', 'list', 0, {}),
+    (NS(output=[NS(type='reasoning')]), 'REASONING_ONLY', 'list', 1, {'reasoning': 1}),
+    (NS(output=[NS(type='function_call'), NS(type='reasoning')]), 'CONTAINS_FUNCTION_CALL',
+     'list', 2, {'function_call': 1, 'reasoning': 1}),
+    (NS(output=[NS(type='message')]), 'NON_TOOL_ITEMS', 'list', 1, {'message': 1}),
+    (NS(output='SECRET_BODY'), 'UNRECOGNIZED', 'OTHER', None, {}),
+    (NS(output=[NS(type='SECRET_TYPE')]), 'UNRECOGNIZED', 'list', 1, {'OTHER': 1}),
+    ({'output': []}, 'EMPTY_ARRAY', 'list', 0, {}),
+])
+def test_terminal_shape_categories_are_metadata_only(response, classification, container, length, counts):
+    result = terminal_structure(response)
+    assert result['classification'] == classification
+    assert result['output_container'] == container
+    assert result['output_length'] == length
+    assert result['item_type_counts'] == counts
+    assert 'SECRET' not in json.dumps(result)
+
+
+def test_sdk_boundary_snapshot_is_preserved_before_admission(audit):
+    rows, _ = events()
+    with scope(TOOLS) as evidence:
+        message = feed(evidence, rows)
+        assert evidence.sdk_terminal_structure['classification'] == 'CONTAINS_FUNCTION_CALL'
+        evidence.completed.output = []  # Synthetic mutation, not historical evidence.
+        with pytest.raises(LLMUnavailable, match='UNMATCHED_EVENT'):
+            evidence.admit(message)
+    record = last(audit)
+    assert record['sdk_terminal_structure']['output_length'] == 1
+    assert record['admission_terminal_structure']['classification'] == 'EMPTY_ARRAY'
+    assert record['counts']['terminal'] == 0
+
+
+@pytest.mark.parametrize('shape', ['missing', 'none', 'empty', 'reasoning'])
+def test_shape_diagnostic_does_not_replace_original_rejection(shape, audit):
+    rows, _ = events()
+    with scope(TOOLS) as evidence:
+        message = feed(evidence, rows)
+        if shape == 'missing':
+            del evidence.completed.output
+        else:
+            evidence.completed.output = {'none': None, 'empty': [], 'reasoning': [NS(type='reasoning')]}[shape]
+        evidence.fail('INCOMPLETE')
+        with pytest.raises(LLMUnavailable, match='MARKET_TOOL_PROTOCOL_INCOMPLETE'):
+            evidence.admit(message)
+    assert last(audit)['code'] == 'INCOMPLETE'
+
+
+def test_none_output_diagnostic_preserves_stream_exception(audit):
+    with scope(TOOLS) as evidence:
+        evidence.completed = NS(output=None)
+        def stream():
+            raise ValueError('TEST_FIXTURE_ORIGINAL_STREAM_FAILURE')
+            yield
+        with pytest.raises(ValueError, match='TEST_FIXTURE_ORIGINAL_STREAM_FAILURE'):
+            list(ObservedResponse(stream(), evidence))
+    assert last(audit)['code'] == 'STREAM_INTERRUPTED'
+    assert last(audit)['admission_terminal_structure']['classification'] == 'OUTPUT_NONE'
+
+
+def test_shape_projection_is_bounded_and_does_not_log_class_names_or_properties(audit):
+    class SecretProviderClass:
+        @property
+        def output(self):
+            raise TypeError('SECRET_RESPONSE_BODY')
+    result = terminal_structure(SecretProviderClass())
+    assert result['object_type'] == 'OTHER'
+    assert result['inspection_failed'] and result['classification'] == 'UNRECOGNIZED'
+    assert 'SECRET' not in json.dumps(result)
+    many = terminal_structure(NS(output=[NS(type='reasoning', text='SECRET')] * 10000))
+    assert many['output_length'] == 10000 and many['items_scanned'] == 256
+    assert many['truncated'] and many['classification'] == 'UNRECOGNIZED'
+    assert many['item_type_counts'] == {'reasoning': 256}
+    with scope(TOOLS) as evidence:
+        evidence.completed = SecretProviderClass()
+        evidence.diagnostic('STREAM_INTERRUPTED')
+    assert 'SECRET' not in audit.read_text()
+
+
+def test_terminal_shape_audit_failure_is_not_swallowed(audit, monkeypatch):
+    def failed_append(*args):
+        raise RuntimeError('TEST_FIXTURE_AUDIT_FAILURE')
+    monkeypatch.setattr('tradingagents.agents.analysts.market_safe_adapter.append_audit', failed_append)
+    with scope(TOOLS) as evidence:
+        evidence.completed = NS(output=None)
+        with pytest.raises(RuntimeError, match='TEST_FIXTURE_AUDIT_FAILURE'):
+            evidence.diagnostic('STREAM_INTERRUPTED')
+
+
+def test_completed_response_property_failure_keeps_original_event_structure_rejection(audit):
+    class BrokenEvent:
+        type = 'response.completed'
+        @property
+        def response(self):
+            raise TypeError('SECRET_PROVIDER_BODY')
+    with scope(TOOLS) as evidence:
+        evidence.observe(BrokenEvent())
+        assert evidence.error == 'EVENT_STRUCTURE'
+        with pytest.raises(LLMUnavailable, match='EVENT_STRUCTURE'):
+            evidence.admit(NS())
+    assert last(audit)['sdk_terminal_structure']['inspection_failed']
+    assert 'SECRET_PROVIDER_BODY' not in audit.read_text()
+
+
+def test_complete_terminal_structure_and_normal_tool_output_match_baseline(audit):
+    # Existing invoke path: same expected native IDs, arguments and tools.
+    rows, items = events(7, 'fragmented')
+    message, _ = invoke(rows)
+    assert message.tool_calls == [dict(name=i['name'], args=json.loads(i['arguments']),
+                                      id=i['call_id'], type='tool_call') for i in items]
+    record = last(audit)
+    assert record['sdk_terminal_structure'] == record['admission_terminal_structure']
+    assert record['sdk_terminal_structure']['item_type_counts'] == {'function_call': 7}
+
+
+def test_normal_admission_message_is_byte_equal_to_fixed_commit(audit):
+    source = subprocess.check_output(['git', 'show',
+        '17bfd7f2dfe330691ab4329f3af22046fb121c30:tradingagents/agents/analysts/market_safe_adapter.py'], text=True)
+    baseline = {'__name__': 'TEST_FIXTURE_BASELINE'}
+    exec(compile(source, 'TEST_FIXTURE_BASELINE', 'exec'), baseline)
+    rows, _ = events(7, 'fragmented')
+    old = baseline['Evidence'](TOOLS)
+    old_message = old.admit(feed(old, rows))
+    with scope(TOOLS) as evidence:
+        new_message = evidence.admit(feed(evidence, rows))
+    assert new_message.model_dump_json().encode() == old_message.model_dump_json().encode()

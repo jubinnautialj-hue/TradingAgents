@@ -14,6 +14,46 @@ from tradingagents.llm_clients.diagnostics import CONTEXT
 ACTIVE = ContextVar("market_safe_response", default=None)
 
 
+def terminal_structure(response):
+    """Metadata projection only; never a fallback source for admission."""
+    from openai.types.responses import Response
+    row = {"version": "market-terminal-structure-v1",
+           "object_type": ("NONE" if response is None else "Response" if type(response) is Response
+                           else "dict" if type(response) is dict else "SimpleNamespace"
+                           if type(response) is SimpleNamespace else "OTHER"),
+           "output_present": None, "output_container": "UNKNOWN", "output_length": None,
+           "item_type_counts": {}, "items_scanned": 0, "truncated": False,
+           "classification": "UNRECOGNIZED"}
+    missing = object()
+    try:
+        # A dict is described as a dict; it is NOT coerced into an SDK object.
+        output = response.get("output", missing) if type(response) is dict else getattr(response, "output", missing)
+        row["output_present"] = output is not missing
+        if output is missing:
+            row.update(output_container="MISSING", classification="OUTPUT_MISSING")
+        elif output is None:
+            row.update(output_container="NONE", classification="OUTPUT_NONE")
+        elif type(output) in (list, tuple):
+            row.update(output_container="list" if type(output) is list else "tuple",
+                       output_length=len(output), truncated=len(output) > 256)
+            counts = {}
+            for item in output[:256]:
+                kind = item.get("type") if type(item) is dict else getattr(item, "type", None)
+                kind = kind if type(kind) is str and kind in {"function_call", "message", "reasoning"} else "OTHER"
+                counts[kind] = counts.get(kind, 0) + 1
+            row.update(item_type_counts=counts, items_scanned=min(len(output), 256))
+            if not row["truncated"]:
+                row["classification"] = ("EMPTY_ARRAY" if not output else "CONTAINS_FUNCTION_CALL"
+                    if counts.get("function_call") else "REASONING_ONLY" if set(counts) == {"reasoning"}
+                    else "NON_TOOL_ITEMS" if "OTHER" not in counts else "UNRECOGNIZED")
+        else:
+            row["output_container"] = "OTHER"
+    except Exception:
+        # Property/shape failures are metadata-unknown, not new rejection causes.
+        row.update(classification="UNRECOGNIZED", inspection_failed=True)
+    return row
+
+
 def reject(code):
     # Static codes only: no provider data or arbitrary exception text escapes.
     evidence = ACTIVE.get()
@@ -37,6 +77,7 @@ class Evidence:
         self.first_error_event = None
         self.current_event = None
         self.admission_item = None
+        self.sdk_terminal_structure = None
 
     @staticmethod
     def identity(value):
@@ -55,16 +96,27 @@ class Evidence:
         if not path:
             return
         terminal, terminal_identities = set(), []
-        for index, item in enumerate(getattr(self.completed, "output", ())):
-            if getattr(item, "type", None) != "function_call":
+        try:
+            output = getattr(self.completed, "output", ())
+        except Exception:
+            output = ()
+        # Diagnostics must not re-raise a malformed output's TypeError while
+        # reporting the original failure. This does not affect admit().
+        output = output[:256] if type(output) in (list, tuple) else ()
+        for index, item in enumerate(output):
+            try:
+                if getattr(item, "type", None) != "function_call":
+                    continue
+                ident = getattr(item, "id", None)
+                cid, name = getattr(item, "call_id", None), getattr(item, "name", None)
+            except Exception:
                 continue
-            ident = getattr(item, "id", None)
             if self.identifier(ident):
                 terminal.add(ident)
             if len(terminal_identities) < 64:
                 terminal_identities.append({"item": self.identity(ident),
-                    "call": self.identity(getattr(item, "call_id", None)),
-                    "tool_sha256": self.identity(getattr(item, "name", None))["sha256"], "index": index})
+                    "call": self.identity(cid),
+                    "tool_sha256": self.identity(name)["sha256"], "index": index})
         added, done, delta, final = map(set, (self.added, self.done, self.deltas, self.arguments_done))
         differences = {"terminal_without_added": terminal - added, "added_without_terminal": added - terminal,
             "terminal_without_done": terminal - done, "done_without_terminal": done - terminal,
@@ -88,6 +140,8 @@ class Evidence:
             "event_identities_truncated": sum(self.event_counts.values()) > len(self.event_identities),
             "first_error_event": self.first_error_event,
             "admission_item": self.admission_item,
+            "sdk_terminal_structure": self.sdk_terminal_structure,
+            "admission_terminal_structure": terminal_structure(self.completed),
             "completed_event_observed": self.completed is not None}
         append_audit(path, (json.dumps(row, sort_keys=True, allow_nan=False) + "\n").encode(), 4 * 1024**2)
 
@@ -105,6 +159,13 @@ class Evidence:
                    "response.incomplete", "error", "response.output_item.added", "response.output_item.done",
                    "response.function_call_arguments.delta", "response.function_call_arguments.done"}
         kind = kind if type(kind) is str and kind in allowed else "OTHER"
+        if kind == "response.completed" and self.sdk_terminal_structure is None:
+            try:
+                self.sdk_terminal_structure = terminal_structure(getattr(event, "response", None))
+            except Exception:
+                self.sdk_terminal_structure = terminal_structure(None)
+                self.sdk_terminal_structure.update(classification="UNRECOGNIZED", inspection_failed=True,
+                                                   output_present=None, output_container="UNKNOWN")
         item = getattr(event, "item", None)
         index = getattr(event, "output_index", None)
         self.current_event = {"event_type": kind,
