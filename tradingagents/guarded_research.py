@@ -331,6 +331,7 @@ class Session:
 
 
 def watchlist(policy):
+    if policy.run_purpose != "research-v1": raise SafetyStop("PURPOSE_MISMATCH")
     return native.Watchlist(instruments=[native.Instrument(instrument=policy.instrument)],
         forward_admission_policy=policy.forward_admission_policy, limits=native.Limits(
         min_interval_seconds=86400, max_symbols=1, task_seconds=policy.task_seconds, batch_seconds=policy.task_seconds,
@@ -400,6 +401,7 @@ def worker_diagnostic(ledger, run_id, *, registration=None, exception=None):
 
 def worker(ledger, run_id, *, invoker=None):
     obj = ledger.load(); policy = Policy.model_validate(obj["policy"])
+    if policy.run_purpose != "research-v1": raise SafetyStop("PURPOSE_MISMATCH")
     if obj["namespace"] == "FIXTURE" and invoker is None: raise SafetyStop("FIXTURE_CANNOT_CALL_MODEL")
     if obj["namespace"] == "PRODUCTION" and invoker is not None: raise SafetyStop("FIXTURE_CANNOT_REGISTER_PRODUCTION")
     if obj["namespace"] == "PRODUCTION":
@@ -441,11 +443,18 @@ def worker(ledger, run_id, *, invoker=None):
         raise
 
 
-def launch(ledger):
+def launch(ledger, *, purpose="research-v1", approval=None):
     obj = ledger.load(); policy = Policy.model_validate(obj["policy"])
+    if purpose not in {"research-v1", "market-protocol-probe-v1"} or policy.run_purpose != purpose:
+        raise SafetyStop("PURPOSE_MISMATCH")
+    probe = None
+    if purpose == "market-protocol-probe-v1":
+        from tradingagents import market_online_probe as probe
+        probe.verify_claim(ledger, approval, for_launch=True)
     if not (obj["namespace"] == "PRODUCTION" and obj["approved"] and policy.enabled and policy.accepted_post_response_exposure):
         raise SafetyStop("USER_APPROVAL_REQUIRED")
-    reviewed_implementation()
+    if probe: reviewed_implementation(extra=("market_online_probe.py",))
+    else: reviewed_implementation()
     try: resource_check(policy)
     except Exception:
         ledger.resource_pause()
@@ -454,11 +463,15 @@ def launch(ledger):
         if not held: raise SafetyStop("CONTROLLER_BUSY")
         rid = ledger.start_research()
         try:
-            process = subprocess.Popen([sys.executable, "-m", "tradingagents.guarded_research", "_worker",
-                                        "--ledger", str(ledger.root), "--run-id", rid], cwd=ROOT,
+            if probe: probe.bind_run(ledger, rid, approval)
+            command = [sys.executable, "-m", "tradingagents.guarded_research", "_probe_worker" if probe else "_worker",
+                       "--ledger", str(ledger.root), "--run-id", rid]
+            if probe: command += ["--approval", str(approval)]
+            process = subprocess.Popen(command, cwd=ROOT,
                                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
         except BaseException:
             ledger.finish_research(rid, None, success=False)
+            if probe: probe.finalize_interrupted(ledger, rid)
             raise
         state = ledger.status()
         remaining = min(policy.task_seconds,
@@ -471,15 +484,19 @@ def launch(ledger):
             finally:
                 state = ledger.status()
                 if state["runs"][rid]["status"] == "RUNNING": ledger.finish_research(rid, None, success=False)
+                if probe: probe.finalize_interrupted(ledger, rid)
             raise
         state = ledger.status()
         if state["runs"][rid]["status"] == "RUNNING": ledger.finish_research(rid, None, success=False)
-        return {"returncode": code, "status": ledger.status()}
+        if probe: probe.finalize_interrupted(ledger, rid)
+        value = {"returncode": code, "status": ledger.status()}
+        if probe: value["probe"] = read(probe.folder(ledger) / "receipt.json")
+        return value
 
 
-def reviewed_implementation():
+def reviewed_implementation(*, extra=()):
     """A later reviewed commit is required before real launches; no self-commit."""
-    for name in ("safety_budget.py", "guarded_research.py", "auto_research.py", "research_budget.py"):
+    for name in ("safety_budget.py", "guarded_research.py", "auto_research.py", "research_budget.py", *extra):
         file = "tradingagents/" + name
         result = subprocess.run(["git", "show", "HEAD:" + file], cwd=ROOT, capture_output=True, timeout=5)
         if result.returncode or result.stdout.replace(b"\r\n", b"\n") != (ROOT / file).read_bytes().replace(b"\r\n", b"\n"):
@@ -488,11 +505,13 @@ def reviewed_implementation():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["init", "status", "pause", "resume", "recover-interrupted", "run", "_worker"])
+    parser.add_argument("command", choices=["init", "status", "pause", "resume", "recover-interrupted", "run", "_worker",
+                                            "probe-claim", "probe", "_probe_worker"])
     parser.add_argument("--ledger", type=Path, required=True)
     parser.add_argument("--policy", type=Path)
     parser.add_argument("--approve", action="store_true")
     parser.add_argument("--run-id")
+    parser.add_argument("--approval", type=Path)
     args = parser.parse_args(); ledger = Ledger(args.ledger)
     try:
         if args.command == "init":
@@ -506,6 +525,16 @@ def main():
         elif args.command == "_worker":
             if not args.run_id: raise ValueError("Run id required")
             value = worker(ledger, args.run_id)
+        elif args.command in {"probe-claim", "probe", "_probe_worker"}:
+            from tradingagents import market_online_probe as probe
+            if not args.approval: raise ValueError("Probe approval required")
+            if args.command == "probe-claim": value = probe.claim_once(ledger, args.approval)
+            elif args.command == "probe":
+                value = launch(ledger, purpose=probe.PURPOSE, approval=args.approval)
+                if value["returncode"] or value["status"]["paused"]: raise SafetyStop("PROBE_FAILED_OR_PAUSED")
+            else:
+                if not args.run_id: raise ValueError("Run id required")
+                value = probe.worker(ledger, args.run_id, args.approval)
         elif args.command == "pause": ledger.pause(); value = ledger.status()
         elif args.command == "resume":
             if ledger.load()["namespace"] == "PRODUCTION": resource_check(Policy.model_validate(ledger.load()["policy"]))
@@ -514,6 +543,10 @@ def main():
             with locked(ledger.root / "controller", wait=False) as held:
                 if not held: raise SafetyStop("CONTROLLER_BUSY")
                 ledger.recover_interrupted(); value = ledger.status()
+                if Policy.model_validate(ledger.load()["policy"]).run_purpose == "market-protocol-probe-v1":
+                    from tradingagents.market_online_probe import finalize_interrupted
+                    for rid in value["runs"]: finalize_interrupted(ledger, rid)
+                    value = ledger.status()
         else: value = ledger.status()
         print(json.dumps(value, ensure_ascii=True, allow_nan=False))
     except Exception as exc:

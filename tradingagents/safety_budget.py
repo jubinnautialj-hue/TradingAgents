@@ -37,6 +37,7 @@ class SafetyStop(LLMUnavailable):
 
 class Policy(ResearchModel):
     version: Literal["d4b-safety-budget-v1"] = VERSION
+    run_purpose: Literal["research-v1", "market-protocol-probe-v1"] = "research-v1"
     enabled: bool = False
     accepted_post_response_exposure: bool = False
     optional_source_policy: Literal["strict-v1", "bls-cpi-403-v1", "official-macro-403-v1"] = "strict-v1"
@@ -68,6 +69,13 @@ class Policy(ResearchModel):
     def headroom_fits(self):
         if self.headroom_tokens > min(self.research_tokens, self.daily_tokens, self.campaign_tokens):
             raise ValueError("Operational headroom exceeds token thresholds")
+        if self.run_purpose == "market-protocol-probe-v1" and (
+                (self.research_tokens, self.daily_tokens, self.campaign_tokens, self.headroom_tokens)
+                != (100000, 100000, 100000, 100000)
+                or (self.research_calls, self.daily_calls, self.campaign_calls) != (1, 1, 1)
+                or (self.research_http, self.daily_http, self.campaign_http) != (240, 240, 240)
+                or self.task_seconds != 900):
+            raise ValueError("Probe requires its fixed one-call policy")
         return self
 
 

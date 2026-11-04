@@ -7,6 +7,15 @@
       "title": "Version",
       "type": "string"
     },
+    "run_purpose": {
+      "default": "research-v1",
+      "enum": [
+        "research-v1",
+        "market-protocol-probe-v1"
+      ],
+      "title": "Run Purpose",
+      "type": "string"
+    },
     "enabled": {
       "default": false,
       "title": "Enabled",

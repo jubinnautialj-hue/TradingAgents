@@ -1,5 +1,6 @@
 {
   "version": "d4b-safety-budget-v1",
+  "run_purpose": "research-v1",
   "enabled": false,
   "accepted_post_response_exposure": false,
   "optional_source_policy": "strict-v1",
