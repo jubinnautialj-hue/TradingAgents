@@ -1,0 +1,243 @@
+"""Synthetic offline structures, never a reconstruction of window-003."""
+import copy
+import hashlib
+import json
+import os
+import ast
+import subprocess
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
+from types import SimpleNamespace as NS
+
+import pytest
+from langchain_core.messages import AIMessage
+
+from tradingagents.agents.analysts.market_analyst import TOOLS
+from tradingagents.agents.analysts.market_safe_adapter import scope, ObservedResponse
+from tradingagents.dataflows.audit_file import append_audit
+from tradingagents.llm_clients.diagnostics import CONTEXT
+from tradingagents.llm_clients.reliability import LLMUnavailable
+from tests.test_market_safe_adapter import events, invoke
+
+
+@pytest.fixture(autouse=True)
+def offline(monkeypatch):
+    monkeypatch.setattr('socket.socket.connect', lambda *a, **k: pytest.fail('REAL_NETWORK_FORBIDDEN'))
+
+
+@pytest.fixture
+def audit(tmp_path, monkeypatch):
+    path = tmp_path / 'fixture.jsonl'
+    monkeypatch.setenv('TA_SINGLE_AUDIT_FILE', str(path))
+    return path
+
+
+def obj(value):
+    if isinstance(value, dict):
+        result = NS(**{k: obj(v) for k, v in value.items()})
+        if 'input_tokens' in value:
+            result.model_dump = lambda: copy.deepcopy(value)
+        return result
+    if isinstance(value, list):
+        return [obj(v) for v in value]
+    return value
+
+
+def feed(evidence, rows):
+    token = CONTEXT.set({'call_id': 'FIXTURE_LOGICAL_CALL'})
+    try:
+        for row in rows:
+            evidence.observe(obj(row))
+    finally:
+        CONTEXT.reset(token)
+    return AIMessage(content='', response_metadata={'id': 'resp_TEST_FIXTURE'},
+                     usage_metadata={'input_tokens': 80, 'output_tokens': 20, 'total_tokens': 100,
+                                     'input_token_details': {'cache_read': 0, 'cache_creation': 0},
+                                     'output_token_details': {'reasoning': 0}})
+
+
+def last(path):
+    return [json.loads(line) for line in path.read_text().splitlines()
+            if json.loads(line)['kind'] == 'MARKET_EVENT_DIAGNOSTIC'][-1]
+
+
+@pytest.mark.parametrize('n', [1, 6, 7])
+@pytest.mark.parametrize('mode', ['sequential', 'interleaved', 'fragmented', 'done_only'])
+def test_normal_sdk_result_and_diagnostics(n, mode, audit):
+    rows, items = events(n, mode)
+    message, _ = invoke(rows)
+    assert [c['args'] for c in message.tool_calls] == [json.loads(i['arguments']) for i in items]
+    record = last(audit)
+    assert record['code'] == 'TERMINAL_VERIFIED'
+    assert record['counts']['terminal'] == n
+    assert not any(record['conditions'].values())
+
+
+@pytest.mark.parametrize('case,expected', [
+    ('added', (True, False, False)), ('done', (False, True, False)),
+    ('delta', (False, False, True)), ('arguments_done', (False, False, True)),
+    ('all', (True, True, True)),
+])
+def test_independent_unmatched_conditions(case, expected, audit):
+    rows, _ = events()
+    with scope(TOOLS) as evidence:
+        message = feed(evidence, rows)
+        if case in {'added', 'all'}:
+            evidence.added['fc_orphan_added'] = (3, 'call_extra', 'get_indicators', '', None)
+        if case in {'done', 'all'}:
+            evidence.done['fc_orphan_done'] = (4, 'call_extra2', 'get_indicators', '', None)
+        if case in {'delta', 'all'}:
+            evidence.deltas['fc_orphan_delta'] = ['SECRET_PARAMETER_VALUE']
+        if case in {'arguments_done', 'all'}:
+            evidence.arguments_done['fc_orphan_final'] = 'SECRET_PARAMETER_VALUE'
+        with pytest.raises(LLMUnavailable, match='UNMATCHED_EVENT'):
+            evidence.admit(message)
+    record = last(audit)
+    assert tuple(record['conditions'][k] for k in
+                 ['terminal_added_mismatch', 'terminal_done_mismatch', 'orphan_argument_events']) == expected
+    assert record['logical_call_id_sha256'] == hashlib.sha256(b'FIXTURE_LOGICAL_CALL').hexdigest()
+    assert record['legacy_rejection_call_id_is_placeholder'] is True
+    assert 'SECRET_PARAMETER_VALUE' not in audit.read_text()
+
+
+@pytest.mark.parametrize('missing', ['added', 'done'])
+def test_missing_final_evidence_has_directional_difference(missing, audit):
+    rows, _ = events()
+    with scope(TOOLS) as evidence:
+        message = feed(evidence, rows)
+        getattr(evidence, missing).clear()
+        with pytest.raises(LLMUnavailable, match='MISSING_FINAL_EVIDENCE'):
+            evidence.admit(message)
+    assert last(audit)['differences']['terminal_without_' + missing]['count'] == 1
+
+
+@pytest.mark.parametrize('fault,code', [
+    ('duplicate', 'DUPLICATE_OR_LIMIT'), ('index', 'INDEX_CONFLICT'),
+    ('parameters', 'FINAL_CONFLICT'), ('missing_id', 'IDENTITY'),
+    ('duplicate_terminal_call', 'DUPLICATE_ID'),
+])
+def test_other_rejections_keep_original_codes(fault, code, audit):
+    rows, _ = events(2)
+    if fault == 'duplicate':
+        rows.insert(1, copy.deepcopy(rows[0]))
+    elif fault == 'index':
+        rows[1]['output_index'] = 0
+    elif fault == 'parameters':
+        next(r for r in rows if r['type'] == 'response.output_item.done')['item']['arguments'] = '{}'
+    elif fault == 'missing_id':
+        rows[0]['item'].pop('id')
+    else:
+        rows[-1]['response']['output'][1]['call_id'] = 'call_0'
+    with scope(TOOLS) as evidence:
+        message = feed(evidence, rows)
+        with pytest.raises(LLMUnavailable, match=code):
+            evidence.admit(message)
+    record = last(audit)
+    assert record['code'] == code
+    if fault == 'missing_id':
+        assert record['first_error_event']['item']['state'] == 'MISSING'
+    if fault == 'duplicate':
+        assert record['first_error_event']['event_type'] == 'response.output_item.added'
+
+
+@pytest.mark.parametrize('failure', ['eof', 'exception', 'unknown_usage'])
+def test_incomplete_stream_and_unknown_usage_are_diagnosed(failure, audit):
+    rows, _ = events()
+    with scope(TOOLS) as evidence:
+        if failure == 'unknown_usage':
+            rows[-1]['response']['usage'] = None
+            message = feed(evidence, rows)
+            with pytest.raises(LLMUnavailable, match='USAGE_UNCONFIRMED'):
+                evidence.admit(message)
+        else:
+            def stream():
+                yield obj(rows[0])
+                if failure == 'exception':
+                    raise RuntimeError('SECRET_STREAM_BODY')
+            if failure == 'exception':
+                with pytest.raises(RuntimeError, match='SECRET_STREAM_BODY'):
+                    list(ObservedResponse(stream(), evidence))
+            else:
+                list(ObservedResponse(stream(), evidence))
+    record = last(audit)
+    assert record['code'] == {'eof': 'STREAM_WITHOUT_COMPLETED', 'exception': 'STREAM_INTERRUPTED',
+                              'unknown_usage': 'USAGE_UNCONFIRMED'}[failure]
+    assert 'SECRET_STREAM_BODY' not in audit.read_text()
+
+
+def test_orphan_parameter_event_is_collected_by_original_observer(audit):
+    rows, _ = events()
+    rows.insert(-1, dict(type='response.function_call_arguments.done', output_index=9,
+                         item_id='fc_orphan', arguments='SECRET'))
+    with scope(TOOLS) as evidence:
+        message = feed(evidence, rows)
+        with pytest.raises(LLMUnavailable, match='UNMATCHED_EVENT'):
+            evidence.admit(message)
+    assert last(audit)['differences']['orphan_arguments_done']['count'] == 1
+    assert 'SECRET' not in audit.read_text()
+
+
+def test_identity_redaction_and_bounded_record(audit):
+    rows, _ = events()
+    with scope(TOOLS) as evidence:
+        feed(evidence, rows)
+        for i in range(100):
+            evidence.observe(NS(type='SECRET_EVENT_TEXT', item=NS(id='SECRET_ID', call_id='SECRET_CALL'),
+                                output_index=i, arguments='SECRET_ARGUMENT', headers='SECRET_KEY'))
+        evidence.diagnostic('TEST_FIXTURE')
+    record = last(audit)
+    assert len(record['event_identities']) == 64 and record['event_identities_truncated']
+    assert record['event_counts']['OTHER'] == 100
+    assert len(audit.read_bytes()) < 65536
+    assert 'SECRET_' not in audit.read_text()
+
+
+def test_diagnostic_capacity_failure_propagates_without_dispatch(audit):
+    append_audit(audit, b'x' * (4194304 - 2) + b'\n', 4194304)
+    before = audit.read_bytes()
+    rows, _ = events()
+    with scope(TOOLS) as evidence:
+        message = feed(evidence, rows)
+        with pytest.raises(RuntimeError, match='CAPACITY'):
+            evidence.admit(message)
+        assert message.tool_calls == []
+    assert audit.read_bytes() == before
+
+
+def test_concurrent_diagnostics_are_complete_json(audit):
+    def write(_):
+        with scope(TOOLS) as evidence:
+            evidence.diagnostic('TEST_FIXTURE')
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        list(pool.map(write, range(24)))
+    assert len(audit.read_text().splitlines()) == 24
+    assert all(json.loads(line)['code'] == 'TEST_FIXTURE' for line in audit.read_text().splitlines())
+    assert audit.with_name(audit.name + '.lock').exists()
+    if os.name == 'posix':
+        assert audit.stat().st_mode & 0o777 == 0o600
+
+
+def test_original_matching_and_admission_body_are_unchanged():
+    """Strip only new diagnostic statements; native admission AST must match."""
+    name = 'tradingagents/agents/analysts/market_safe_adapter.py'
+    old = subprocess.check_output(['git', 'show', '348ae9983242c4dd86463ceae4702de5c313ace5:' + name], text=True)
+    new = (Path(__file__).resolve().parents[1] / name).read_text()
+    def methods(source):
+        cls = next(n for n in ast.parse(source).body if isinstance(n, ast.ClassDef) and n.name == 'Evidence')
+        return {n.name: n for n in cls.body if isinstance(n, ast.FunctionDef)}
+    before, after = methods(old), methods(new)
+    class StripDiagnostics(ast.NodeTransformer):
+        def visit_Assign(self, node):
+            if any(isinstance(t, ast.Attribute) and t.attr == 'admission_item' for t in node.targets):
+                return None
+            return self.generic_visit(node)
+
+        def visit_Expr(self, node):
+            if (isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Attribute)
+                    and node.value.func.attr == 'diagnostic'):
+                return None
+            return self.generic_visit(node)
+    for name in ['_observe', 'identifier', 'parse', 'same', 'admit']:
+        if name == 'admit':
+            after[name] = StripDiagnostics().visit(after[name])
+        assert ast.dump(before[name], include_attributes=False) == ast.dump(after[name], include_attributes=False)
