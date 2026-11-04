@@ -384,3 +384,109 @@ def test_normal_admission_message_is_byte_equal_to_fixed_commit(audit):
     with scope(TOOLS) as evidence:
         new_message = evidence.admit(feed(evidence, rows))
     assert new_message.model_dump_json().encode() == old_message.model_dump_json().encode()
+
+
+@pytest.mark.parametrize('value,classification,name', [
+    ('response.queued', 'SDK_KNOWN', 'response.queued'),
+    ('response.reasoning_text.done', 'SDK_KNOWN', 'response.reasoning_text.done'),
+    ('response.vendor_extension.done', 'UNKNOWN_NAME', 'response.vendor_extension.done'),
+    (None, 'MISSING', None), (42, 'INVALID_TYPE', None),
+    ('SECRET_BODY\nAuthorization: SECRET_KEY', 'REDACTED_NAME', None),
+    ('response.' + 'x' * 200, 'REDACTED_NAME', None)])
+def test_other_original_type_is_bounded_classified_and_never_allowed(value, classification, name, audit):
+    from tests.test_market_stream_reconciliation import complete_events
+    rows, _ = complete_events()
+    rows.insert(-2, dict(type=value, response_id='resp_TEST_FIXTURE', call_id='SECRET_CALL',
+                        item_id='SECRET_ITEM', arguments='SECRET_ARGUMENTS', headers='SECRET_KEY'))
+    for i, row in enumerate(rows):row['sequence_number'] = i
+    with scope(TOOLS) as evidence:
+        message = feed(evidence, [])
+        list(ObservedResponse(iter(obj(row) for row in rows), evidence))
+        with pytest.raises(LLMUnavailable, match='EVENT_COMPLETION_PROOF'):
+            evidence.admit(message)
+    record = last(audit)
+    summary = record['other_event_diagnostics']['events'][0]
+    assert summary['type'] == dict(name=name, classification=classification)
+    assert summary['sequence_number'] == summary['event_ordinal']
+    assert summary['event_call'] == evidence.identity('SECRET_CALL')
+    assert summary['item'] == evidence.identity('SECRET_ITEM')
+    assert summary['response_id'] == evidence.identity('resp_TEST_FIXTURE')
+    assert record['completion_proof']['gate_rejected']
+    assert record['completion_proof']['failed_conditions']['other_events_present']
+    assert 'SECRET_' not in audit.read_text()
+    assert message.tool_calls == []
+
+
+def test_all_completion_proof_failures_are_reported_together(audit):
+    with scope(TOOLS) as evidence:
+        evidence.observe(NS(type='response.vendor_extension', sequence_number=None,
+                            response_id='resp_OTHER', response=NS(id='resp_NESTED')))
+        evidence.diagnostic('EVENT_COMPLETION_PROOF')
+    result = last(audit)
+    assert len(result['completion_proof']['failed_conditions']) == 7
+    assert all(result['completion_proof']['failed_conditions'].values())
+    other = result['other_event_diagnostics']['events'][0]
+    assert other['sequence_state'] == 'MISSING'
+    assert other['nested_response_id'] == evidence.identity('resp_NESTED')
+    assert other['response_id'] == evidence.identity('resp_OTHER')
+
+
+def test_successful_empty_terminal_has_no_completion_proof_failures(audit):
+    from tests.test_market_stream_reconciliation import complete_events
+    rows, _ = complete_events()
+    message, _ = invoke(rows)
+    record = last(audit)
+    assert not any(record['completion_proof']['failed_conditions'].values())
+    assert not record['completion_proof']['gate_rejected']
+    assert record['other_event_diagnostics'] == dict(version='market-other-events-v1', events=[], truncated=False)
+    assert len(message.tool_calls) == 1
+
+
+@pytest.mark.parametrize('sequence', [-1, True, 'SECRET_SEQUENCE', 2**100])
+def test_other_sequence_is_bounded_without_affecting_original_observer(sequence, audit):
+    with scope(TOOLS) as evidence:
+        evidence.observe(NS(type='response.vendor_extension', sequence_number=sequence))
+        evidence.diagnostic('TEST_FIXTURE')
+    summary = last(audit)['other_event_diagnostics']['events'][0]
+    assert summary['sequence_number'] is None and summary['sequence_state'] == 'INVALID'
+    assert 'SECRET_' not in audit.read_text()
+
+
+def test_other_samples_have_independent_capacity_and_explicit_truncation(audit):
+    with scope(TOOLS) as evidence:
+        for i in range(100):
+            evidence.observe(NS(type='response.vendor_extension', sequence_number=i))
+        evidence.diagnostic('TEST_FIXTURE')
+    record = last(audit)
+    assert record['event_counts']['OTHER'] == 100
+    assert len(record['other_event_diagnostics']['events']) == 32
+    assert record['other_event_diagnostics']['truncated']
+    assert len(audit.read_bytes()) < 65536
+
+
+def test_diagnostic_change_keeps_all_matching_and_completion_gates_identical():
+    source = subprocess.check_output(['git', 'show',
+        '3f385e1fd6d960070a5870eaa412aa3f6cca1a74:tradingagents/agents/analysts/market_safe_adapter.py'], text=True)
+    current = (Path(__file__).resolve().parents[1] / 'tradingagents/agents/analysts/market_safe_adapter.py').read_text()
+    def methods(text):
+        cls = next(n for n in ast.parse(text).body if isinstance(n, ast.ClassDef) and n.name == 'Evidence')
+        return {n.name: ast.dump(n, include_attributes=False) for n in cls.body if isinstance(n, ast.FunctionDef)}
+    old, new = methods(source), methods(current)
+    for name in ['_observe', 'verified_output', 'admit', 'identifier', 'parse', 'same', 'fail']:
+        assert old[name] == new[name], name
+
+
+def test_new_metadata_property_failure_does_not_change_original_observation(audit):
+    class BrokenMetadata:
+        type = 'response.vendor_extension'
+        sequence_number = 0
+        @property
+        def response(self):
+            raise RuntimeError('SECRET_METADATA')
+    with scope(TOOLS) as evidence:
+        evidence.observe(BrokenMetadata())
+        assert evidence.error is None
+        assert evidence.events == 1 and evidence.event_counts['OTHER'] == 1
+        evidence.diagnostic('TEST_FIXTURE')
+    assert last(audit)['other_event_diagnostics']['events'] == [dict(inspection_failed=True)]
+    assert 'SECRET_METADATA' not in audit.read_text()

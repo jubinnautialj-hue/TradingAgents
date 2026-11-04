@@ -4,6 +4,9 @@ from contextvars import ContextVar
 import json
 import hashlib
 import os
+import re
+from functools import lru_cache
+from typing import get_args
 from types import SimpleNamespace
 
 from tradingagents.llm_clients.reliability import LLMUnavailable
@@ -12,6 +15,25 @@ from tradingagents.dataflows.audit_file import append_audit
 from tradingagents.llm_clients.diagnostics import CONTEXT
 
 ACTIVE = ContextVar("market_safe_response", default=None)
+
+
+@lru_cache(maxsize=1)
+def sdk_event_names():
+    """Diagnostic vocabulary only; never an admission allowlist."""
+    from openai.types.responses import ResponseStreamEvent
+    return frozenset(name for cls in get_args(get_args(ResponseStreamEvent)[0])
+                     for name in get_args(cls.model_fields['type'].annotation))
+
+
+def event_type_summary(value):
+    # Never log arbitrary provider text disguised as an event type.
+    if value is None:
+        return {"name": None, "classification": "MISSING"}
+    if type(value) is not str:
+        return {"name": None, "classification": "INVALID_TYPE"}
+    if len(value) > 128 or not re.fullmatch(r"response\.[a-z_]+(?:\.[a-z_]+)*|error", value):
+        return {"name": None, "classification": "REDACTED_NAME"}
+    return {"name": value, "classification": "SDK_KNOWN" if value in sdk_event_names() else "UNKNOWN_NAME"}
 
 
 def terminal_structure(response):
@@ -85,6 +107,7 @@ class Evidence:
         self.event_response_ids = set()
         self.reconciliation = None
         self.first_event_type = None
+        self.other_events = []
 
     @staticmethod
     def identity(value):
@@ -150,6 +173,21 @@ class Evidence:
             "sdk_terminal_structure": self.sdk_terminal_structure,
             "admission_terminal_structure": terminal_structure(self.completed),
             "reconciliation": self.reconciliation,
+            "other_event_diagnostics": {"version": "market-other-events-v1",
+                "events": self.other_events,
+                "truncated": self.event_counts.get("OTHER", 0) > len(self.other_events)},
+            # Snapshot all operands, without changing the original OR gate or
+            # treating an earlier diagnostic snapshot as a gate evaluation.
+            "completion_proof": {"version": "market-completion-proof-diagnostics-v1",
+                "gate_rejected": code == "EVENT_COMPLETION_PROOF",
+                "failed_conditions": {
+                    "stream_not_exhausted": not self.stream_exhausted,
+                    "sequence_invalid": not self.sequence_valid,
+                    "first_event_not_created": self.first_event_type != "response.created",
+                    "created_count_not_one": self.event_counts.get("response.created") != 1,
+                    "completed_count_not_one": self.event_counts.get("response.completed") != 1,
+                    "other_events_present": bool(self.event_counts.get("OTHER", 0)),
+                    "response_identity_mismatch": bool(self.event_response_ids - {self.response_id})}},
             "completed_event_observed": self.completed is not None}
         append_audit(path, (json.dumps(row, sort_keys=True, allow_nan=False) + "\n").encode(), 4 * 1024**2)
 
@@ -163,6 +201,7 @@ class Evidence:
         # accepted response. Admission occurs only AFTER invoke/reconciliation.
         self.bind_context()
         kind = getattr(event, "type", None)
+        raw_kind = kind
         allowed = {"response.created", "response.in_progress", "response.completed", "response.failed",
                    "response.incomplete", "error", "response.output_item.added", "response.output_item.done",
                    "response.function_call_arguments.delta", "response.function_call_arguments.done"}
@@ -184,6 +223,23 @@ class Evidence:
             "tool_sha256": self.identity(getattr(item, "name", None))["sha256"],
             "index": index if type(index) is int and 0 <= index < 4096 else None}
         self.event_counts[kind] = min(self.event_counts.get(kind, 0) + 1, 8193)
+        if kind == "OTHER" and len(self.other_events) < 32:
+            try:
+                sequence = getattr(event, "sequence_number", None)
+                self.other_events.append({"type": event_type_summary(raw_kind),
+                    "event_ordinal": min(self.events, 8193),
+                    "sequence_number": sequence if type(sequence) is int and 0 <= sequence < 2**63 else None,
+                    "sequence_state": "VALID" if type(sequence) is int and 0 <= sequence < 2**63
+                                      else "MISSING" if sequence is None else "INVALID",
+                    "response_id": self.identity(getattr(event, "response_id", None)),
+                    "nested_response_id": self.identity(getattr(getattr(event, "response", None), "id", None)),
+                    "item": self.current_event["item"], "index": self.current_event["index"],
+                    "call": self.identity(getattr(item, "call_id", None)),
+                    "event_call": self.identity(getattr(event, "call_id", None))})
+            except Exception:
+                # New metadata inspection must never replace an existing
+                # protocol result; audit append failures still propagate.
+                self.other_events.append({"inspection_failed": True})
         if len(self.event_identities) < 64:
             self.event_identities.append(self.current_event)
         try:
