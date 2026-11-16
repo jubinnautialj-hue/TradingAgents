@@ -134,6 +134,9 @@ class Session:
         self.wall, self.mono = now_ms(), time.monotonic()
         self.meters = []
         self.model_lock = threading.RLock()
+        self.raw_sse = None
+        if os.environ.get('TA_MARKET_RAW_SSE_APPROVAL') and self.policy.run_purpose != 'market-protocol-probe-v1':
+            raise SafetyStop('RAW_SSE_PROBE_ONLY')
 
     def check(self):
         if abs((now_ms() - self.wall) - (time.monotonic() - self.mono) * 1000) > 1000:
@@ -159,6 +162,8 @@ class Session:
     @contextmanager
     def guards(self, meter):
         """Outer logical scope + raw usage tap; legacy counters remain intact."""
+        if os.environ.get('TA_MARKET_RAW_SSE_APPROVAL') and self.raw_sse is None:
+            raise SafetyStop('RAW_SSE_NOT_BOUND')
         from langchain_core.language_models.chat_models import BaseChatModel
         import langchain_openai.chat_models.base as sdk
         import requests
@@ -279,10 +284,14 @@ class Session:
                     CONTEXT.get().update(wire_id=wid, transport_http_status=None, request_id_sha256=None)
                 marker = WIRE.set(wid)
                 try:
+                    if kind == "MODEL" and self.raw_sse is not None:
+                        self.raw_sse.before_request(request, wid)
                     response = fn(client, request, *args, **kwargs)
                 except BaseException as exc:
                     self.ledger.finish_http(wid, failed=True)
                     if kind == "MODEL": emit("HTTP_ERROR", failure=exc)
+                    if kind == "MODEL" and self.raw_sse is not None:
+                        self.raw_sse.event('REQUEST_OR_CAPTURE_FAILED')
                     raise
                 else:
                     status = getattr(response, "status_code", None)
@@ -316,6 +325,8 @@ class Session:
                                     self.ledger._pause(obj, "TRANSPORT_OR_SERVICE_FAILURE")
                                 raise
                         setattr(response, attr, checked_body)
+                    if kind == 'MODEL' and self.raw_sse is not None:
+                        self.raw_sse.attach(request, response, wid)
                     return response
                 finally: WIRE.reset(marker)
 

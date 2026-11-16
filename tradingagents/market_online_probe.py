@@ -229,6 +229,8 @@ def worker(ledger, run_id, approval, *, invoker=None):
         # Establish the bounded private audit sink before any possible request.
         append_audit(folder(ledger) / 'audit.jsonl', (json.dumps({'kind': 'MARKET_PROBE_ADMISSION',
                      'version': VERSION, 'run_id': run_id, **SAFETY}) + '\n').encode(), 4 * 1024**2)
+        from tradingagents.llm_clients.raw_sse_evidence import prepare
+        session.raw_sse = prepare(ledger, run_id, scope, config, folder(ledger) / 'audit.jsonl')
         with patch.dict(os.environ, {'TA_SINGLE_AUDIT_FILE': str(folder(ledger) / 'audit.jsonl')}), run_config(config), session.guards(meter):
             result = invoker(config) if invoker else _market_turn(config)
         state = ledger.status(); run = state['runs'][run_id]
